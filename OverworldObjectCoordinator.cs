@@ -1,8 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using YuguLibrary.Controllers;
 using YuguLibrary.Enumerations;
 using YuguLibrary.Models;
+using YuguLibrary.Utilities;
 
 namespace YuguLibrary
 {
@@ -60,24 +62,6 @@ namespace YuguLibrary
             this.animationScript.AttachOverworldObjectCoordinator(this);
         }
 
-        /// <summary>
-        /// Runs a new animation coroutine from <see cref="animationQueue"/> if there are none currently running.
-        /// </summary>
-        void RunAnimationQueue()
-        {
-            if (animationQueue.Count != 0)
-            {
-                if (!currentlyAnimating)
-                {
-                    StartCoroutine(animationQueue.Dequeue());
-                }
-            }
-            else
-            {
-                animationScript.PlayAnimation();
-            }
-        }
-        /*
         public void FrameMove(Directions direction)
         {
             int totalMoveFrames;
@@ -102,9 +86,27 @@ namespace YuguLibrary
             }
         }
 
-        IEnumerator MoveSegment(Directions direction, int totalMoveFrames, int moveProgress = 0)
+        /// <summary>
+        /// Runs a new animation coroutine from <see cref="animationQueue"/> if there are none currently running.
+        /// </summary>
+        private void RunAnimationQueue()
         {
-            yield return new WaitForSeconds(1 / 60);
+            if (animationQueue.Count != 0)
+            {
+                if (!currentlyAnimating)
+                {
+                    StartCoroutine(animationQueue.Dequeue());
+                }
+            }
+            else
+            {
+                animationScript.PlayAnimation();
+            }
+        }
+
+        private IEnumerator MoveSegment(Directions direction, int totalMoveFrames, int moveProgress = 0)
+        {
+            yield return new WaitForSeconds(1/60);
 
             float dx = xmove / totalMoveFrames;
             float dy = ymove / totalMoveFrames;
@@ -137,11 +139,12 @@ namespace YuguLibrary
             }
 
             transform.position = new Vector3(transform.position.x + dx, transform.position.y + dy, transform.position.z + dz);
-            PlayerController playerController = (PlayerController)UtilityFunctions.GetController(typeof(PlayerController));
-            if (overworldObject.Equals(playerController.currentOverworldObject))
+            Player player = UtilityFunctions.GetActivePlayer();
+            if (overworldObject.Equals(player.GetCurrentOverworldObject()))
             {
                 SetCameraPosition();
             }
+
             moveProgress++;
             if (moveProgress < totalMoveFrames)
             {
@@ -153,18 +156,18 @@ namespace YuguLibrary
             }
         }
 
-        public void SetCameraPosition()
+        private void SetCameraPosition()
         {
-            PlayerController playerController = (PlayerController)UtilityFunctions.GetController(typeof(PlayerController));
+            Player player = UtilityFunctions.GetActivePlayer();
 
-            Vector3 camerapos = new Vector3(transform.position.x, transform.position.y, playerController.mainCamera.transform.position.z);
-            playerController.mainCamera.transform.position = camerapos;
+            Vector3 camerapos = new Vector3(transform.position.x, transform.position.y, player.mainCamera.transform.position.z);
+            player.mainCamera.transform.position = camerapos;
         }
 
-        void RepeatMove(Directions direction, int totalMoveFrames, int moveProgress)
+        private void RepeatMove(Directions direction, int totalMoveFrames, int moveProgress)
         {
             StartCoroutine(MoveSegment(direction, totalMoveFrames, moveProgress));
-        } */
+        }
         #endregion
     }
 }

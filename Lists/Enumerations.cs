@@ -7,15 +7,7 @@ namespace YuguLibrary
     namespace Enumerations
     {
         //TODO+: add descriptions from game concept document to enums, likely; unitroles/unitclassifications
-
-        /// <summary>
-        /// List of all keyboard buttons.
-        /// </summary>
-        public enum KeyboardInputs
-        {
-
-        }
-
+        
         /// <summary>
         /// List of all controller buttons.
         /// </summary>
@@ -444,7 +436,7 @@ namespace YuguLibrary
         /// <summary>
         /// List of all possible skill types.
         /// </summary>
-        public enum SkillTypes
+        public enum EncounterSkillTypes
         {
             /// <summary>
             /// Identifier for Primary-type skills. One can be used per <see cref="UnitTurn"/>.
@@ -464,7 +456,8 @@ namespace YuguLibrary
             /// <summary>
             /// Identifier for Movement-type skills. One can be used per <see cref="UnitTurn"/>.
             /// </summary>
-            Movement
+            Movement,
+            None
         };
 
         /// <summary>
@@ -557,7 +550,8 @@ namespace YuguLibrary
             /// </summary>
             Unique,
             Self,
-            Tile
+            Tile,
+            Neutral
         };
 
         /// <summary>

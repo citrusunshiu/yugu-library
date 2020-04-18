@@ -15,6 +15,11 @@ namespace YuguLibrary
         public class UnitDetector
         {
             /// <summary>
+            /// Reference to the controller the unit detector is attached to.
+            /// </summary>
+            MonoBehaviour controllerReference;
+
+            /// <summary>
             /// Reference to the tilemap used for overworld object movement.
             /// </summary>
             private Tilemap geography;
@@ -78,40 +83,14 @@ namespace YuguLibrary
             /// </summary>
             public static AreaOfEffect aggroRadius;
 
-            public UnitDetector(Tilemap geography, Tilemap indicators)
+            public UnitDetector(Tilemap geography, Tilemap indicators, MonoBehaviour controllerReference)
             {
                 this.geography = geography;
                 this.indicators = indicators;
+                this.controllerReference = controllerReference;
             }
 
             #region Functions
-            #region Instance Functions
-            /// <summary>
-            /// Changes the current unit detector instance.
-            /// </summary>
-            /// <param name="instance">The instance that the unit detector will change to.</param>
-            /// <param name="spawnPosition">The position where the player will be placed at.</param>
-            public void LoadNewInstance(Instance instance, Vector3Int spawnPosition)
-            {
-                SwapGeography(instance.GeographyName);
-            }
-
-            private void SwapGeography(string name)
-            {
-                if (geography != null)
-                {
-                    Debug.Log(geography.gameObject.transform.parent.gameObject.name);
-                    geography.ClearAllTiles();
-                    geography.transform.SetParent(null);
-                    geography.name += "(OLD)";
-                }
-
-                GameObject.Instantiate(Resources.Load(UtilityFunctions.GEOGRAPHY_FILE_PATH + name));
-
-                geography = GameObject.Find(name + "(Clone)").GetComponentInChildren<Tilemap>();
-                geography.gameObject.transform.parent.gameObject.name = "trashed";
-                geography.transform.SetParent(GameObject.Find("Controller Hub").transform);
-            }
 
             /// <summary>
             /// Adds an overworld object to the unit detector at a given position.
@@ -125,11 +104,26 @@ namespace YuguLibrary
                 UtilityFunctions.SetSpriteDefaultPosition(overworldObject.overworldObjectCoordinator);
             }
 
+            /// <summary>
+            /// Removes an overworld object from the unit detector.
+            /// </summary>
+            /// <param name="overworldObject">The overworld object to be removed.</param>
             public void RemoveOverworldObject(OverworldObject overworldObject)
             {
                 overworldObjects.Remove(overworldObject);
                 overworldObject.overworldObjectCoordinator.StopAllCoroutines();
                 GameObject.Destroy(overworldObject.overworldObjectCoordinator.gameObject);
+            }
+
+            #region Instance Functions
+            /// <summary>
+            /// Changes the current unit detector instance.
+            /// </summary>
+            /// <param name="instance">The instance that the unit detector will change to.</param>
+            /// <param name="spawnPosition">The position where the player will be placed at.</param>
+            public void LoadNewInstance(Instance instance, Vector3Int spawnPosition)
+            {
+                SwapGeography(instance.GeographyName);
             }
             #endregion
 
@@ -205,15 +199,43 @@ namespace YuguLibrary
                     overworldObject.position = tileToPlace;
                     overworldObject.direction = moveDirection;
 
-                    UtilityFunctions.SetSpriteDefaultPosition(overworldObject.overworldObjectCoordinator);
+                    //UtilityFunctions.SetSpriteDefaultPosition(overworldObject.overworldObjectCoordinator);
+
+                    DelayMovements(overworldObject, z);
 
                     return true;
                 }
 
                 return false;
             }
+            
+            /// <summary>
+            /// Finds the shortest traversable path from one location to another.
+            /// </summary>
+            /// <param name="overworldObject">Overworld object attempting to travel.</param>
+            /// <param name="to">Location to pathfind to.</param>
+            /// <returns>Returns the direction for the unit to move to next to reach the desired location, or returns 
+            /// <see cref="Directions.Down"/> if there is none.</returns>
+            public Directions PathfindTo(OverworldObject overworldObject, Vector3Int to)
+            {
+                return Directions.Down;
+            }
+
+            /// <summary>
+            /// Teleports a given <see cref="OverworldObject"/> to specified location.
+            /// </summary>
+            /// <param name="overworldObject">OverworldObject attempting to travel.</param>
+            /// <param name="to">Location to travel to.</param>
+            /// <returns>Returns true if the overworld object moved successfully, and false otherwise.</returns>
+            public bool BlinkTo(OverworldObject overworldObject, Vector3Int to)
+            {
+                return true;
+            }
 
 
+
+            #endregion
+            
             /// <summary>
             /// Gets the highest floor tile at a given position.
             /// </summary>
@@ -246,33 +268,46 @@ namespace YuguLibrary
             }
 
             /// <summary>
-            /// Finds the shortest traversable path from one location to another.
+            /// Prevents movement from an <see cref="OverworldObject"/> for a specified amount of time.
             /// </summary>
-            /// <param name="overworldObject">Overworld object attempting to travel.</param>
-            /// <param name="to">Location to pathfind to.</param>
-            /// <returns>Returns the direction for the unit to move to next to reach the desired location, or returns 
-            /// <see cref="Directions.Down"/> if there is none.</returns>
-            public Directions PathfindTo(OverworldObject overworldObject, Vector3Int to)
+            /// <param name="overworldObject">The overworldObject to have its movement delayed.</param>
+            /// <param name="z">The amount of tiles travelled in the Z-axis.</param>
+            private void DelayMovements(OverworldObject overworldObject, int z)
             {
-                return Directions.Down;
+                if (z == 0)
+                {
+                    overworldObject.canMove = false;
+                    controllerReference.StartCoroutine(overworldObject.UnlockMovement());
+                }
+
+                if (z > 0)
+                {
+                    overworldObject.canAscend = false;
+                    controllerReference.StartCoroutine(overworldObject.UnlockAscent());
+                }
+                else if (z < 0)
+                {
+                    overworldObject.canDescend = false;
+                    controllerReference.StartCoroutine(overworldObject.UnlockDescent());
+                }
             }
 
-            /// <summary>
-            /// Teleports a given <see cref="OverworldObject"/> to specified location.
-            /// </summary>
-            /// <param name="overworldObject">OverworldObject attempting to travel.</param>
-            /// <param name="to">Location to travel to.</param>
-            /// <returns>Returns true if the overworld object moved successfully, and false otherwise.</returns>
-            public bool BlinkTo(OverworldObject overworldObject, Vector3Int to)
+            private void SwapGeography(string name)
             {
-                return true;
-            }
+                if (geography != null)
+                {
+                    Debug.Log(geography.gameObject.transform.parent.gameObject.name);
+                    geography.ClearAllTiles();
+                    geography.transform.SetParent(null);
+                    geography.name += "(OLD)";
+                }
 
-            public void MoveToLocation(OverworldObject overworldObject, Vector3Int to)
-            {
+                GameObject.Instantiate(Resources.Load(UtilityFunctions.GEOGRAPHY_FILE_PATH + name));
 
+                geography = GameObject.Find(name + "(Clone)").GetComponentInChildren<Tilemap>();
+                geography.gameObject.transform.parent.gameObject.name = "trashed";
+                geography.transform.SetParent(GameObject.Find("Controller Hub").transform);
             }
-            #endregion
             #endregion
         }
     }

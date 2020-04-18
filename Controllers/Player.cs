@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using YuguLibrary.Enumerations;
 using YuguLibrary.Models;
+using YuguLibrary.OverworldObjectActions;
+using YuguLibrary.Utilities;
 
 namespace YuguLibrary
 {
@@ -11,6 +13,11 @@ namespace YuguLibrary
         public class Player
         {
             #region Variables
+            /// <summary>
+            /// Reference to the controller the unit detector is attached to.
+            /// </summary>
+            MonoBehaviour controllerReference;
+
             /// <summary>
             /// The player's saved data.
             /// </summary>
@@ -30,6 +37,11 @@ namespace YuguLibrary
             /// The movement speed of the scene's camera.
             /// </summary>
             public float cameraSpeed = 5;
+
+            private KeyCode arrowUp = KeyCode.UpArrow;
+            private KeyCode arrowDown = KeyCode.DownArrow;
+            private KeyCode arrowLeft = KeyCode.LeftArrow;
+            private KeyCode arrowRight = KeyCode.RightArrow;
             #endregion
 
             #region Constructors
@@ -40,21 +52,32 @@ namespace YuguLibrary
             #endregion
 
             #region Functions
-            public void SetPlayerUnit(OverworldObject overworldObject)
+            public void SetCurrentOverworldObject(OverworldObject overworldObject)
             {
                 currentOverworldObject = overworldObject;
+                AttachPlayerOverworldObjectActions(currentOverworldObject);
             }
 
-            private void RunAction(ControllerInputs input)
+            public OverworldObject GetCurrentOverworldObject()
             {
-
+                return currentOverworldObject;
             }
 
             /// <summary>
-            /// Reads and handles controller inputs from the user.
+            /// Reads and handles controller and keyboard inputs from the user.
             /// </summary>
             public void ReadInputs()
             {
+                foreach(KeyCode keyCode in UtilityFunctions.ValidKeyCodes)
+                {
+                    if (Input.GetKeyDown(keyCode))
+                    {
+                        Debug.Log("Keyboard:" + keyCode.ToString() + " key pressed");
+                        RunAction(keyCode);
+                    }
+                }
+
+                #region Controller Inputs
                 // Buttons
                 if (Input.GetButtonDown("Bottom Face Button"))
                 {
@@ -162,7 +185,6 @@ namespace YuguLibrary
                 float xAxisRightAnalog = Input.GetAxisRaw("Right Analog Horizontal");
                 float yAxisRightAnalog = Input.GetAxisRaw("Right Analog Vertical");
 
-
                 /* NOTES: Mapped to movement. Left analog stick is likely preferred due to isometric perspective; map to both for now.
                  *
                  * UP = NW 
@@ -187,10 +209,11 @@ namespace YuguLibrary
                 /* NOTES: No known use currently.
                  * */
                 float rightTrigger = Input.GetAxisRaw("Right Trigger");
-                
+                #endregion
+
                 //if ((playerUnit.canMove && !inputsDisabled) || (inputsDisabled && currentOverworldObject is TileCursor))
                 //{
-                    CheckMovement(xAxisDPad, yAxisDPad);
+                CheckMovement(xAxisDPad, yAxisDPad);
                     CheckMovement(xAxisLeftAnalog, yAxisLeftAnalog * -1);
                 //} 
                 
@@ -201,52 +224,70 @@ namespace YuguLibrary
             /// </summary>
             /// <param name="xAxis">The position of the input's x axis.</param>
             /// <param name="yAxis">The position of the input's y axis.</param>
-            void CheckMovement(float xAxis, float yAxis)
+            private void CheckMovement(float xAxis, float yAxis)
             {
-                if (xAxis > 0.25f && yAxis > 0.25f) // right && down
+                if ((xAxis > 0.25f && yAxis > 0.25f) || (Input.GetKey(arrowRight) && Input.GetKey(arrowDown))) // right && down
                 {
-                    if (currentOverworldObject.MoveSE())
-                    {
-                        Vector3 cp = mainCamera.transform.position;
+                    currentOverworldObject.MoveInDirection(Directions.SE);
 
-                        mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, cp,
-                        cameraSpeed * Time.deltaTime);
-                    }
-
+                }else if ((xAxis < -0.25f && yAxis < -0.25f) || (Input.GetKey(arrowLeft) && Input.GetKey(arrowUp))) // left && up
+                {
+                    currentOverworldObject.MoveInDirection(Directions.NW);
+                }else if ((yAxis > 0.25f && xAxis < -0.25f) || (Input.GetKey(arrowDown) && Input.GetKey(arrowLeft))) // down && left
+                {
+                    currentOverworldObject.MoveInDirection(Directions.SW);
+                }else if ((yAxis < -0.25f && xAxis > 0.25f) || (Input.GetKey(arrowUp) && Input.GetKey(arrowRight))) // up && right
+                {
+                    currentOverworldObject.MoveInDirection(Directions.NE);
                 }
+            }
 
-                if (xAxis < -0.25f && yAxis < -0.25f) // left && up
+            /// <summary>
+            /// Adds the basic player overworld object actions to the current overworld object.
+            /// </summary>
+            /// <param name="overworldObject">The overworld object to add the actions to.</param>
+            private void AttachPlayerOverworldObjectActions(OverworldObject overworldObject)
+            {
+                overworldObject.AddOverworldObjectAction(new TestOWOAction(ControllerInputs.TopFace, overworldObject));
+                overworldObject.AddOverworldObjectAction(new Interact(ControllerInputs.RightFace, overworldObject));
+                overworldObject.AddOverworldObjectAction(new Jump(ControllerInputs.BottomFace, overworldObject));
+                overworldObject.AddOverworldObjectAction(new ToggleRun(ControllerInputs.RightBumper, overworldObject));
+                overworldObject.AddOverworldObjectAction(new ToggleStationary(ControllerInputs.LeftBumper, overworldObject));
+            }
+
+            /// <summary>
+            /// Finds and executes the highest priority action associated with the given input.
+            /// </summary>
+            /// <param name="input">The input to be executed.</param>
+            private void RunAction(ControllerInputs input)
+            {
+                OverworldObjectAction action = currentOverworldObject.GetOverworldObjectAction(input);
+
+                if (action != null)
                 {
-                    if (currentOverworldObject.MoveNW())
-                    {
-                        Vector3 cp = mainCamera.transform.position;
-
-                        mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, cp,
-                        cameraSpeed * Time.deltaTime);
-                    }
+                    action.ExecuteAction();
                 }
-
-                if (yAxis > 0.25f && xAxis < -0.25f) // down && left
+                else
                 {
-                    if (currentOverworldObject.MoveSW())
-                    {
-                        Vector3 cp = mainCamera.transform.position;
-
-                        mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, cp,
-                        cameraSpeed * Time.deltaTime);
-                    }
-
+                    Debug.Log("no owoaction on input " + input.ToString());
                 }
+            }
 
-                if (yAxis < -0.25f && xAxis > 0.25f) // up && right
+            /// <summary>
+            /// Finds and executes the highest priority action associated with the given input.
+            /// </summary>
+            /// <param name="input">The input to be executed.</param>
+            private void RunAction(KeyCode input)
+            {
+                OverworldObjectAction action = currentOverworldObject.GetOverworldObjectAction(input);
+
+                if (action != null)
                 {
-                    if (currentOverworldObject.MoveNE())
-                    {
-                        Vector3 cp = mainCamera.transform.position;
-
-                        mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, cp,
-                        cameraSpeed * Time.deltaTime);
-                    }
+                    action.ExecuteAction();
+                }
+                else
+                {
+                    Debug.Log("no owoaction on input " + input.ToString());
                 }
             }
             #endregion

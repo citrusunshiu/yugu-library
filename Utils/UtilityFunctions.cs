@@ -9,6 +9,35 @@ namespace YuguLibrary
     {
         public static class UtilityFunctions
         {
+            #region Valid KeyCode Values
+            public static KeyCode[] ValidKeyCodes =
+            {
+                KeyCode.Tilde,
+                KeyCode.Alpha1,
+                KeyCode.Alpha2,
+                KeyCode.Alpha3,
+                KeyCode.Alpha4,
+                KeyCode.Tab,
+                KeyCode.Q,
+                KeyCode.W,
+                KeyCode.E,
+                KeyCode.R,
+                KeyCode.CapsLock,
+                KeyCode.A,
+                KeyCode.S,
+                KeyCode.D,
+                KeyCode.F,
+                KeyCode.LeftShift,
+                KeyCode.Z,
+                KeyCode.X,
+                KeyCode.C,
+                KeyCode.V,
+                KeyCode.LeftControl,
+                KeyCode.LeftAlt,
+                KeyCode.Space,
+            };
+            #endregion
+
             #region File Paths
             public static readonly string SPRITESHEET_FILE_PATH = "";
             public static readonly string UI_FILE_PATH = "Sprites/UI/";
@@ -19,6 +48,10 @@ namespace YuguLibrary
             public static readonly string GEOGRAPHY_FILE_PATH = "Prefabs/Geographies/";
             #endregion
 
+            /// <summary>
+            /// Gets the unit detector currently active in the scene.
+            /// </summary>
+            /// <returns>Returns the UnitDetector object from the current scene.</returns>
             public static UnitDetector GetActiveUnitDetector()
             {
                 GameObject controllerHub = GameObject.Find("Controller Hub");
@@ -26,6 +59,10 @@ namespace YuguLibrary
                 return unitDetector;
             }
 
+            /// <summary>
+            /// Gets the player object currently active in the scene.
+            /// </summary>
+            /// <returns>Returns the Player object from the current scene.</returns>
             public static Player GetActivePlayer()
             {
                 GameObject controllerHub = GameObject.Find("Controller Hub");

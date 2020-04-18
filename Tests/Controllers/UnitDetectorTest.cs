@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
@@ -8,21 +9,34 @@ namespace Tests
 {
     public class UnitDetectorTest
     {
-        // A Test behaves as an ordinary method
         [Test]
-        public void UnitDetectorTestSimplePasses()
+        public void UnitDetectorTestLoadNewInstance()
         {
-            // Use the Assert class to test conditions
+            throw new NotImplementedException();
         }
 
-        // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
-        // `yield return null;` to skip a frame.
-        [UnityTest]
-        public IEnumerator UnitDetectorTestWithEnumeratorPasses()
+        [Test]
+        public void UnitDetectorTestSpawnRemoveOverworldObject()
         {
-            // Use the Assert class to test conditions.
-            // Use yield to skip a frame.
-            yield return null;
+            throw new NotImplementedException();
+        }
+
+        [Test]
+        public void UnitDetectorTestMove()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Test]
+        public void UnitDetectorTestPathfindTo()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Test]
+        public void UnitDetectorTestBlinkTo()
+        {
+            throw new NotImplementedException();
         }
     }
 }

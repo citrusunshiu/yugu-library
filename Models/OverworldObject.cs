@@ -42,6 +42,8 @@ namespace YuguLibrary
             /// The <see cref="Models.AnimationScript"/> used to display the unit's visuals.
             /// </summary>
             public abstract AnimationScript AnimationScript { get; }
+            
+            private List<OverworldObjectAction> owoActions = new List<OverworldObjectAction>();
 
             /// <summary>
             /// The number of frames it takes for the overworld object to walk across 1 tile.
@@ -186,6 +188,48 @@ namespace YuguLibrary
             #endregion
 
             #region Functions
+            public void AddOverworldObjectAction(OverworldObjectAction overworldObjectAction)
+            {
+                owoActions.Add(overworldObjectAction);
+            }
+
+            public void RemoveOverworldObjectAction(OverworldObjectAction overworldObjectAction)
+            {
+                owoActions.Remove(overworldObjectAction);
+            }
+
+            public OverworldObjectAction GetOverworldObjectAction(ControllerInputs input)
+            {
+                OverworldObjectAction overworldObjectAction = null;
+
+                foreach(OverworldObjectAction action in owoActions)
+                {
+                    if(action.GetControllerInput() == input && 
+                        (overworldObjectAction == null || action.GetPriority() > overworldObjectAction.GetPriority()))
+                    {
+                        overworldObjectAction = action;
+                    }
+                }
+
+                return overworldObjectAction;
+            }
+
+            public OverworldObjectAction GetOverworldObjectAction(KeyCode input)
+            {
+                OverworldObjectAction overworldObjectAction = null;
+
+                foreach (OverworldObjectAction action in owoActions)
+                {
+                    if (action.GetKeyboardInput() == input &&
+                        (overworldObjectAction == null || action.GetPriority() > overworldObjectAction.GetPriority()))
+                    {
+                        overworldObjectAction = action;
+                    }
+                }
+
+                return overworldObjectAction;
+            }
+
             /// <summary>
             /// Sets the number of frames the overworld object should take for different forms of movement, and 
             /// calculates the delay (in seconds) based on the number of frames.
@@ -193,11 +237,11 @@ namespace YuguLibrary
             /// <param name="walkFrames">The number of frames the overworld object should take to walk 1 tile.</param>
             /// <param name="ascentFrames">The number of frames the overworld object should take to ascend 1 tile.</param>
             /// <param name="descentFrames">The number of frames the overworld object should take to descend 1 tile.</param>
-            void CalculateFrameSpeeds(int walkFrames, int ascentFrames, int descentFrames)
+            private void CalculateFrameSpeeds(int walkFrames, int ascentFrames, int descentFrames)
             {
                 this.walkFrames = walkFrames;
                 walkDelay = walkFrames / 60F;
-
+                
                 runFrames = (int)SpeedTier;
                 runDelay = runFrames / 60F;
 
@@ -260,12 +304,12 @@ namespace YuguLibrary
             /// Moves the overworld object 1 tile forward in the northwest direction.
             /// </summary>
             /// <returns>Returns true if the unit moved successfully, and false otherwise.</returns>
-            public bool MoveNW()
+            private bool MoveNW()
             {
                 if (canMove && UtilityFunctions.GetActiveUnitDetector().Move(this, 0, 1, 0))
                 {
                     direction = Directions.NW;
-                    //overworldObjectCoordinator.FrameMove(Directions.NW);
+                    overworldObjectCoordinator.FrameMove(Directions.NW);
                     return true;
                 }
 
@@ -276,12 +320,12 @@ namespace YuguLibrary
             /// Moves the overworld object 1 tile forward in the northeast direction.
             /// </summary>
             /// <returns>Returns true if the unit moved successfully, and false otherwise.</returns>
-            public bool MoveNE()
+            private bool MoveNE()
             {
                 if (canMove && UtilityFunctions.GetActiveUnitDetector().Move(this, 1, 0, 0))
                 {
                     direction = Directions.NE;
-                    //overworldObjectCoordinator.FrameMove(Directions.NE);
+                    overworldObjectCoordinator.FrameMove(Directions.NE);
                     return true;
                 }
 
@@ -292,12 +336,12 @@ namespace YuguLibrary
             /// Moves the overworld object 1 tile forward in the southeast direction.
             /// </summary>
             /// <returns>Returns true if the unit moved successfully, and false otherwise.</returns>
-            public bool MoveSE()
+            private bool MoveSE()
             {
                 if (canMove && UtilityFunctions.GetActiveUnitDetector().Move(this, 0, -1, 0))
                 {
                     direction = Directions.SE;
-                    //overworldObjectCoordinator.FrameMove(Directions.SE);
+                    overworldObjectCoordinator.FrameMove(Directions.SE);
                     return true;
                 }
 
@@ -308,16 +352,109 @@ namespace YuguLibrary
             /// Moves the overworld object 1 tile forward in the southwest direction.
             /// </summary>
             /// <returns>Returns true if the unit moved successfully, and false otherwise.</returns>
-            public bool MoveSW()
+            private bool MoveSW()
             {
                 if (canMove && UtilityFunctions.GetActiveUnitDetector().Move(this, -1, 0, 0))
                 {
                     direction = Directions.SW;
-                    //overworldObjectCoordinator.FrameMove(Directions.SW);
+                    overworldObjectCoordinator.FrameMove(Directions.SW);
                     return true;
                 }
 
                 return false;
+            }
+
+            /// <summary>
+            /// Moves the overworld object 1 tile upward.
+            /// </summary>
+            /// <returns>Returns true if the unit moved successfully, and false otherwise.</returns>
+            private bool MoveUp()
+            {
+                if (canAscend && UtilityFunctions.GetActiveUnitDetector().Move(this, 0, 0, 1))
+                {
+                    overworldObjectCoordinator.FrameMove(Directions.Up);
+                    return true;
+                }
+
+                return false;
+            }
+
+            /// <summary>
+            /// Moves the overworld object 1 tile downward.
+            /// </summary>
+            /// <returns>Returns true if the unit moved successfully, and false otherwise.</returns>
+            private bool MoveDown()
+            {
+                if (canDescend && UtilityFunctions.GetActiveUnitDetector().Move(this, 0, 0, -1))
+                {
+                    overworldObjectCoordinator.FrameMove(Directions.Down);
+                    return true;
+                }
+
+                return false;
+            }
+            
+            /// <summary>
+            /// Sets <see cref="canMove"/> to true after the seconds specified by <see cref="walkDelay"/> or 
+            /// <see cref="runDelay"/> have passed.
+            /// </summary>
+            /// <remarks>Whether walkDelay or runDelay is used is dependent on the value of <see cref="isRunning"/>.</remarks>
+            /// <returns></returns>
+            public IEnumerator UnlockMovement()
+            {
+                if (!unlockingMovement)
+                {
+                    unlockingMovement = true;
+                    yield return new WaitForSeconds(GetMovementDelay());
+                    canMove = true;
+                    unlockingMovement = false;
+                }
+                else
+                {
+                    yield return null;
+                }
+
+            }
+
+            /// <summary>
+            /// Sets <see cref="canAscend"/> to true after the seconds specified by <see cref="ascentDelay"/> have passed.
+            /// </summary>
+            /// <returns></returns>
+            public IEnumerator UnlockAscent()
+            {
+                if (!unlockingAscent)
+                {
+                    unlockingAscent = true;
+                    yield return new WaitForSeconds(ascentDelay);
+                    canAscend = true;
+                    unlockingAscent = false;
+                    //Jump();
+                }
+                else
+                {
+                    yield return null;
+                }
+            }
+
+            /// <summary>
+            /// Sets <see cref="canDescend"/> to true after the seconds specified by <see cref="descentDelay"/> have passed.
+            /// </summary>
+            /// <returns></returns>
+            public IEnumerator UnlockDescent()
+            {
+                if (!unlockingDescent)
+                {
+                    unlockingDescent = true;
+                    yield return new WaitForSeconds(descentDelay);
+                    canDescend = true;
+                    unlockingDescent = false;
+                    //Fall();
+                }
+                else
+                {
+                    yield return null;
+                }
+
             }
             #endregion
         }

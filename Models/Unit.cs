@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Models;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -170,9 +171,7 @@ namespace YuguLibrary
             /// <summary>
             /// Whether or not the unit is currently executing an <see cref="OverworldAIAction"/>.
             /// </summary>
-            private bool isExecutingOverworldAIAction = false;
-
-            private List<OverworldSkill> overworldSkills = new List<OverworldSkill>();
+            private bool isExecutingOverworldAIAction;
 
             #region Unit Stats
             /// <summary>

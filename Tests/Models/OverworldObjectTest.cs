@@ -32,5 +32,11 @@ namespace Tests
         {
             throw new NotImplementedException();
         }
+
+        [Test]
+        public void OverworldObjectTestMovementDelays()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

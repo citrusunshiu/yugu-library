@@ -36,12 +36,12 @@ namespace YuguLibrary
             /// <remarks>
             /// Determines how fast the unit is able to move in the overworld.
             /// </remarks>
-            public abstract SpeedTiers SpeedTier { get; }
+            public SpeedTiers speedTier;
 
             /// <summary>
             /// The <see cref="Models.AnimationScript"/> used to display the unit's visuals.
             /// </summary>
-            public abstract AnimationScript AnimationScript { get; }
+            public AnimationScript animationScript;
             
             private List<OverworldObjectAction> owoActions = new List<OverworldObjectAction>();
 
@@ -242,7 +242,7 @@ namespace YuguLibrary
                 this.walkFrames = walkFrames;
                 walkDelay = walkFrames / 60F;
                 
-                runFrames = (int)SpeedTier;
+                runFrames = (int)speedTier;
                 runDelay = runFrames / 60F;
 
                 this.ascentFrames = ascentFrames;

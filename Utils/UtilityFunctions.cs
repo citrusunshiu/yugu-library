@@ -39,6 +39,8 @@ namespace YuguLibrary
             #endregion
 
             #region File Paths
+            public static readonly string JSON_ASSETS_FILE_PATH = Application.dataPath + "/Resources/JSON Assets/";
+            public static readonly string JSON_ASSETS_UNIT_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Units/";
             public static readonly string SPRITESHEET_FILE_PATH = "";
             public static readonly string UI_FILE_PATH = "Sprites/UI/";
             public static readonly string ICONS_FILE_PATH = UI_FILE_PATH + "Icons/";

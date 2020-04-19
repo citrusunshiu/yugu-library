@@ -4,12 +4,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using YuguLibrary.Enumerations;
+using YuguLibrary.Utilities;
 
 namespace YuguLibrary
 {
     namespace Models
     {
-        public abstract class Unit : OverworldObject
+        public class Unit : OverworldObject
         {
             #region Variables
             /// <summary>
@@ -72,17 +73,22 @@ namespace YuguLibrary
             #endregion
 
             /// <summary>
+            /// The file path to the JSON containing the unit's data.
+            /// </summary>
+            private string unitJSONFilePath;
+
+            /// <summary>
             /// The unit's displayed name.
             /// </summary>
-            public abstract string Name { get; }
-            
+            private string name;
+
             /// <summary>
             /// The unit's role type.
             /// </summary>
             /// <remarks>
             /// Descriptor for unit information; checked during certain targeting scenarios and damage calculations.
             /// </remarks>
-            public abstract UnitRoles Role { get; }
+            private UnitRoles role;
 
             /// <summary>
             /// The unit's classification type.
@@ -90,7 +96,7 @@ namespace YuguLibrary
             /// <remarks>
             /// Descriptor for unit information; checked during certain targeting scenarios and damage calculations.
             /// </remarks>
-            public abstract UnitClassifications Classification { get; }
+            private UnitClassifications classification;
 
             /// <summary>
             /// The unit's target type.
@@ -98,7 +104,7 @@ namespace YuguLibrary
             /// <remarks>
             /// Descriptor for unit information, and checked during certain targeting scenarios and calculations.
             /// </remarks>
-            public TargetTypes targetType;
+            private TargetTypes targetType;
             
             /// <summary>
             /// Tracks additional skill resources possessed by the unit.
@@ -107,71 +113,7 @@ namespace YuguLibrary
             /// Value is an integer to store the amount of resource available. Certain skills may require special 
             /// resources in addition to or in place of MP.
             /// </remarks>
-            private Dictionary<SkillResources, int> specialResources = new Dictionary<SkillResources, int>();
-            
-            /// <summary>
-            /// The list of attributes that the unit currently has.
-            /// </summary>
-            /// <remarks>
-            /// Size is equivalent to the length of <see cref="UnitAttributes"/>. Toggle an attribute’s index 
-            /// value to true to apply the respective attribute.
-            /// </remarks>
-            private bool[] attributes = new bool[Enum.GetNames(typeof(UnitAttributes)).Length];
-
-            /// <summary>
-            /// Tracks the unit's special interactions with skill attributes.
-            /// </summary>
-            /// <remarks>
-            /// Used to calculate damage modifiers during <see cref="EncounterController.CollectMiscellaneousModifiers()"/>.
-            /// </remarks>
-            private Dictionary<HitAttributes, Effectiveness> skillInteractions = new Dictionary<HitAttributes, Effectiveness>();
-
-            /// <summary>
-            /// Tracks the unit's current statuses.
-            /// </summary>
-            private Dictionary<StatusEffects, Status> statuses = new Dictionary<StatusEffects, Status>();
-
-            /// <summary>
-            /// List of the skills that the unit has access to.
-            /// </summary>
-            private List<Skill> skills = new List<Skill>();
-
-            /// <summary>
-            /// Tracks the unit's aggro towards enemy units.
-            /// </summary>
-            private AggroSpread aggroSpread = new AggroSpread();
-
-            /// <summary>
-            /// Tracks the unit's current resistance to impairment-type effects.
-            /// </summary>
-            private CCResistanceBar ccResistanceBar;
-
-            /// <summary>
-            /// List of <see cref="HookFunction"/> objects to search through and execute during specific 
-            /// <see cref="DelegateFlags"/> events.
-            /// </summary>
-            private List<HookFunction> hookFunctions = new List<HookFunction>();
-
-            /// <summary>
-            /// List of <see cref="OverworldAI"/> objects currently attached to the unit.
-            /// </summary>
-            /// <remarks>
-            /// Determines how the unit will interact with other units and tiles in the overworld.
-            /// </remarks>
-            private List<OverworldAI> overworldAIs = new List<OverworldAI>();
-
-            /// <summary>
-            /// The unit's current <see cref="OverworldAIAction"/>.
-            /// </summary>
-            /// <remarks>
-            /// When determined, the unit will execute the action when they are free.
-            /// </remarks>
-            private OverworldAIAction currentOverworldAIAction;
-
-            /// <summary>
-            /// Whether or not the unit is currently executing an <see cref="OverworldAIAction"/>.
-            /// </summary>
-            private bool isExecutingOverworldAIAction;
+            private Dictionary<SkillResources, SkillResource> skillResources = new Dictionary<SkillResources, SkillResource>();
 
             #region Unit Stats
             /// <summary>
@@ -180,7 +122,7 @@ namespace YuguLibrary
             /// <remarks>
             /// Used to calculate the unit's HP stat (<see cref="level"/> * hpScaling).
             /// </remarks>
-            protected abstract float HPScaling { get; }
+            private float hpScaling;
 
             /// <summary>
             /// The unit's MP scaling.
@@ -188,7 +130,7 @@ namespace YuguLibrary
             /// <remarks>
             /// Used to calculate the unit's MP stat (<see cref="level"/> * mpScaling).
             /// </remarks>
-            protected abstract float MPScaling { get; }
+            private float mpScaling;
 
             /// <summary>
             /// The unit's MP Regen scaling.
@@ -196,7 +138,7 @@ namespace YuguLibrary
             /// <remarks>
             /// Used to calculate the unit's MP Regen stat (<see cref="level"/> * mpRegenScaling).
             /// </remarks>
-            protected abstract float MPRegenScaling { get; }
+            private float mpRegenScaling;
 
             /// <summary>
             /// The unit's Physical Attack scaling.
@@ -204,7 +146,7 @@ namespace YuguLibrary
             /// <remarks>
             /// Used to calculate the unit's Physical Attack stat (<see cref="level"/> * physicalAttackScaling).
             /// </remarks>
-            protected abstract float PhysicalAttackScaling { get; }
+            private float physicalAttackScaling;
 
             /// <summary>
             /// The unit's Magical Attack scaling.
@@ -212,7 +154,7 @@ namespace YuguLibrary
             /// <remarks>
             /// Used to calculate the unit's Magical Attack stat (<see cref="level"/> * magicalAttackScaling).
             /// </remarks>
-            protected abstract float MagicalAttackScaling { get; }
+            private float magicalAttackScaling;
 
             /// <summary>
             /// The unit's Physical Defense scaling.
@@ -220,7 +162,7 @@ namespace YuguLibrary
             /// <remarks>
             /// Used to calculate the unit's Physical Defense stat (<see cref="level"/> * physicalDefenseScaling).
             /// </remarks>
-            protected abstract float PhysicalDefenseScaling { get; }
+            private float physicalDefenseScaling;
 
             /// <summary>
             /// The unit's Magical Defense scaling.
@@ -228,7 +170,7 @@ namespace YuguLibrary
             /// <remarks>
             /// Used to calculate the unit's Magical Defense stat (<see cref="level"/> * magicalDefenseScaling).
             /// </remarks>
-            protected abstract float MagicalDefenseScaling { get; }
+            private float magicalDefenseScaling;
 
             /// <summary>
             /// The unit's Speed scaling.
@@ -236,7 +178,7 @@ namespace YuguLibrary
             /// <remarks>
             /// Used to calculate the unit's Speed stat (<see cref="level"/> * speedScaling).
             /// </remarks>
-            protected abstract float SpeedScaling { get; }
+            private float speedScaling;
 
             /// <summary>
             /// The unit's Stagger Threshold scaling.
@@ -244,7 +186,7 @@ namespace YuguLibrary
             /// <remarks>
             /// Used to calculate the unit's Stagger Threshold stat (<see cref="level"/> * staggerThresholdScaling).
             /// </remarks>
-            protected abstract float StaggerThresholdScaling { get; }
+            private float staggerThresholdScaling;
 
             /// <summary>
             /// The unit's level.
@@ -493,13 +435,85 @@ namespace YuguLibrary
             /// Subtracts from an attacker’s Water Damage stat while defending against Water-type hits.
             /// </remarks>
             public int waterResistance;
+
+            /// <summary>
+            /// The unit's Attack Speed stat.
+            /// </summary>
+            /// <remarks>
+            /// Higher values decrease the animation time of certain skills. (100 attack speed = 2x speed)
+            /// </remarks>
+            public int attackSpeed;
             #endregion
+
+            /// <summary>
+            /// The list of attributes that the unit currently has.
+            /// </summary>
+            /// <remarks>
+            /// Size is equivalent to the length of <see cref="UnitAttributes"/>. Toggle an attribute’s index 
+            /// value to true to apply the respective attribute.
+            /// </remarks>
+            private bool[] attributes = new bool[Enum.GetNames(typeof(UnitAttributes)).Length];
+
+            /// <summary>
+            /// Tracks the unit's special interactions with skill attributes.
+            /// </summary>
+            /// <remarks>
+            /// Used to calculate damage modifiers during <see cref="EncounterController.CollectMiscellaneousModifiers()"/>.
+            /// </remarks>
+            private Dictionary<HitAttributes, Effectiveness> skillInteractions = new Dictionary<HitAttributes, Effectiveness>();
+
+            /// <summary>
+            /// Tracks the unit's current statuses.
+            /// </summary>
+            private Dictionary<StatusEffects, Status> statuses = new Dictionary<StatusEffects, Status>();
+
+            /// <summary>
+            /// List of the skills that the unit has access to.
+            /// </summary>
+            private List<Skill> skills = new List<Skill>();
+
+            /// <summary>
+            /// Tracks the unit's aggro towards enemy units.
+            /// </summary>
+            private AggroSpread aggroSpread = new AggroSpread();
+
+            /// <summary>
+            /// Tracks the unit's current resistance to impairment-type effects.
+            /// </summary>
+            private CCResistanceBar ccResistanceBar;
+
+            /// <summary>
+            /// List of <see cref="HookFunction"/> objects to search through and execute during specific 
+            /// <see cref="DelegateFlags"/> events.
+            /// </summary>
+            private List<HookFunction> hookFunctions = new List<HookFunction>();
+
+            /// <summary>
+            /// List of <see cref="OverworldAI"/> objects currently attached to the unit.
+            /// </summary>
+            /// <remarks>
+            /// Determines how the unit will interact with other units and tiles in the overworld.
+            /// </remarks>
+            private List<OverworldAI> overworldAIs = new List<OverworldAI>();
+
+            /// <summary>
+            /// The unit's current <see cref="OverworldAIAction"/>.
+            /// </summary>
+            /// <remarks>
+            /// When determined, the unit will execute the action when they are free.
+            /// </remarks>
+            private OverworldAIAction currentOverworldAIAction;
+
+            /// <summary>
+            /// Whether or not the unit is currently executing an <see cref="OverworldAIAction"/>.
+            /// </summary>
+            private bool isExecutingOverworldAIAction;
 
             #region Encounter-specific Variables
             /// <summary>
             /// The number of tiles outward a unit is legally allowed to move during their turn.
             /// </summary>
-            public abstract int BaseMovementRadius { get; }
+            private int baseMovementRadius;
 
             /// <summary>
             /// List of <see cref="EncounterAI"/> scripts currently attached to the unit.
@@ -527,47 +541,142 @@ namespace YuguLibrary
 
                 overworldObjectCoordinator = overworldObject.GetComponent<OverworldObjectCoordinator>();
                 overworldObjectCoordinator.overworldObject = this;
-                overworldObjectCoordinator.AttachAnimationScript(AnimationScript);
+                overworldObjectCoordinator.AttachAnimationScript(animationScript);
 
                 this.level = level;
                 this.targetType = targetType;
 
                 ccResistanceBar = new CCResistanceBar(this);
-                InitializeUnitStats();
-                InitializeOverworldSkills();
-                InitializeSkills();
-                InitializeOverworldAIs();
-                InitializeEncounterAIs();
+                InitializeStats();
+            }
+
+            /// <summary>
+            /// Creates a new unit instance from a JSON data file.
+            /// </summary>
+            /// <param name="unitJSONFilePath">The file path of the JSON object, relative to the "Assets/Resources/" directory.</param>
+            /// <param name="level">The unit's level.</param>
+            /// <param name="targetType">The unit's targeting type.</param>
+            public Unit(string unitJSONFilePath, int level, TargetTypes targetType)
+            {
+                UnitJSONParser unitJSONParser = new UnitJSONParser(unitJSONFilePath);
+
+                this.level = level;
+                this.targetType = targetType;
+
+                InitializeUnitBaseValues(unitJSONParser);
+                InitializeStats();
+                InitializeUnitFunctionality(unitJSONParser);
+
+
             }
             #endregion
 
             #region Functions
-            protected abstract void InitializeOverworldSkills();
-            protected abstract void InitializeSkills();
-            protected abstract void InitializeOverworldAIs();
-            protected abstract void InitializeEncounterAIs();
-            
-            protected void InitializeUnitStats()
+            private void InitializeUnitBaseValues(UnitJSONParser unitJSONParser)
             {
-                hp = level * (int)HPScaling;
+                name = unitJSONParser.GetName();
+                animationScript = unitJSONParser.GetAnimationScript();
+                role = unitJSONParser.GetRole();
+                classification = unitJSONParser.GetClassification();
+                speedTier = unitJSONParser.GetSpeedTier();
+
+                hpScaling = unitJSONParser.GetHPScaling();
+                mpScaling = unitJSONParser.GetMPScaling();
+                mpRegenScaling = unitJSONParser.GetMPRegenScaling();
+                physicalAttackScaling = unitJSONParser.GetPhysicalAttackScaling();
+                magicalAttackScaling = unitJSONParser.GetMagicalAttackScaling();
+                physicalDefenseScaling = unitJSONParser.GetPhysicalDefenseScaling();
+                magicalDefenseScaling = unitJSONParser.GetMagicalDefenseScaling();
+                staggerThresholdScaling = unitJSONParser.GetStaggerThresholdScaling();
+                speedScaling = unitJSONParser.GetSpeedScaling();
+
+                List<SkillResource> skillResources = unitJSONParser.GetSkillResources();
+
+                foreach (SkillResource container in skillResources)
+                {
+                    AddSkillResource(container.GetResourceValue(), container);
+                }
+            }
+
+            private void InitializeStats()
+            {
+                hp = level * (int)hpScaling;
                 if (targetType == TargetTypes.Enemy)
                 {
                     hp *= 1000;
                 }
 
-                mp = level * (int)MPScaling;
+                mp = level * (int)mpScaling;
 
                 currentHP = hp;
                 currentMP = mp;
 
 
-                mpRegen = level * (int)MPRegenScaling;
-                physicalAttack = level * (int)PhysicalAttackScaling;
-                magicalAttack = level * (int)MagicalAttackScaling;
-                physicalDefense = level * (int)PhysicalDefenseScaling;
-                magicalDefense = level * (int)MagicalDefenseScaling;
-                speed = level * (int)SpeedScaling;
-                staggerThreshold = level * (int)StaggerThresholdScaling;
+                mpRegen = level * (int)mpRegenScaling;
+                physicalAttack = level * (int)physicalAttackScaling;
+                magicalAttack = level * (int)magicalAttackScaling;
+                physicalDefense = level * (int)physicalDefenseScaling;
+                magicalDefense = level * (int)magicalDefenseScaling;
+                speed = level * (int)speedScaling;
+                staggerThreshold = level * (int)staggerThresholdScaling;
+            }
+
+            private void InitializeUnitFunctionality(UnitJSONParser unitJSONParser)
+            {
+                List<Skill> skills = unitJSONParser.GetSkills();
+                foreach (Skill skill in skills)
+                {
+                    AddSkill(skill);
+                }
+
+                List<OverworldObjectAction> actions = unitJSONParser.GetActions();
+                foreach (OverworldObjectAction action in actions)
+                {
+                    AddOverworldObjectAction(action);
+                }
+
+                List<OverworldAI> overworldAIs = unitJSONParser.GetOverworldAIs();
+                foreach (OverworldAI overworldAI in overworldAIs)
+                {
+                    AddOverworldAI(overworldAI);
+                }
+
+                List<EncounterAI> encounterAIs = unitJSONParser.GetEncounterAIs();
+                foreach (EncounterAI encounterAI in encounterAIs)
+                {
+                    AddEncounterAI(encounterAI);
+                }
+            }
+
+            /// <summary>
+            /// Adds a skill resource to the unit.
+            /// </summary>
+            /// <param name="resource">The skill resource</param>
+            public void AddSkillResource(SkillResources resourceValue, SkillResource resource)
+            {
+                skillResources.Add(resourceValue, resource);
+            }
+
+            /// <summary>
+            /// Adds a skill to a unit, and links the unit to the skill.
+            /// </summary>
+            /// <param name="skill">The skill to be added to and linked with the unit.</param>
+            public void AddSkill(Skill skill)
+            {
+                skills.Add(skill);
+                skill.AttachSkillToUnit(this);
+            }
+
+
+
+            public void AddOverworldAI(OverworldAI overworldAI)
+            {
+                overworldAIs.Add(overworldAI);
+            }
+
+            public void AddEncounterAI(EncounterAI encounterAI)
+            {
+                encounterAIs.Add(encounterAI);
             }
 
             /// <summary>
@@ -637,6 +746,24 @@ namespace YuguLibrary
                 return skillInteractions[hitAttribute];
             }
             #endregion
+        }
+
+        public class SkillResource
+        {
+            SkillResources resource;
+            int maxValue;
+            int currentValue;
+
+            public SkillResource(SkillResources resource, int maxValue)
+            {
+                this.resource = resource;
+                this.maxValue = maxValue;
+            }
+
+            public SkillResources GetResourceValue()
+            {
+                return resource;
+            }
         }
     }
 }

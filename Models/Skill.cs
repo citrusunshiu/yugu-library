@@ -11,32 +11,32 @@ namespace YuguLibrary
         /// <summary>
         /// Unique actions that allow units to interact with each other in combat.
         /// </summary>
-        public abstract class Skill
+        public class Skill
         {
             /// <summary>
             /// The skill's displayed name.
             /// </summary>
-            public abstract string Name { get; }
+            private string name;
 
             /// <summary>
             /// The skill's short description.
             /// </summary>
-            public abstract string Description { get; }
+            private string description;
 
             /// <summary>
             /// The skill's detailed description.
             /// </summary>
-            public abstract string LongDescription { get; }
+            private string longDescription;
 
             /// <summary>
             /// The file path to the skill's display icon.
             /// </summary>
-            public abstract string IconFilePath { get; }
+            private string iconFilePath;
 
             /// <summary>
             /// The skill's type category.
             /// </summary>
-            public abstract EncounterSkillTypes EncounterSkillType { get; }
+            private EncounterSkillTypes encounterSkillType;
 
             /// <summary>
             /// The type of unit that the skill is able to target.
@@ -45,7 +45,7 @@ namespace YuguLibrary
             /// Value of <see cref="TargetTypes.Unique"/> indicates that <see cref="SelectSkillTargets"/> will be used
             /// for filtering targets.
             /// </remarks>
-            public abstract TargetTypes TargetType { get; }
+            private TargetTypes targetType;
 
             /// <summary>
             /// The skill's category for AI usage.
@@ -53,7 +53,7 @@ namespace YuguLibrary
             /// <remarks>
             /// Uses <see cref="AISkillCategories"/>.
             /// </remarks>
-            public abstract AISkillCategories AISkillCategory { get; }
+            private AISkillCategories aiSkillCategory;
 
             /// <summary>
             /// The skill's cost to be used.
@@ -62,12 +62,12 @@ namespace YuguLibrary
             /// Key uses <see cref="UnitStats.HP"/>, <see cref="UnitStats.MP"/>, or a value from
             /// <see cref="Enumerations.SpecialResources"/>. All costs must be met by the unit for the skill to be used.
             /// </remarks>
-            public abstract Dictionary<SkillResources, int> Cost { get; }
+            private Dictionary<SkillResources, int> cost;
 
             /// <summary>
             /// The skill's cooldown when used.
             /// </summary>
-            public abstract int Cooldown { get; }
+            private int cooldown;
 
             /// <summary>
             /// The skill's current cooldown.
@@ -89,6 +89,12 @@ namespace YuguLibrary
             /// </summary>
             private Unit unit;
 
+
+            public Skill(string skillJSONFilePath, int levelObtained, int progressionPointObtained)
+            {
+
+            }
+
             /// <summary>
             /// Sets the owner of the skill object to a given unit.
             /// </summary>
@@ -96,10 +102,8 @@ namespace YuguLibrary
             public void AttachSkillToUnit(Unit unit)
             {
                 this.unit = unit;
-
-                MethodInfo mi = this.GetType().GetMethod("AttachSkillToUnit");
-                
             }
+
         }
     }
 

@@ -556,9 +556,16 @@ namespace YuguLibrary
             /// <param name="unitJSONFilePath">The file path of the JSON object, relative to the "Assets/Resources/" directory.</param>
             /// <param name="level">The unit's level.</param>
             /// <param name="targetType">The unit's targeting type.</param>
-            public Unit(string unitJSONFilePath, int level, TargetTypes targetType)
+            public Unit(string unitJSONFilePath, int level, TargetTypes targetType) : base()
             {
                 UnitJSONParser unitJSONParser = new UnitJSONParser(unitJSONFilePath);
+
+
+                GameObject g = (GameObject)Resources.Load("Prefabs/Overworld Object");
+                GameObject overworldObject = GameObject.Instantiate(g);
+
+                overworldObjectCoordinator = overworldObject.GetComponent<OverworldObjectCoordinator>();
+                overworldObjectCoordinator.overworldObject = this;
 
                 this.level = level;
                 this.targetType = targetType;
@@ -576,6 +583,7 @@ namespace YuguLibrary
             {
                 name = unitJSONParser.GetName();
                 animationScript = unitJSONParser.GetAnimationScript();
+                overworldObjectCoordinator.AttachAnimationScript(animationScript);
                 role = unitJSONParser.GetRole();
                 classification = unitJSONParser.GetClassification();
                 speedTier = unitJSONParser.GetSpeedTier();
@@ -763,6 +771,16 @@ namespace YuguLibrary
             public SkillResources GetResourceValue()
             {
                 return resource;
+            }
+
+            public int GetMaxValue()
+            {
+                return maxValue;
+            }
+
+            public int GetCurrentValue()
+            {
+                return currentValue;
             }
         }
     }

@@ -7,6 +7,7 @@ using YuguLibrary.Models;
 using Newtonsoft.Json;
 using System.IO;
 using AnimationScripts;
+using YuguLibrary.OverworldObjectActions;
 
 namespace YuguLibrary
 {
@@ -17,6 +18,12 @@ namespace YuguLibrary
             protected object ParseStringToEnumeration(Type enumType, string enumName)
             {
                 return Enum.Parse(enumType, enumName);
+            }
+
+            protected object GetValueFromJSON(JsonTextReader reader)
+            {
+                reader.Read();
+                return reader.Value;
             }
         }
 
@@ -30,15 +37,15 @@ namespace YuguLibrary
 
             private List<SkillResource> skillResources;
 
-            private int hpScaling;
-            private int mpScaling;
-            private int mpRegenScaling;
-            private int physicalAttackScaling;
-            private int magicalAttackScaling;
-            private int physicalDefenseScaling;
-            private int magicalDefenseScaling;
-            private int staggerThresholdScaling;
-            private int speedScaling;
+            private float hpScaling;
+            private float mpScaling;
+            private float mpRegenScaling;
+            private float physicalAttackScaling;
+            private float magicalAttackScaling;
+            private float physicalDefenseScaling;
+            private float magicalDefenseScaling;
+            private float staggerThresholdScaling;
+            private float speedScaling;
 
             private List<Skill> skills;
             private List<OverworldObjectAction> actions;
@@ -47,6 +54,12 @@ namespace YuguLibrary
 
             public UnitJSONParser(string unitJSONFileName)
             {
+                skillResources = new List<SkillResource>();
+                skills = new List<Skill>();
+                actions = new List<OverworldObjectAction>();
+                overworldAIs = new List<OverworldAI>();
+                encounterAIs = new List<EncounterAI>();
+
                 JsonTextReader reader = new JsonTextReader(new StreamReader(UtilityFunctions.JSON_ASSETS_UNIT_FOLDER_PATH + unitJSONFileName));
                 while (reader.Read())
                 {
@@ -67,88 +80,215 @@ namespace YuguLibrary
 
                         if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("role"))
                         {
-                            reader.Read();
-                            role = (UnitRoles)ParseStringToEnumeration(typeof(UnitRoles), (string)reader.Value);
+                            role = (UnitRoles)ParseStringToEnumeration(typeof(UnitRoles), (string)GetValueFromJSON(reader));
                         }
 
                         if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("classification"))
                         {
                             reader.Read();
+                            classification = (UnitClassifications)ParseStringToEnumeration(typeof(UnitClassifications), (string)reader.Value);
                         }
 
                         if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("speedTier"))
                         {
                             reader.Read();
+                            speedTier = (SpeedTiers)ParseStringToEnumeration(typeof(SpeedTiers), (string)reader.Value);
                         }
 
                         if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("skillResources"))
                         {
-                            reader.Read();
+                            SkillResources resource = SkillResources.HP;
+                            long maxValue = 0;
+
+                            reader.Read(); //StartArray
+                            while(reader.Read() && reader.TokenType != JsonToken.EndArray) //StartObject OR EndArray
+                            {
+                                if(reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("resource"))
+                                {
+                                    reader.Read();
+                                    resource = (SkillResources)ParseStringToEnumeration(typeof(SkillResources), (string)reader.Value);
+                                }
+
+                                if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("maxValue"))
+                                {
+                                    reader.Read();
+                                    maxValue = (long)reader.Value;
+                                }
+
+                                if(reader.TokenType == JsonToken.EndObject)
+                                {
+                                    skillResources.Add(new SkillResource(resource, (int)maxValue));
+                                    Debug.Log("created: " + resource + " (max value: " + maxValue + ")");
+                                    resource = SkillResources.HP;
+                                    maxValue = 0;
+                                }
+                            }
                         }
 
                         if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("hpScaling"))
                         {
                             reader.Read();
+                            hpScaling = (long)reader.Value;
                         }
 
                         if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("mpScaling"))
                         {
                             reader.Read();
+                            mpScaling = (long)reader.Value;
                         }
 
                         if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("mpRegenScaling"))
                         {
                             reader.Read();
+                            mpRegenScaling = (long)reader.Value;
                         }
 
                         if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("physicalAttackScaling"))
                         {
                             reader.Read();
+                            physicalAttackScaling = (long)reader.Value;
                         }
 
                         if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("magicalAttackScaling"))
                         {
                             reader.Read();
+                            magicalAttackScaling = (long)reader.Value;
                         }
 
                         if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("physicalDefenseScaling"))
                         {
                             reader.Read();
+                            physicalDefenseScaling = (long)reader.Value;
                         }
 
                         if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("magicalDefenseScaling"))
                         {
                             reader.Read();
+                            magicalDefenseScaling = (long)reader.Value;
                         }
 
                         if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("speedScaling"))
                         {
                             reader.Read();
+                            speedScaling = (long)reader.Value;
                         }
 
                         if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("staggerThresholdScaling"))
                         {
                             reader.Read();
+                            staggerThresholdScaling = (long)reader.Value;
                         }
 
                         if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("skills"))
                         {
-                            reader.Read();
+                            string skillJSONFilePath = "";
+                            long levelObtained = 0;
+                            long progressionPointObtained = 0;
+
+                            reader.Read(); //StartArray
+                            while (reader.Read() && reader.TokenType != JsonToken.EndArray) //StartObject OR EndArray
+                            {
+
+                                if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("skillJSONFilePath"))
+                                {
+                                    reader.Read();
+                                    skillJSONFilePath = (string)reader.Value;
+                                }
+
+                                if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("levelObtained"))
+                                {
+                                    reader.Read();
+                                    levelObtained = (long)reader.Value;
+                                }
+
+                                if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("progressionPointObtained"))
+                                {
+                                    reader.Read();
+                                    progressionPointObtained = (long)reader.Value;
+                                }
+
+                                if (reader.TokenType == JsonToken.EndObject)
+                                {
+                                    skills.Add(new Skill(skillJSONFilePath, (int)levelObtained, (int)progressionPointObtained));
+                                    Debug.Log("created: " + skillJSONFilePath + " (levelObtained: " + levelObtained + ", progressionPointObtained: " + progressionPointObtained + ")");
+                                    skillJSONFilePath = "";
+                                    levelObtained = 0;
+                                    progressionPointObtained = 0;
+                                }
+
+                            }
                         }
 
                         if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("actions"))
                         {
-                            reader.Read();
+                            string actionClassName = "";
+
+                            reader.Read(); //StartArray
+                            while (reader.Read() && reader.TokenType != JsonToken.EndArray)
+                            {
+                                if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("className"))
+                                {
+                                    reader.Read();
+                                    actionClassName = (string)reader.Value;
+                                    Debug.Log(actionClassName);
+                                }
+
+                                if (reader.TokenType == JsonToken.EndObject)
+                                {
+                                    Type type = Type.GetType(actionClassName);
+                                    actions.Add((OverworldObjectAction)Activator.CreateInstance(type));
+                                    Debug.Log("created: " + actionClassName);
+                                    actionClassName = "";
+                                }
+                            }
                         }
 
                         if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("overworldAIs"))
                         {
-                            reader.Read();
+                            string overworldAIClassName = "";
+
+                            reader.Read(); //StartArray
+                            while (reader.Read() && reader.TokenType != JsonToken.EndArray)
+                            {
+                                if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("className"))
+                                {
+                                    reader.Read();
+                                    overworldAIClassName = (string)reader.Value;
+                                }
+
+                                if (reader.TokenType == JsonToken.EndObject)
+                                {
+                                    Type type = Type.GetType(overworldAIClassName);
+                                    overworldAIs.Add((OverworldAI)Activator.CreateInstance(type));
+                                    Debug.Log("created: " + overworldAIClassName);
+                                    overworldAIClassName = "";
+                                }
+                            }
                         }
 
                         if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("encounterAIs"))
                         {
-                            reader.Read();
+                            string encounterAIClassName = "";
+
+                            reader.Read(); //StartArray
+                            while (reader.Read() && reader.TokenType != JsonToken.EndArray)
+                            {
+                                if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("className"))
+                                {
+                                    reader.Read();
+                                    encounterAIClassName = (string)reader.Value;
+                                }
+
+                                if (reader.TokenType == JsonToken.EndObject)
+                                {
+                                    Type type = Type.GetType(encounterAIClassName);
+                                    encounterAIs.Add((EncounterAI)Activator.CreateInstance(type));
+                                    Debug.Log("created: " + encounterAIClassName);
+                                    encounterAIClassName = "";
+                                }
+
+
+                            }
                         }
                     }
                     else
@@ -252,6 +392,21 @@ namespace YuguLibrary
             {
                 return encounterAIs;
             }
+        }
+
+        public class InstanceJSONParser : JSONParser
+        {
+
+        }
+
+        public class SkillJSONParser : JSONParser
+        {
+
+        }
+
+        public class AnimationScriptJSONParser : JSONParser
+        {
+
         }
     }
 }

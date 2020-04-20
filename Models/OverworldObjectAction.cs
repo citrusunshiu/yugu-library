@@ -49,6 +49,11 @@ namespace YuguLibrary
             #endregion
 
             #region Constructors
+            public OverworldObjectAction()
+            {
+
+            }
+
             public OverworldObjectAction(ControllerInputs input, OverworldObject overworldObject)
             {
                 controllerInput = input;
@@ -136,6 +141,11 @@ namespace YuguLibrary
     {
         public class TestOWOAction : OverworldObjectAction
         {
+            public TestOWOAction()
+            {
+
+            }
+
             public TestOWOAction(ControllerInputs input, OverworldObject overworldObject) : base(input, overworldObject)
             {
 

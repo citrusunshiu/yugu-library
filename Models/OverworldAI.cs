@@ -1,18 +1,30 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using YuguLibrary.Models;
 
-public class OverworldAI : MonoBehaviour
+namespace YuguLibrary
 {
-    // Start is called before the first frame update
-    void Start()
+    namespace Models
     {
-        
+        public class OverworldAI
+        {
+            public OverworldAI()
+            {
+
+            }
+        }
     }
 
-    // Update is called once per frame
-    void Update()
+    namespace OverworldAIs
     {
-        
+        public class RandomMove : OverworldAI
+        {
+            public RandomMove()
+            {
+
+            }
+        }
     }
 }
+

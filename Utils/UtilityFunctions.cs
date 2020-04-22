@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using YuguLibrary.Controllers;
+using Mono.Data.Sqlite;
 
 namespace YuguLibrary
 {
@@ -39,8 +40,13 @@ namespace YuguLibrary
             #endregion
 
             #region File Paths
+            public static readonly string SQLITE_LOCALIZATION_DB_FILE_PATH = Application.dataPath + "/Databases/yugutext.db";
             public static readonly string JSON_ASSETS_FILE_PATH = Application.dataPath + "/Resources/JSON Assets/";
             public static readonly string JSON_ASSETS_UNIT_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Units/";
+            public static readonly string JSON_ASSETS_ANIMATION_SCRIPT_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Animatiotn Scripts/";
+            public static readonly string JSON_ASSETS_INSTANCE_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Instances/";
+            public static readonly string JSON_ASSETS_SKILL_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Skills/";
+            public static readonly string JSON_ASSETS_STATUS_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Statuses/";
             public static readonly string SPRITESHEET_FILE_PATH = "";
             public static readonly string UI_FILE_PATH = "Sprites/UI/";
             public static readonly string ICONS_FILE_PATH = UI_FILE_PATH + "Icons/";
@@ -112,6 +118,25 @@ namespace YuguLibrary
                 translation.y -= position.z;
 
                 return translation;
+            }
+
+            /// <summary>
+            /// Retrieves a string by its given ID from SQLite database.
+            /// </summary>
+            /// <param name="id">The ID of the string to retrieve.</param>
+            /// <returns>Returns the string of the associated ID.</returns>
+            public static string GetStringFromSQL(string id)
+            {
+                SqliteConnection connection = new SqliteConnection("URI=file:" + SQLITE_LOCALIZATION_DB_FILE_PATH);
+                connection.Open();
+                
+                SqliteCommand command = connection.CreateCommand();
+                command.CommandText = @"SELECT text FROM Text WHERE textID='" + id + "'";
+
+                SqliteDataReader reader = command.ExecuteReader();
+                reader.Read();
+
+                return reader.GetString(0);
             }
         }
     }

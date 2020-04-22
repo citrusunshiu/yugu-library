@@ -14,19 +14,19 @@ namespace YuguLibrary
         public class Skill
         {
             /// <summary>
-            /// The skill's displayed name.
+            /// The localized database ID containing the skill's displayed name.
             /// </summary>
-            private string name;
+            private string nameID;
 
             /// <summary>
-            /// The skill's short description.
+            /// The localized database ID containing the skill's short description.
             /// </summary>
-            private string description;
+            private string descriptionID;
 
             /// <summary>
-            /// The skill's detailed description.
+            /// The localized database ID containing the skill's detailed description.
             /// </summary>
-            private string longDescription;
+            private string longDescriptionID;
 
             /// <summary>
             /// The file path to the skill's display icon.
@@ -70,6 +70,11 @@ namespace YuguLibrary
             private int cooldown;
 
             /// <summary>
+            /// The name of the function associated with the skill object's logic.
+            /// </summary>
+            private string skillFunctionName;
+            
+            /// <summary>
             /// The skill's current cooldown.
             /// </summary>
             /// <remarks>
@@ -88,8 +93,7 @@ namespace YuguLibrary
             /// The unit that the skill is attached to.
             /// </summary>
             private Unit unit;
-
-
+            
             public Skill(string skillJSONFilePath, int levelObtained, int progressionPointObtained)
             {
 
@@ -104,6 +108,16 @@ namespace YuguLibrary
                 this.unit = unit;
             }
 
+            public void ExecuteSkill()
+            {
+                MethodInfo method = GetType().GetMethod(skillFunctionName, BindingFlags.NonPublic | BindingFlags.Instance);
+                method.Invoke(this, null);
+            }
+
+            private void TestSkill()
+            {
+                Debug.Log("Skill:TestSkill running");
+            }
         }
     }
 

@@ -123,7 +123,7 @@ namespace YuguLibrary
             /// <param name="spawnPosition">The position where the player will be placed at.</param>
             public void LoadNewInstance(Instance instance, Vector3Int spawnPosition)
             {
-                SwapGeography(instance.GeographyName);
+                SwapGeography(instance.GetGeographyName());
             }
             #endregion
 

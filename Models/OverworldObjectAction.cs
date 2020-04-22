@@ -324,7 +324,8 @@ namespace YuguLibrary
 
             public override void ExecuteAction()
             {
-                throw new System.NotImplementedException();
+                Debug.Log("UseSkill:ExecuteAction running");
+                skill.ExecuteSkill();
             }
         }
     }

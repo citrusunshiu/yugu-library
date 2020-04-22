@@ -78,9 +78,9 @@ namespace YuguLibrary
             private string unitJSONFilePath;
 
             /// <summary>
-            /// The unit's displayed name.
+            /// The localized database ID containing the unit's displayed name.
             /// </summary>
-            private string name;
+            private string nameID;
 
             /// <summary>
             /// The unit's role type.
@@ -534,31 +534,16 @@ namespace YuguLibrary
             #endregion
 
             #region Constructors
-            public Unit(int level, TargetTypes targetType) : base()
-            {
-                GameObject g = (GameObject)Resources.Load("Prefabs/Overworld Object");
-                GameObject overworldObject = GameObject.Instantiate(g);
-
-                overworldObjectCoordinator = overworldObject.GetComponent<OverworldObjectCoordinator>();
-                overworldObjectCoordinator.overworldObject = this;
-                overworldObjectCoordinator.AttachAnimationScript(animationScript);
-
-                this.level = level;
-                this.targetType = targetType;
-
-                ccResistanceBar = new CCResistanceBar(this);
-                InitializeStats();
-            }
-
             /// <summary>
             /// Creates a new unit instance from a JSON data file.
             /// </summary>
-            /// <param name="unitJSONFilePath">The file path of the JSON object, relative to the "Assets/Resources/" directory.</param>
+            /// <param name="unitJSONFileName">The name of the JSON file, relative to the 
+            /// "Assets/Resources/JSON Assets/Units/" directory.</param>
             /// <param name="level">The unit's level.</param>
             /// <param name="targetType">The unit's targeting type.</param>
-            public Unit(string unitJSONFilePath, int level, TargetTypes targetType) : base()
+            public Unit(string unitJSONFileName, int level, TargetTypes targetType) : base()
             {
-                UnitJSONParser unitJSONParser = new UnitJSONParser(unitJSONFilePath);
+                UnitJSONParser unitJSONParser = new UnitJSONParser(unitJSONFileName);
 
 
                 GameObject g = (GameObject)Resources.Load("Prefabs/Overworld Object");
@@ -581,7 +566,7 @@ namespace YuguLibrary
             #region Functions
             private void InitializeUnitBaseValues(UnitJSONParser unitJSONParser)
             {
-                name = unitJSONParser.GetName();
+                name = unitJSONParser.GetNameID();
                 animationScript = unitJSONParser.GetAnimationScript();
                 overworldObjectCoordinator.AttachAnimationScript(animationScript);
                 role = unitJSONParser.GetRole();

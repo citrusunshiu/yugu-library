@@ -27,7 +27,12 @@ namespace YuguLibrary
                 return reader.Read() && reader.TokenType != JsonToken.EndArray;
             }
 
-            protected object ParseStringToEnumeration(Type enumType, string enumName)
+            protected bool IsEndOfObject(JsonTextReader reader)
+            {
+                return reader.TokenType == JsonToken.EndObject;
+            }
+
+            protected object GetEnumerationFromJSONString(Type enumType, string enumName)
             {
                 return Enum.Parse(enumType, enumName);
             }
@@ -96,17 +101,17 @@ namespace YuguLibrary
 
                         if (CheckForProperty("role", reader))
                         {
-                            role = (UnitRoles)ParseStringToEnumeration(typeof(UnitRoles), (string)GetValueFromJSON(reader));
+                            role = (UnitRoles)GetEnumerationFromJSONString(typeof(UnitRoles), (string)GetValueFromJSON(reader));
                         }
 
                         if (CheckForProperty("classification", reader))
                         {
-                            classification = (UnitClassifications)ParseStringToEnumeration(typeof(UnitClassifications), (string)GetValueFromJSON(reader));
+                            classification = (UnitClassifications)GetEnumerationFromJSONString(typeof(UnitClassifications), (string)GetValueFromJSON(reader));
                         }
 
                         if (CheckForProperty("speedTier", reader))
                         {
-                            speedTier = (SpeedTiers)ParseStringToEnumeration(typeof(SpeedTiers), (string)GetValueFromJSON(reader));
+                            speedTier = (SpeedTiers)GetEnumerationFromJSONString(typeof(SpeedTiers), (string)GetValueFromJSON(reader));
                         }
 
                         if (CheckForProperty("skillResources", reader))
@@ -119,7 +124,7 @@ namespace YuguLibrary
                             {
                                 if (CheckForProperty("resource", reader))
                                 {
-                                    resource = (SkillResources)ParseStringToEnumeration(typeof(SkillResources), (string)GetValueFromJSON(reader));
+                                    resource = (SkillResources)GetEnumerationFromJSONString(typeof(SkillResources), (string)GetValueFromJSON(reader));
                                 }
 
                                 if (CheckForProperty("maxValue", reader))
@@ -207,7 +212,7 @@ namespace YuguLibrary
                                     progressionPointObtained = (long)GetValueFromJSON(reader);
                                 }
 
-                                if (reader.TokenType == JsonToken.EndObject)
+                                if (IsEndOfObject(reader))
                                 {
                                     skills.Add(new Skill(skillJSONFileName, (int)levelObtained, (int)progressionPointObtained));
                                     Debug.Log("created: " + skillJSONFileName + " (levelObtained: " + levelObtained + ", progressionPointObtained: " + progressionPointObtained + ")");
@@ -232,7 +237,7 @@ namespace YuguLibrary
                                     Debug.Log(actionClassName);
                                 }
 
-                                if (reader.TokenType == JsonToken.EndObject)
+                                if (IsEndOfObject(reader))
                                 {
                                     Type type = Type.GetType(actionClassName);
                                     actions.Add((OverworldObjectAction)Activator.CreateInstance(type));
@@ -254,7 +259,7 @@ namespace YuguLibrary
                                     overworldAIClassName = (string)GetValueFromJSON(reader);
                                 }
 
-                                if (reader.TokenType == JsonToken.EndObject)
+                                if (IsEndOfObject(reader))
                                 {
                                     Type type = Type.GetType(overworldAIClassName);
                                     overworldAIs.Add((OverworldAI)Activator.CreateInstance(type));
@@ -276,7 +281,7 @@ namespace YuguLibrary
                                     encounterAIClassName = (string)GetValueFromJSON(reader);
                                 }
 
-                                if (reader.TokenType == JsonToken.EndObject)
+                                if (IsEndOfObject(reader))
                                 {
                                     Type type = Type.GetType(encounterAIClassName);
                                     encounterAIs.Add((EncounterAI)Activator.CreateInstance(type));
@@ -436,17 +441,17 @@ namespace YuguLibrary
 
                         if(CheckForProperty("province", reader))
                         {
-                            province = (Provinces)ParseStringToEnumeration(typeof(Provinces), (string)GetValueFromJSON(reader));
+                            province = (Provinces)GetEnumerationFromJSONString(typeof(Provinces), (string)GetValueFromJSON(reader));
                         }
 
                         if (CheckForProperty("district", reader))
                         {
-                            district = (Districts)ParseStringToEnumeration(typeof(Districts), (string)GetValueFromJSON(reader));
+                            district = (Districts)GetEnumerationFromJSONString(typeof(Districts), (string)GetValueFromJSON(reader));
                         }
 
                         if (CheckForProperty("area", reader))
                         {
-                            area = (Areas)ParseStringToEnumeration(typeof(Areas), (string)GetValueFromJSON(reader));
+                            area = (Areas)GetEnumerationFromJSONString(typeof(Areas), (string)GetValueFromJSON(reader));
                         }
 
                         if(CheckForProperty("instanceCoordinates", reader))
@@ -471,7 +476,7 @@ namespace YuguLibrary
                                 zPos = (long)GetValueFromJSON(reader);
                             }
 
-                            if (reader.TokenType == JsonToken.EndObject)
+                            if (IsEndOfObject(reader))
                             {
                                 instanceCoordinates = new Vector3Int((int)xPos, (int)yPos, (int)zPos);
                             }
@@ -589,12 +594,21 @@ namespace YuguLibrary
             private string descriptionID;
             private string longDescriptionID;
             private string iconFilePath;
-            TargetTypes targetType;
-            EncounterSkillTypes encounterSkillType;
-            AISkillCategories aiSkillCategory;
+            private TargetTypes targetType;
+            private EncounterSkillTypes encounterSkillType;
+            private AISkillCategories aiSkillCategory;
+            private List<SkillResource> costs;
+            private int cooldown;
+            private List<Hit> hits;
+            private List<SkillChoreography> skillChoreographies;
+            private string skillFunctionName;
+            
 
             public SkillJSONParser(string skillJSONFileName)
             {
+                costs = new List<SkillResource>();
+                hits = new List<Hit>();
+                skillChoreographies = new List<SkillChoreography>();
 
                 JsonTextReader reader = new JsonTextReader(new StreamReader(UtilityFunctions.JSON_ASSETS_SKILL_FOLDER_PATH + skillJSONFileName));
                 ParseJSON(reader);
@@ -607,6 +621,265 @@ namespace YuguLibrary
                     if (reader.Value != null)
                     {
                         Debug.Log("Token: " + reader.TokenType + ", Value: " + reader.Value);
+                        if(CheckForProperty("nameID", reader))
+                        {
+                            nameID = (string)GetValueFromJSON(reader);
+                        }
+                        
+                        if(CheckForProperty("descriptionID", reader))
+                        {
+                            descriptionID = (string)GetValueFromJSON(reader);
+                        }
+
+                        if (CheckForProperty("longDescriptionID", reader))
+                        {
+                            longDescriptionID = (string)GetValueFromJSON(reader);
+                        }
+
+                        if (CheckForProperty("iconFilePath", reader))
+                        {
+                            iconFilePath = (string)GetValueFromJSON(reader);
+                        }
+
+                        if(CheckForProperty("targetType", reader))
+                        {
+                            targetType = (TargetTypes)GetEnumerationFromJSONString(typeof(TargetTypes), (string)GetValueFromJSON(reader));
+                        }
+
+                        if (CheckForProperty("encounterSkillType", reader))
+                        {
+                            encounterSkillType = (EncounterSkillTypes)GetEnumerationFromJSONString(typeof(EncounterSkillTypes), (string)GetValueFromJSON(reader));
+                        }
+
+                        if (CheckForProperty("aiSkillCategory", reader))
+                        {
+                            aiSkillCategory = (AISkillCategories)GetEnumerationFromJSONString(typeof(AISkillCategories), (string)GetValueFromJSON(reader));
+                        }
+
+                        if(CheckForProperty("costs", reader))
+                        {
+                            SkillResources resource = SkillResources.HP;
+                            long value = -1;
+
+                            reader.Read();
+                            while (IsArrayOngoing(reader))
+                            {
+
+                                if(CheckForProperty("resource", reader))
+                                {
+                                    resource = (SkillResources)GetEnumerationFromJSONString(typeof(SkillResources), (string)GetValueFromJSON(reader));
+                                }
+
+                                if(CheckForProperty("value", reader))
+                                {
+                                    value = (long)GetValueFromJSON(reader);
+                                }
+
+                                if (IsEndOfObject(reader))
+                                {
+                                    SkillResource cost = new SkillResource(resource, (int)value);
+                                    costs.Add(cost);
+
+                                    resource = SkillResources.HP;
+                                    value = -1;
+                                }
+                            }
+                        }
+
+                        if(CheckForProperty("cooldown", reader))
+                        {
+                            cooldown = (int)(long)GetValueFromJSON(reader);
+                        }
+
+                        if (CheckForProperty("hits", reader))
+                        {
+                            string hitNameID;
+                            float damageModifier;
+                            float aggroModifier;
+                            List<HitAttributes> attributes = new List<HitAttributes>();
+                            Dictionary<string, int> statuses = new Dictionary<string, int>();
+
+                            reader.Read();
+                            while (IsArrayOngoing(reader))
+                            {
+                                if(CheckForProperty("nameID", reader))
+                                {
+                                    hitNameID = (string)GetValueFromJSON(reader);
+                                }
+
+                                if (CheckForProperty("damageModifier", reader))
+                                {
+                                    damageModifier = (long)GetValueFromJSON(reader);
+                                }
+
+                                if (CheckForProperty("aggroModifier", reader))
+                                {
+                                    aggroModifier= (long)GetValueFromJSON(reader);
+                                }
+
+                                if (CheckForProperty("attributes", reader))
+                                {
+                                    reader.Read();
+                                    while(reader.TokenType != JsonToken.EndArray)
+                                    {
+                                        reader.Read();
+                                        if(reader.TokenType != JsonToken.EndArray)
+                                        {
+                                            attributes.Add((HitAttributes)GetEnumerationFromJSONString(typeof(HitAttributes), (string)reader.Value));
+                                        }
+                                    }
+                                }
+
+                                if (CheckForProperty("statuses", reader))
+                                {
+                                    string statusJSONFileName = "";
+                                    int procChance = -1;
+
+                                    reader.Read();
+                                    while (IsArrayOngoing(reader))
+                                    {
+                                        if(CheckForProperty("statusJSONFileName", reader))
+                                        {
+                                            statusJSONFileName = (string)GetValueFromJSON(reader);
+                                        }   
+
+                                        if(CheckForProperty("procChance", reader))
+                                        {
+                                            procChance = (int)(long)GetValueFromJSON(reader);
+                                        }
+
+                                        if (IsEndOfObject(reader))
+                                        {
+                                            statuses.Add(statusJSONFileName, procChance);
+
+                                            statusJSONFileName = "";
+                                            procChance = -1;
+                                        }
+                                        
+                                    }
+                                }
+                            }
+                        }
+
+                        if (CheckForProperty("skillChoreographies", reader))
+                        {
+                            string choreographyNameID = "";
+                            int animationPatternIndex = -1;
+                            int totalFrames = -1;
+                            bool isAttackSpeedDependent = false;
+                            List<List<Hitbox>> hitboxGroups = new List<List<Hitbox>>();
+
+                            reader.Read();
+                            while (IsArrayOngoing(reader))
+                            {
+                                if(CheckForProperty("nameID", reader))
+                                {
+                                    choreographyNameID = (string)GetValueFromJSON(reader);
+                                }
+
+                                if (CheckForProperty("animationPatternIndex", reader))
+                                {
+                                    animationPatternIndex = (int)(long)GetValueFromJSON(reader);
+                                }
+
+                                if (CheckForProperty("totalFrames", reader))
+                                {
+                                    totalFrames = (int)(long)GetValueFromJSON(reader);
+                                }
+
+                                if (CheckForProperty("isAttackSpeedDependent", reader))
+                                {
+                                    isAttackSpeedDependent = (bool)GetValueFromJSON(reader);
+                                }
+
+                                if (CheckForProperty("hitboxGroups", reader))
+                                {
+                                    int startFrame = -1;
+                                    int delayFrames = -1;
+                                    int lingerFrames = -1;
+                                    List<Hitbox> hitboxes = new List<Hitbox>();
+                                    string hitFunctionName = "";
+                                    int hitIndex = -1;
+
+                                    reader.Read();
+                                    while (IsArrayOngoing(reader))
+                                    {
+                                        if(CheckForProperty("startFrame", reader))
+                                        {
+                                            startFrame = (int)(long)GetValueFromJSON(reader);
+                                        }
+
+                                        if (CheckForProperty("delayFrames", reader))
+                                        {
+                                            delayFrames = (int)(long)GetValueFromJSON(reader);
+                                        }
+
+                                        if (CheckForProperty("lingerFrames", reader))
+                                        {
+                                            lingerFrames = (int)(long)GetValueFromJSON(reader);
+                                        }
+
+                                        if (CheckForProperty("hitboxes", reader))
+                                        {
+                                            int xPos = 0;
+                                            int yPos = 0;
+                                            int zPos = 0;
+
+                                            reader.Read();
+                                            while (IsArrayOngoing(reader))
+                                            {
+                                                if(CheckForProperty("xPos", reader))
+                                                {
+                                                    xPos = (int)(long)GetValueFromJSON(reader);
+                                                }
+
+                                                if (CheckForProperty("yPos", reader))
+                                                {
+                                                    yPos = (int)(long)GetValueFromJSON(reader);
+                                                }
+
+                                                if (CheckForProperty("zPos", reader))
+                                                {
+                                                    zPos = (int)(long)GetValueFromJSON(reader);
+                                                }
+
+                                                if (IsEndOfObject(reader))
+                                                {
+                                                    hitboxes.Add(new Hitbox(startFrame, delayFrames, lingerFrames, 
+                                                        new Vector3Int(xPos, yPos, zPos), hitFunctionName, hitIndex));
+
+                                                    xPos = 0;
+                                                    yPos = 0;
+                                                    zPos = 0;
+                                                }
+                                            }
+                                        }
+
+                                        if (IsEndOfObject(reader))
+                                        {
+                                            hitboxGroups.Add(hitboxes);
+                                        }
+                                    }
+                                }
+
+                                if (IsEndOfObject(reader))
+                                {
+                                    SkillChoreography skillChoreography = new SkillChoreography(choreographyNameID, animationPatternIndex, totalFrames, isAttackSpeedDependent, hitboxGroups);
+                                    
+                                    choreographyNameID = "";
+                                    animationPatternIndex = -1;
+                                    totalFrames = -1;
+                                    isAttackSpeedDependent = false;
+                                    hitboxGroups = new List<List<Hitbox>>();
+                                }
+                            }
+                        }
+
+                        if (CheckForProperty("skillFunctionName", reader))
+                        {
+                            skillFunctionName = (string)GetValueFromJSON(reader);
+                        }
+
                     }
                     else
                     {
@@ -616,14 +889,74 @@ namespace YuguLibrary
             }
 
             #region Getters
+            public string GetNameID()
+            {
+                return nameID;
+            }
+
+            public string GetDescriptionID()
+            {
+                return descriptionID;
+            }
+
+            public string GetLongDescriptionID()
+            {
+                return longDescriptionID;
+            }
+
+            public string GetIconFilePath()
+            {
+                return iconFilePath;
+            }
+
+            public EncounterSkillTypes GetEncounterSkillType()
+            {
+                return encounterSkillType;
+            }
+
+            public TargetTypes GetTargetType()
+            {
+                return targetType;
+            }
+
+            public AISkillCategories GetAISkillCategory()
+            {
+                return aiSkillCategory;
+            }
+
+            public List<SkillResource> GetCosts()
+            {
+                return costs;
+            }
+
+            public int GetCooldown()
+            {
+                return cooldown;
+            }
+
+            public List<Hit> GetHits()
+            {
+                return hits;
+            }
+
+            public List<SkillChoreography> GetSkillChoreographies()
+            {
+                return skillChoreographies;
+            }
+
+            public string GetSkillFunctionName()
+            {
+                return skillFunctionName;
+            }
             #endregion
         }
 
         public class StatusJSONParser : JSONParser
         {
-            public StatusJSONParser()
+            public StatusJSONParser(string statusJSONFileName)
             {
-
+                JsonTextReader reader = new JsonTextReader(new StreamReader(UtilityFunctions.JSON_ASSETS_STATUS_FOLDER_PATH + statusJSONFileName));
+                ParseJSON(reader);
             }
 
             protected override void ParseJSON(JsonTextReader reader)
@@ -647,9 +980,16 @@ namespace YuguLibrary
 
         public class AnimationScriptJSONParser : JSONParser
         {
-            public AnimationScriptJSONParser()
-            {
+            private string nameID;
+            private string spritesheetFileName;
+            List<AnimationPattern> animationPatterns;
 
+            public AnimationScriptJSONParser(string animationScriptJSONFileName)
+            {
+                animationPatterns = new List<AnimationPattern>();
+
+                JsonTextReader reader = new JsonTextReader(new StreamReader(UtilityFunctions.JSON_ASSETS_ANIMATION_SCRIPT_FOLDER_PATH + animationScriptJSONFileName));
+                ParseJSON(reader);
             }
             
             protected override void ParseJSON(JsonTextReader reader)
@@ -659,6 +999,73 @@ namespace YuguLibrary
                     if (reader.Value != null)
                     {
                         Debug.Log("Token: " + reader.TokenType + ", Value: " + reader.Value);
+                        if(CheckForProperty("nameID", reader))
+                        {
+                            nameID = (string)GetValueFromJSON(reader);
+                        }
+
+                        if (CheckForProperty("spritesheetFileName", reader))
+                        {
+                            spritesheetFileName = (string)GetValueFromJSON(reader);
+                        }
+
+                        if (CheckForProperty("animationPatterns", reader))
+                        {
+                            string animationPatternNameID = "";
+                            int totalFrames = -1;
+                            List<AnimationPatternSignal> animationPatternSignals = new List<AnimationPatternSignal>();
+
+                            reader.Read();
+                            while (IsArrayOngoing(reader))
+                            {
+                                if(CheckForProperty("nameID", reader))
+                                {
+                                    animationPatternNameID = (string)GetValueFromJSON(reader);
+                                }
+
+                                if (CheckForProperty("totalFrames", reader))
+                                {
+                                    totalFrames = (int)(long)GetValueFromJSON(reader);
+                                }
+
+                                if (CheckForProperty("animationPatternSignals", reader))
+                                {
+                                    int startFrame = -1;
+                                    int spriteIndex = -1;
+
+                                    reader.Read();
+                                    while (IsArrayOngoing(reader))
+                                    {
+                                        if(CheckForProperty("startFrame", reader))
+                                        {
+                                            startFrame = (int)(long)GetValueFromJSON(reader);
+                                        }
+
+                                        if (CheckForProperty("spriteIndex", reader))
+                                        {
+                                            spriteIndex = (int)(long)GetValueFromJSON(reader);
+                                        }
+
+                                        if (IsEndOfObject(reader))
+                                        {
+                                            animationPatternSignals.Add(new AnimationPatternSignal(startFrame, spriteIndex));
+
+                                            startFrame = -1;
+                                            spriteIndex = -1;
+                                        }
+                                    }
+                                }
+
+                                if (IsEndOfObject(reader))
+                                {
+                                    animationPatterns.Add(new AnimationPattern(animationPatternNameID, totalFrames, animationPatternSignals));
+
+                                    animationPatternNameID = "";
+                                    totalFrames = -1;
+                                    animationPatternSignals = new List<AnimationPatternSignal>();
+                                }
+                            }
+                        }
                     }
                     else
                     {
@@ -668,6 +1075,20 @@ namespace YuguLibrary
             }
 
             #region Getters
+            public string GetNameID()
+            {
+                return nameID;
+            }
+            
+            public string GetSpritesheetFileName()
+            {
+                return spritesheetFileName;
+            }
+
+            public List<AnimationPattern> GetAnimationPatterns()
+            {
+                return animationPatterns;
+            }
             #endregion
         }
 
@@ -700,32 +1121,6 @@ namespace YuguLibrary
         public class RequestJSONParser : JSONParser
         {
             public RequestJSONParser()
-            {
-
-            }
-
-            protected override void ParseJSON(JsonTextReader reader)
-            {
-                while (reader.Read())
-                {
-                    if (reader.Value != null)
-                    {
-                        Debug.Log("Token: " + reader.TokenType + ", Value: " + reader.Value);
-                    }
-                    else
-                    {
-                        Debug.Log("Token: " + reader.TokenType);
-                    }
-                }
-            }
-
-            #region Getters
-            #endregion
-        }
-
-        public class SkillChoreographyJSONParser : JSONParser
-        {
-            public SkillChoreographyJSONParser()
             {
 
             }

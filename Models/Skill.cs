@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using YuguLibrary.Enumerations;
+using YuguLibrary.Utilities;
 
 namespace YuguLibrary
 {
@@ -56,18 +57,24 @@ namespace YuguLibrary
             private AISkillCategories aiSkillCategory;
 
             /// <summary>
-            /// The skill's cost to be used.
+            /// The skill's costs to be used.
             /// </summary>
-            /// <remarks>
-            /// Key uses <see cref="UnitStats.HP"/>, <see cref="UnitStats.MP"/>, or a value from
-            /// <see cref="Enumerations.SpecialResources"/>. All costs must be met by the unit for the skill to be used.
-            /// </remarks>
-            private Dictionary<SkillResources, int> cost;
+            private List<SkillResource> costs;
 
             /// <summary>
             /// The skill's cooldown when used.
             /// </summary>
             private int cooldown;
+
+            /// <summary>
+            /// The list of hits that the skill has access to during usage.
+            /// </summary>
+            private List<Hit> hits;
+
+            /// <summary>
+            /// The list of animations and hitbox timings that the skill has access to during usage.
+            /// </summary>
+            private List<SkillChoreography> skillChoreographies;
 
             /// <summary>
             /// The name of the function associated with the skill object's logic.
@@ -93,10 +100,35 @@ namespace YuguLibrary
             /// The unit that the skill is attached to.
             /// </summary>
             private Unit unit;
-            
-            public Skill(string skillJSONFilePath, int levelObtained, int progressionPointObtained)
-            {
 
+            private int levelObtained;
+
+            private int progressionPointObtained;
+            
+            public Skill(string skillJSONFileName, int levelObtained, int progressionPointObtained)
+            {
+                this.levelObtained = levelObtained;
+                this.progressionPointObtained = progressionPointObtained;
+
+                SkillJSONParser skillJSONParser = new SkillJSONParser(skillJSONFileName);
+
+                InitializeSkillValues(skillJSONParser);
+            }
+
+            private void InitializeSkillValues(SkillJSONParser skillJSONParser)
+            {
+                nameID = skillJSONParser.GetNameID();
+                descriptionID = skillJSONParser.GetDescriptionID();
+                longDescriptionID = skillJSONParser.GetLongDescriptionID();
+                iconFilePath = skillJSONParser.GetIconFilePath();
+                encounterSkillType = skillJSONParser.GetEncounterSkillType();
+                targetType = skillJSONParser.GetTargetType();
+                aiSkillCategory = skillJSONParser.GetAISkillCategory();
+                costs = skillJSONParser.GetCosts();
+                cooldown = skillJSONParser.GetCooldown();
+                hits = skillJSONParser.GetHits();
+                skillChoreographies = skillJSONParser.GetSkillChoreographies();
+                skillFunctionName = skillJSONParser.GetSkillFunctionName();
             }
 
             /// <summary>

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using YuguLibrary.Utilities;
 
 namespace YuguLibrary
 {
@@ -20,6 +21,21 @@ namespace YuguLibrary
             protected OverworldObjectCoordinator overworldObjectCoordinator;
 
             /// <summary>
+            /// 
+            /// </summary>
+            private string nameID;
+
+            /// <summary>
+            /// 
+            /// </summary>
+            private string spritesheetFileName;
+
+            /// <summary>
+            /// 
+            /// </summary>
+            private List<AnimationPattern> animationPatterns;
+
+            /// <summary>
             /// The spriteesheet associated with the AnimationScript.
             /// </summary>
             protected object[] spritesheet;
@@ -30,9 +46,23 @@ namespace YuguLibrary
             {
 
             }
+
+            public AnimationScript(string animationScriptJSONFileName)
+            {
+                AnimationScriptJSONParser animationScriptJSONParser = new AnimationScriptJSONParser(animationScriptJSONFileName);
+
+                InitializeAnimationScript(animationScriptJSONParser);
+            }
             #endregion
 
             #region Functions
+            private void InitializeAnimationScript(AnimationScriptJSONParser animationScriptJSONParser)
+            {
+                nameID = animationScriptJSONParser.GetNameID();
+                spritesheetFileName = animationScriptJSONParser.GetSpritesheetFileName();
+                animationPatterns = animationScriptJSONParser.GetAnimationPatterns();
+            }
+
             public void AttachOverworldObjectCoordinator(OverworldObjectCoordinator overworldObjectCoordinator)
             {
                 this.overworldObjectCoordinator = overworldObjectCoordinator;

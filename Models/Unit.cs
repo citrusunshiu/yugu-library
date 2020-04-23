@@ -566,7 +566,7 @@ namespace YuguLibrary
             #region Functions
             private void InitializeUnitBaseValues(UnitJSONParser unitJSONParser)
             {
-                name = unitJSONParser.GetNameID();
+                nameID = unitJSONParser.GetNameID();
                 animationScript = unitJSONParser.GetAnimationScript();
                 overworldObjectCoordinator.AttachAnimationScript(animationScript);
                 role = unitJSONParser.GetRole();

@@ -42,18 +42,21 @@ namespace YuguLibrary
             #region File Paths
             public static readonly string SQLITE_LOCALIZATION_DB_FILE_PATH = Application.dataPath + "/Databases/yugutext.db";
             public static readonly string JSON_ASSETS_FILE_PATH = Application.dataPath + "/Resources/JSON Assets/";
+
             public static readonly string JSON_ASSETS_UNIT_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Units/";
-            public static readonly string JSON_ASSETS_ANIMATION_SCRIPT_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Animatiotn Scripts/";
             public static readonly string JSON_ASSETS_INSTANCE_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Instances/";
-            public static readonly string JSON_ASSETS_SKILL_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Skills/";
             public static readonly string JSON_ASSETS_STATUS_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Statuses/";
-            public static readonly string SPRITESHEET_FILE_PATH = "";
+
+            public static readonly string UNIT_SPRITESHEET_FILE_PATH = "Sprites/Units/";
             public static readonly string UI_FILE_PATH = "Sprites/UI/";
             public static readonly string ICONS_FILE_PATH = UI_FILE_PATH + "Icons/";
             public static readonly string SPRITES_FILE_PATH = "Sprites/";
             public static readonly string BORDERS_FILE_PATH = SPRITES_FILE_PATH + "UI/Borders/";
             public static readonly string LOCKED_ICON_FILE_PATH = SPRITES_FILE_PATH + "/Misc/lock";
             public static readonly string GEOGRAPHY_FILE_PATH = "Prefabs/Geographies/";
+            
+            //public static readonly string JSON_ASSETS_ANIMATION_SCRIPT_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Animation Scripts/";
+            //public static readonly string JSON_ASSETS_SKILL_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Skills/";
             #endregion
 
             /// <summary>

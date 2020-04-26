@@ -6,7 +6,6 @@ using YuguLibrary.Enumerations;
 using YuguLibrary.Models;
 using Newtonsoft.Json;
 using System.IO;
-using AnimationScripts;
 using YuguLibrary.OverworldObjectActions;
 
 namespace YuguLibrary
@@ -96,7 +95,7 @@ namespace YuguLibrary
                         if (reader.TokenType == JsonToken.PropertyName && reader.Value.Equals("animationScriptJSONFileName"))
                         {
                             reader.Read();
-                            animationScript = new TestUnitAnimationScript();
+                            animationScript = new AnimationScript((string)reader.Value);
                         }
 
                         if (CheckForProperty("role", reader))
@@ -610,7 +609,7 @@ namespace YuguLibrary
                 hits = new List<Hit>();
                 skillChoreographies = new List<SkillChoreography>();
 
-                JsonTextReader reader = new JsonTextReader(new StreamReader(UtilityFunctions.JSON_ASSETS_SKILL_FOLDER_PATH + skillJSONFileName));
+                JsonTextReader reader = new JsonTextReader(new StreamReader(UtilityFunctions.JSON_ASSETS_UNIT_FOLDER_PATH + skillJSONFileName));
                 ParseJSON(reader);
             }
 
@@ -988,7 +987,7 @@ namespace YuguLibrary
             {
                 animationPatterns = new List<AnimationPattern>();
 
-                JsonTextReader reader = new JsonTextReader(new StreamReader(UtilityFunctions.JSON_ASSETS_ANIMATION_SCRIPT_FOLDER_PATH + animationScriptJSONFileName));
+                JsonTextReader reader = new JsonTextReader(new StreamReader(UtilityFunctions.JSON_ASSETS_UNIT_FOLDER_PATH + animationScriptJSONFileName));
                 ParseJSON(reader);
             }
             

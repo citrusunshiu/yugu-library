@@ -7,7 +7,7 @@ namespace YuguLibrary
 {
     namespace Models
     {
-        public abstract class AnimationScript
+        public class AnimationScript
         {
             #region Variables
             /// <summary>
@@ -39,6 +39,12 @@ namespace YuguLibrary
             /// The spriteesheet associated with the AnimationScript.
             /// </summary>
             protected object[] spritesheet;
+
+            private int animationPatternIndex;
+
+            private int framesGiven = -1;
+
+            private bool isLooping;
             #endregion
 
             #region Constructors
@@ -49,9 +55,14 @@ namespace YuguLibrary
 
             public AnimationScript(string animationScriptJSONFileName)
             {
+                isLooping = true;
+                animationPatternIndex = 0;
+                
                 AnimationScriptJSONParser animationScriptJSONParser = new AnimationScriptJSONParser(animationScriptJSONFileName);
 
                 InitializeAnimationScript(animationScriptJSONParser);
+
+                spritesheet = Resources.LoadAll(UtilityFunctions.UNIT_SPRITESHEET_FILE_PATH + spritesheetFileName);
             }
             #endregion
 
@@ -68,13 +79,62 @@ namespace YuguLibrary
                 this.overworldObjectCoordinator = overworldObjectCoordinator;
             }
 
+            public void SetAnimationPatternIndex(int animationPatternIndex)
+            {
+                this.animationPatternIndex = animationPatternIndex;
+            }
+
+            public void SetFramesGiven(int framesGiven)
+            {
+                this.framesGiven = framesGiven;
+            }
+
+            public void SetIsLooping(bool isLooping)
+            {
+                this.isLooping = isLooping;
+            }
+
+            public bool IsLooping()
+            {
+                return isLooping;
+            }
+
             public void PlayAnimation()
             {
-                //TODO: placeholder code; fix later
-                for (int i = 0; i < 60; i++)
+                AnimationPattern animationPattern = animationPatterns[animationPatternIndex];
+                List<AnimationPatternSignal> animationPatternSignals = animationPattern.GetAnimationPatternSignals();
+
+                float animationSpeedModifier = 1;
+
+                if(framesGiven > 0)
                 {
-                    overworldObjectCoordinator.animationQueue.Enqueue(Animate(i, SECONDS_PER_FRAME * 10));
+                    animationSpeedModifier = animationPattern.GetTotalFrames() / framesGiven;
                 }
+
+                int i = 0;
+
+                foreach(AnimationPatternSignal signal in animationPatternSignals)
+                {
+                    if(i == 0)
+                    {
+                        overworldObjectCoordinator.animationQueue.Enqueue(Animate(signal.GetSpriteIndex(), 
+                            SECONDS_PER_FRAME * signal.GetStartFrame() * animationSpeedModifier));
+                    }
+                    else
+                    {
+                        int frameDifference = GetFrameDifference(signal, animationPatternSignals[i - 1]);
+
+                        overworldObjectCoordinator.animationQueue.Enqueue(Animate(signal.GetSpriteIndex(), 
+                            SECONDS_PER_FRAME * frameDifference * animationSpeedModifier));
+
+                    }
+                    i++;
+                }
+            }
+
+            private int GetFrameDifference(AnimationPatternSignal currentSignal, AnimationPatternSignal previousSignal)
+            {
+                return currentSignal.GetStartFrame() - previousSignal.GetStartFrame();
             }
 
             /// <summary>
@@ -86,8 +146,8 @@ namespace YuguLibrary
             IEnumerator Animate(int index, float waitSeconds)
             {
                 overworldObjectCoordinator.currentlyAnimating = true;
-                overworldObjectCoordinator.spriteRenderer.sprite = (Sprite)spritesheet[index + 1];
                 yield return new WaitForSeconds(waitSeconds);
+                overworldObjectCoordinator.spriteRenderer.sprite = (Sprite)spritesheet[index + 1];
                 overworldObjectCoordinator.currentlyAnimating = false;
             }
 

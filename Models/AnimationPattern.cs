@@ -18,6 +18,16 @@ namespace YuguLibrary
                 this.totalFrames = totalFrames;
                 this.animationPatternSignals = animationPatternSignals;
             }
+
+            public List<AnimationPatternSignal> GetAnimationPatternSignals()
+            {
+                return animationPatternSignals;
+            }
+
+            public int GetTotalFrames()
+            {
+                return totalFrames;
+            }
         }
 
         public class AnimationPatternSignal
@@ -29,6 +39,16 @@ namespace YuguLibrary
             {
                 this.startFrame = startFrame;
                 this.spriteIndex = spriteIndex;
+            }
+
+            public int GetStartFrame()
+            {
+                return startFrame;
+            }
+
+            public int GetSpriteIndex()
+            {
+                return spriteIndex;
             }
         }
 

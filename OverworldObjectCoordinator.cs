@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using YuguLibrary.Controllers;
@@ -65,6 +66,7 @@ namespace YuguLibrary
         public void FrameMove(Directions direction)
         {
             int totalMoveFrames;
+            int animationIndex = 1;
 
             switch (direction)
             {
@@ -82,8 +84,26 @@ namespace YuguLibrary
 
             if (this != null)
             {
+                SetAnimation(animationIndex, totalMoveFrames, false);
                 StartCoroutine(MoveSegment(direction, totalMoveFrames));
             }
+        }
+
+        /// <summary>
+        /// Changes the overworld object's current animation to the specified index.
+        /// </summary>
+        /// <param name="animationIndex">The index number of the animation to change to.</param>
+        /// <param name="framesGiven">The amount of frames given for the animation to play fully. (set to -1 for default play speed)</param>
+        /// <param name="isLooping">Whether or not the animation should loop after completion.</param>
+        private void SetAnimation(int animationIndex, int framesGiven, bool isLooping)
+        {
+            StopAllCoroutines();
+            currentlyAnimating = false;
+            animationScript.SetAnimationPatternIndex(animationIndex);
+            animationScript.SetFramesGiven(framesGiven);
+            animationScript.SetIsLooping(isLooping);
+            animationQueue.Clear();
+            animationScript.PlayAnimation();
         }
 
         /// <summary>
@@ -98,7 +118,7 @@ namespace YuguLibrary
                     StartCoroutine(animationQueue.Dequeue());
                 }
             }
-            else
+            else if (animationScript.IsLooping())
             {
                 animationScript.PlayAnimation();
             }
@@ -106,7 +126,7 @@ namespace YuguLibrary
 
         private IEnumerator MoveSegment(Directions direction, int totalMoveFrames, int moveProgress = 0)
         {
-            yield return new WaitForSeconds(1/60);
+            yield return new WaitForSeconds(0.016667F);
 
             float dx = xmove / totalMoveFrames;
             float dy = ymove / totalMoveFrames;
@@ -152,6 +172,7 @@ namespace YuguLibrary
             }
             else
             {
+                SetAnimation(0, -1, true);
                 UtilityFunctions.SetSpriteDefaultPosition(this);
             }
         }

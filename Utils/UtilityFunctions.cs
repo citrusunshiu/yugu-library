@@ -10,6 +10,8 @@ namespace YuguLibrary
     {
         public static class UtilityFunctions
         {
+            static System.Random random = new System.Random();
+
             #region Valid KeyCode Values
             public static KeyCode[] ValidKeyCodes =
             {
@@ -140,6 +142,27 @@ namespace YuguLibrary
                 reader.Read();
 
                 return reader.GetString(0);
+            }
+
+            /// <summary>
+            /// Rolls a random integer between 1-100, and compares it against a specified passing rate.
+            /// </summary>
+            /// <param name="passChance">The success rate of the roll.</param>
+            /// <returns>Returns true if passChance is higher than the number rolled, and false otherwise.</returns>
+            public static bool GetRandomPercentage(int passChance)
+            {
+
+                int randint = random.Next(0, 101);
+                //Debug.Log("randint value: " + randint);
+
+                if (passChance >= randint)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
         }
     }

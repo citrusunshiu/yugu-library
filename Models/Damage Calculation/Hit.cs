@@ -44,18 +44,18 @@ namespace YuguLibrary
             private string nameID;
 
             /// <summary>
-            /// The hit's damage modifier.
+            /// The hit's damage/healing modifier.
             /// </summary>
             /// <remarks>
-            /// Used to calculate the hit's damage during <see cref="EncounterController.CalculateDamage(Skill, OverworldObject, OverworldObject)"/>.
+            /// Used to calculate the hit's damage or healing.
             /// </remarks>
-            private float damageModifier;
+            private float hitModifier;
 
             /// <summary>
             /// The hit's aggro modifier.
             /// </summary>
             /// <remarks>
-            /// Used to calculate the hit's aggro generation during <see cref="EncounterController.CalculateAggro"/>.
+            /// Used to calculate the hit's aggro generation.
             /// </remarks>
             public float aggroModifier;
             
@@ -80,10 +80,10 @@ namespace YuguLibrary
             #endregion
 
             #region Constructors
-            public Hit(float modifier, float aggroMultiplier, List<HitAttributes> attributes,
+            public Hit(float hitModifier, float aggroMultiplier, List<HitAttributes> attributes,
                 Dictionary<string, int> statuses)
             {
-                this.damageModifier = modifier;
+                this.hitModifier = hitModifier;
                 this.aggroModifier = aggroMultiplier;
                 this.statuses = statuses;
 
@@ -103,6 +103,16 @@ namespace YuguLibrary
             public bool CheckAttribute(HitAttributes attribute)
             {
                 return attributes[(int)attribute];
+            }
+
+            public float GetHitModifier()
+            {
+                return hitModifier;
+            }
+
+            public float GetAggroModifier()
+            {
+                return aggroModifier;
             }
             #endregion
         }

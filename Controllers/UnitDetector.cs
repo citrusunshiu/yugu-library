@@ -235,6 +235,29 @@ namespace YuguLibrary
 
 
             #endregion
+
+            public void FlagDelegate(DelegateFlags flag, HookBundle hookBundle, List<Unit> unitsAlerted)
+            {
+                foreach(Unit unit in unitsAlerted)
+                {
+                    unit.ExecuteDelegates(flag, hookBundle);
+                }
+            }
+
+            public List<Unit> GetAllUnits()
+            {
+                List<Unit> units = new List<Unit>();
+
+                foreach(OverworldObject overworldObject in overworldObjects)
+                {
+                    if(overworldObject is Unit)
+                    {
+                        units.Add((Unit)overworldObject);
+                    }
+                }
+
+                return units;
+            }
             
             /// <summary>
             /// Gets the highest floor tile at a given position.

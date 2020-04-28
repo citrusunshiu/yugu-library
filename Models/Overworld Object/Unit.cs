@@ -641,6 +641,42 @@ namespace YuguLibrary
                 }
             }
 
+            public void AlterHP(HitCalculation calculation)
+            {
+                int alterAmount = calculation.GetDamageResult();
+
+                currentHP -= alterAmount;
+                
+                if(alterAmount >= 0) //for damage
+                {
+                    if(currentHP <= 0) //is incapacitated
+                    {
+
+                    }
+                    else
+                    {
+
+                    }
+                }
+                else //for healing
+                {
+                    if (currentHP > hp)
+                    {
+                        currentHP = hp;
+                    }
+                }
+            }
+
+            public void AlterAggro(HitCalculation calculation)
+            {
+                aggroSpread.InsertAggro(calculation.GetAttackingUnit(), calculation.GetAggroResult());
+            }
+
+            public void ExecuteDelegates(DelegateFlags flag, HookBundle hookBundle)
+            {
+
+            }
+
             /// <summary>
             /// Adds a skill resource to the unit.
             /// </summary>
@@ -661,6 +697,10 @@ namespace YuguLibrary
             }
 
 
+            public TargetTypes GetTargetType()
+            {
+                return targetType;
+            }
 
             public void AddOverworldAI(OverworldAI overworldAI)
             {

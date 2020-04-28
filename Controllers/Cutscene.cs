@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class OverworldSkill : MonoBehaviour
+public class Cutscene : MonoBehaviour
 {
     // Start is called before the first frame update
     void Start()

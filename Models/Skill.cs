@@ -37,7 +37,7 @@ namespace YuguLibrary
             /// <summary>
             /// The skill's type category.
             /// </summary>
-            private EncounterSkillTypes encounterSkillType;
+            private SkillTypes encounterSkillType;
 
             /// <summary>
             /// The type of unit that the skill is able to target.

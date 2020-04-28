@@ -594,7 +594,7 @@ namespace YuguLibrary
             private string longDescriptionID;
             private string iconFilePath;
             private TargetTypes targetType;
-            private EncounterSkillTypes encounterSkillType;
+            private SkillTypes encounterSkillType;
             private AISkillCategories aiSkillCategory;
             private List<SkillResource> costs;
             private int cooldown;
@@ -647,7 +647,7 @@ namespace YuguLibrary
 
                         if (CheckForProperty("encounterSkillType", reader))
                         {
-                            encounterSkillType = (EncounterSkillTypes)GetEnumerationFromJSONString(typeof(EncounterSkillTypes), (string)GetValueFromJSON(reader));
+                            encounterSkillType = (SkillTypes)GetEnumerationFromJSONString(typeof(SkillTypes), (string)GetValueFromJSON(reader));
                         }
 
                         if (CheckForProperty("aiSkillCategory", reader))
@@ -908,7 +908,7 @@ namespace YuguLibrary
                 return iconFilePath;
             }
 
-            public EncounterSkillTypes GetEncounterSkillType()
+            public SkillTypes GetEncounterSkillType()
             {
                 return encounterSkillType;
             }

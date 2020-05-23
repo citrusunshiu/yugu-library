@@ -1,11 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
+using YuguLibrary.Models;
 
 public class Hitbox
 {
     #region Variables
-
     /// <summary>
     /// The frame number to activate the hitbox on.
     /// </summary>
@@ -29,6 +30,21 @@ public class Hitbox
     private string hitFunctionName;
 
     private int hitIndex;
+
+    private Unit unit;
+
+    /// <summary>
+    /// The skill that the hitbox is attached to.
+    /// </summary>
+    private Skill skill;
+
+    /// <summary>
+    /// The unique identifier for the hitbox's hitbox group.
+    /// </summary>
+    /// <remarks>
+    /// Used to ensure units cannot be hit by hitboxes in the same group more than once.
+    /// </remarks>
+    private string hitboxGroupID;
     #endregion
 
     #region Constructors
@@ -44,5 +60,72 @@ public class Hitbox
     #endregion
 
     #region Functions
+    /// <summary>
+    /// Modifies <see cref="startFrame"/> and <see cref="delayFrames"/> to be sped up or slowed down dependent on a 
+    /// given attack speed value.
+    /// </summary>
+    /// <param name="attackSpeed">The attack speed value to modify the frames by.</param>
+    public void AdjustToAttackSpeed(float attackSpeed)
+    {
+        // not done yet
+    }
+
+    private bool TryHitbox(Unit target)
+    {
+        if(unit.GetTargetType() != target.GetTargetType())
+        {
+            return target.SearchHitboxImmunity(hitboxGroupID);
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public void ExecuteHitbox(Unit target)
+    {
+        if (TryHitbox(target))
+        {
+            Debug.Log(hitFunctionName);
+            if (hitFunctionName.Equals(""))
+            {
+                RunHitboxDefault(target);
+            }
+            else
+            {
+                MethodInfo method = GetType().GetMethod(hitFunctionName, BindingFlags.NonPublic | BindingFlags.Instance);
+                method.Invoke(skill, new object[] { target });
+            }
+
+            target.AddHitboxImmunity(hitboxGroupID);
+        }
+
+    }
+
+    private void RunHitboxDefault(Unit target)
+    {
+        HitCalculation hitCalculation = new HitCalculation(unit, skill.GetHits()[hitIndex], target);
+        hitCalculation.ApplyHitCalculation();
+    }
+
+    public void SetHitboxGroupID(string hitboxGroupID)
+    {
+        this.hitboxGroupID = hitboxGroupID;
+    }
+
+    public Vector3Int GetPosition()
+    {
+        return position;
+    }
+
+    public void SetUnit(Unit unit)
+    {
+        this.unit = unit;
+    }
+
+    public void SetSkill(Skill skill)
+    {
+        this.skill = skill;
+    }
     #endregion
 }

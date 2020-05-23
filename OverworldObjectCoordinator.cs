@@ -95,7 +95,7 @@ namespace YuguLibrary
         /// <param name="animationIndex">The index number of the animation to change to.</param>
         /// <param name="framesGiven">The amount of frames given for the animation to play fully. (set to -1 for default play speed)</param>
         /// <param name="isLooping">Whether or not the animation should loop after completion.</param>
-        private void SetAnimation(int animationIndex, int framesGiven, bool isLooping)
+        public void SetAnimation(int animationIndex, int framesGiven, bool isLooping)
         {
             StopAllCoroutines();
             currentlyAnimating = false;

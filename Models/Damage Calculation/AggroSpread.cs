@@ -15,14 +15,35 @@ namespace YuguLibrary
         public class AggroSpread
         {
             #region Variables
+            readonly float AUTO_REMOVAL_VALUE = 0.05f;
+
+            /// <summary>
+            /// The sum of all values in <see cref="aggroShares"/>.
+            /// </summary>
+            /// <remarks>
+            /// Used to calculate the percentage of aggro held by units.
+            /// </remarks>
+            float aggroSum;
+
             /// <summary>
             /// The aggro value form enemy units that have recently attacked a unit.
             /// </summary>
             /// <remarks>
-            /// When a unit is attacked, an aggro value is calculated using the damage inflicted to the defending unit using 
-            /// <see cref="EncounterController.CalculateAggro"/>.
+            /// When a unit is attacked, an aggro value is calculated using the damage inflicted to the defending unit 
+            /// using <see cref="EncounterController.CalculateAggro"/>.
             /// </remarks>
-            public Dictionary<Unit, float> aggroShares = new Dictionary<Unit, float>();
+            private Dictionary<Unit, float> aggroShares = new Dictionary<Unit, float>();
+
+
+            public Dictionary<Unit, int> attackHistory = new Dictionary<Unit, int>();
+
+            /// <summary>
+            /// A list of units with the highest aggro value.
+            /// </summary>
+            /// <remarks>
+            /// Units that are within 10% of the highest aggro value are added to the list.
+            /// </remarks>
+            List<Unit> topAggros = new List<Unit>();
             #endregion
 
             #region Functions
@@ -30,7 +51,7 @@ namespace YuguLibrary
             /// Inserts or appends to a value in <see cref="aggroShares"/>.
             /// </summary>
             /// <remarks>
-            /// Searches for the unit’s key, and adds the given value to the current value stored. If the entry does not 
+            /// Searches for the unit’s key, and adds the given value to the current value stored. If the entry does not
             /// exist, a new entry is added using the parameters given.
             /// </remarks>
             /// <param name="unit">The attacking unit that generated the aggro.</param>
@@ -48,6 +69,34 @@ namespace YuguLibrary
             }
 
             /// <summary>
+            /// Modifies a specified unit's aggro by a modifier.
+            /// </summary>
+            /// <param name="unit">The unit aggro to be modified.</param>
+            /// <param name="modifier">The value to multiply the unit's aggro by.</param>
+            public void ModifyAggro(Unit unit, float modifier)
+            {
+                if (aggroShares.ContainsKey(unit))
+                {
+                    aggroShares[unit] *= modifier;
+                }
+            }
+
+            /// <summary>
+            /// Checks if a unit's aggro generation is low enough to be removed.
+            /// </summary>
+            /// <remarks>
+            /// If the difference is less than 5% of <see cref="aggroSum"/>, the entry is removed. 
+            /// </remarks>
+            /// <param name="unit">The unit whose aggro is to be checked.</param>
+            void CheckAggroRemoval(Unit unit)
+            {
+                if (aggroShares.ContainsKey(unit) && aggroShares[unit] / aggroSum < AUTO_REMOVAL_VALUE)
+                {
+                    aggroShares.Remove(unit);
+                }
+            }
+
+            /// <summary>
             /// Subtracts from an aggro value in <see cref="aggroShares"/>.
             /// </summary>
             /// <remarks>
@@ -55,7 +104,7 @@ namespace YuguLibrary
             /// </remarks>
             /// <param name="unit">The key to search for.</param>
             /// <param name="value">The amount of aggro to subtract from the retrieved entry.</param>
-            void RemoveAggro(Unit unit, float value)
+            void SubtractAggro(Unit unit, float value)
             {
                 if (aggroShares.ContainsKey(unit))
                 {

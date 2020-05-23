@@ -170,7 +170,11 @@ namespace YuguLibrary
 
             OnEncounterCollectReceivingHealModifiers,
 
-            OnEncounterIncapacitation
+            OnEncounterIncapacitation,
+
+            OnApply,
+
+            OnRemove
         };
 
         /// <summary>
@@ -275,17 +279,6 @@ namespace YuguLibrary
             ElectricResistance,
             EarthResistance,
             WaterResistance,
-        };
-
-        public enum DialogueCharacters
-        {
-
-        }
-
-        public enum DialogueEmotions
-        {
-            None,
-            Default,
         }
 
         /// <summary>

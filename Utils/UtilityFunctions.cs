@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using YuguLibrary.Controllers;
 using Mono.Data.Sqlite;
+using System;
 
 namespace YuguLibrary
 {
@@ -48,6 +49,7 @@ namespace YuguLibrary
             public static readonly string JSON_ASSETS_UNIT_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Units/";
             public static readonly string JSON_ASSETS_INSTANCE_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Instances/";
             public static readonly string JSON_ASSETS_STATUS_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Statuses/";
+            public static readonly string JSON_ASSETS_CUTSCENE_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Cutscenes/";
 
             public static readonly string UNIT_SPRITESHEET_FILE_PATH = "Sprites/Units/";
             public static readonly string UI_FILE_PATH = "Sprites/UI/";
@@ -156,6 +158,24 @@ namespace YuguLibrary
                 //Debug.Log("randint value: " + randint);
 
                 if (passChance >= randint)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            public static long UnixTimeNow()
+            {
+                var timeSpan = (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0));
+                return (long)timeSpan.TotalSeconds;
+            }
+
+            public static bool CompareVector3Ints(Vector3Int a, Vector3Int b)
+            {
+                if (a.x == b.x && a.y == b.y && a.z == b.z)
                 {
                     return true;
                 }

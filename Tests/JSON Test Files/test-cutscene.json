@@ -1,0 +1,54 @@
+{
+    "nameID": "test_cutscene",
+    "scenes": [
+        {
+            "instanceJSONFileName": "test-instance.json",
+            "geologyInformation": {
+                "year": 2,
+                "season": "Autumn",
+                "date": 25,
+                "time": "Evening"
+            },
+            "isCinematic": "true",
+            "units": [
+                {
+                    "unitJSONFileName": "test-unit.json",
+                    "unitPosition": {
+                        "xPos": 1,
+                        "yPos": 1,
+                        "zPos": 1
+                    }
+                }
+            ],
+            "sceneChoreographies": [
+                {
+                    "cameraPosition": {
+                        "xPos": 1,
+                        "yPos": 1,
+                        "zPos": 1,
+                        "movementSpeed": 1
+                    },
+                    "dialogue": {
+                        "speakerID": "",
+                        "textID": "",
+                        "portraitFileName": "",
+                        "portraitEmote": 0
+                    },
+                    "animations": [
+                        {
+                            "unitName": "",
+                            "unitIndex": 0,
+                            "moveToTile": {
+                                "xPos": 1,
+                                "yPos": 1,
+                                "zPos": 1
+                            },
+                            "animationIndex": 0
+                        }
+                    ]
+                }
+            ]
+
+        }
+    ]
+}

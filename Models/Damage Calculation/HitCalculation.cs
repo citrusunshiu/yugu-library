@@ -11,15 +11,42 @@ namespace YuguLibrary
     {
         public class HitCalculation
         {
+            /// <summary>
+            /// The unit delivering the hit.
+            /// </summary>
             private Unit attackingUnit;
+
+            /// <summary>
+            /// The hit used for calculation.
+            /// </summary>
             private Hit attackingHit;
 
+            /// <summary>
+            /// The unit being affected by the hit.
+            /// </summary>
             private Unit defendingUnit;
 
+            /// <summary>
+            /// The value multipliers on the attacking hit.
+            /// </summary>
             private Dictionary<string, float> modifiers;
+
+            /// <summary>
+            /// The statuses to be applied to the defending unit.
+            /// </summary>
+            /// <remarks>
+            /// Key is the JSON file name of the status; value is the duration of the status.
+            /// </remarks>
             private Dictionary<string, int> statuses;
 
+            /// <summary>
+            /// The value to modify the target unit's HP by, based on the calculation.
+            /// </summary>
             private int damageResult;
+
+            /// <summary>
+            /// The value to add to the target unit's <see cref="AggroSpread"/>, based on the calculation.
+            /// </summary>
             private float aggroResult;
 
             public HitCalculation(Unit attackingUnit, Hit attackingHit, Unit defendingUnit)
@@ -39,6 +66,26 @@ namespace YuguLibrary
             {
                 defendingUnit.AlterHP(this);
                 defendingUnit.AlterAggro(this);
+            }
+
+            public Unit GetAttackingUnit()
+            {
+                return attackingUnit;
+            }
+
+            public Unit GetDefendingUnit()
+            {
+                return defendingUnit;
+            }
+
+            public int GetDamageResult()
+            {
+                return damageResult;
+            }
+
+            public float GetAggroResult()
+            {
+                return aggroResult;
             }
 
             private int CalculateDamage()
@@ -63,7 +110,7 @@ namespace YuguLibrary
                 //damage calculation
                 int damage = Mathf.RoundToInt((attackingHit.GetHitModifier() * ((1F + attack) / (1f + defense))) / allyModifier);
 
-                
+
 
                 //applying all modifiers
                 foreach (float modifier in modifiers.Values)
@@ -72,26 +119,6 @@ namespace YuguLibrary
                 }
 
                 return damage;
-            }
-
-            public Unit GetAttackingUnit()
-            {
-                return attackingUnit;
-            }
-
-            public Unit GetDefendingUnit()
-            {
-                return defendingUnit;
-            }
-
-            public int GetDamageResult()
-            {
-                return damageResult;
-            }
-
-            public float GetAggroResult()
-            {
-                return aggroResult;
             }
 
             private Dictionary<string, int> CheckStatuses()
@@ -125,6 +152,10 @@ namespace YuguLibrary
                 return modifiers;
             }
 
+            /// <summary>
+            /// Calculates the aggro to be generated from the hit.
+            /// </summary>
+            /// <returns>Returns the hit's aggro value.</returns>
             private float CalculateAggro()
             {   
                 return attackingHit.GetAggroModifier() * (float)Math.Pow(damageResult, 2);

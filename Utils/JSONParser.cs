@@ -213,7 +213,7 @@ namespace YuguLibrary
 
                                 if (IsEndOfObject(reader))
                                 {
-                                    skills.Add(new Skill(skillJSONFileName, (int)levelObtained, (int)progressionPointObtained));
+                                    skills.Add(new SkillHub(skillJSONFileName, (int)levelObtained, (int)progressionPointObtained));
                                     Debug.Log("created: " + skillJSONFileName + " (levelObtained: " + levelObtained + ", progressionPointObtained: " + progressionPointObtained + ")");
                                     skillJSONFileName = "";
                                     levelObtained = 0;
@@ -950,33 +950,6 @@ namespace YuguLibrary
             #endregion
         }
 
-        public class StatusJSONParser : JSONParser
-        {
-            public StatusJSONParser(string statusJSONFileName)
-            {
-                JsonTextReader reader = new JsonTextReader(new StreamReader(UtilityFunctions.JSON_ASSETS_STATUS_FOLDER_PATH + statusJSONFileName));
-                ParseJSON(reader);
-            }
-
-            protected override void ParseJSON(JsonTextReader reader)
-            {
-                while (reader.Read())
-                {
-                    if (reader.Value != null)
-                    {
-                        Debug.Log("Token: " + reader.TokenType + ", Value: " + reader.Value);
-                    }
-                    else
-                    {
-                        Debug.Log("Token: " + reader.TokenType);
-                    }
-                }
-            }
-
-            #region Getters
-            #endregion
-        }
-
         public class AnimationScriptJSONParser : JSONParser
         {
             private string nameID;
@@ -1093,7 +1066,281 @@ namespace YuguLibrary
 
         public class CutsceneJSONParser : JSONParser
         {
-            public CutsceneJSONParser()
+            string nameID;
+            List<Scene> scenes;
+
+            public CutsceneJSONParser(string cutsceneJSONFileName)
+            {
+                scenes = new List<Scene>();
+
+                JsonTextReader reader = new JsonTextReader(
+                    new StreamReader(UtilityFunctions.JSON_ASSETS_CUTSCENE_FOLDER_PATH + cutsceneJSONFileName));
+                ParseJSON(reader);
+            }
+
+            protected override void ParseJSON(JsonTextReader reader)
+            {
+                while (reader.Read())
+                {
+                    if (reader.Value != null)
+                    {
+                        Debug.Log("Token: " + reader.TokenType + ", Value: " + reader.Value);
+                        if(CheckForProperty("nameID", reader))
+                        {
+                            nameID = (string)GetValueFromJSON(reader);
+                        }
+
+                        if(CheckForProperty("scenes", reader))
+                        {
+                            string instanceJSONFileName = "";
+
+                            int year = 0;
+                            Seasons season = Seasons.Spring;
+                            int date = 0;
+                            Times time = Times.EarlyMorning;
+
+                            bool isCinematic = false;
+
+                            List<string> unitsToPlace = new List<string>();
+                            List<Vector3Int> unitPositions = new List<Vector3Int>();
+
+                            List<SceneChoreography> sceneChoreographies = new List<SceneChoreography>();
+                            
+                            reader.Read(); //StartArray
+                            while (IsArrayOngoing(reader))
+                            {
+                                if(CheckForProperty("instanceJSONFileName", reader))
+                                {
+                                    instanceJSONFileName = (string)GetValueFromJSON(reader);
+                                }
+
+                                if(CheckForProperty("geologyInformation", reader))
+                                {
+                                    reader.Read(); //StartObject
+                                    if(CheckForProperty("year", reader))
+                                    {
+                                        year = (int)(long)GetValueFromJSON(reader);
+                                    }
+
+                                    if(CheckForProperty("season", reader))
+                                    {
+                                        season = (Seasons)GetEnumerationFromJSONString(typeof(Seasons), (string)GetValueFromJSON(reader));
+                                    }
+
+                                    if(CheckForProperty("date", reader))
+                                    {
+                                        date = (int)(long)GetValueFromJSON(reader);
+                                    }
+
+                                    if(CheckForProperty("time", reader))
+                                    {
+                                        time = (Times)GetEnumerationFromJSONString(typeof(Times), (string)GetValueFromJSON(reader));
+                                    }
+
+                                    if (IsEndOfObject(reader))
+                                    {
+
+                                    }
+                                }
+
+                                if(CheckForProperty("isCinematic", reader))
+                                {
+                                    isCinematic = (bool)GetValueFromJSON(reader);
+                                }
+
+                                if(CheckForProperty("units", reader))
+                                {
+                                    string unitJSONFileName = "";
+                                    int xPos = -255;
+                                    int yPos = -255;
+                                    int zPos = -255;
+
+                                    reader.Read(); //StartArray
+                                    while (IsArrayOngoing(reader))
+                                    {
+                                        if(CheckForProperty("unitJSONFileName", reader))
+                                        {
+                                            unitJSONFileName = (string)GetValueFromJSON(reader);
+                                        }
+
+                                        if(CheckForProperty("unitPosition", reader))
+                                        {
+                                            reader.Read(); //StartObject
+                                            if (CheckForProperty("xPos", reader))
+                                            {
+                                                xPos = (int)(long)GetValueFromJSON(reader);
+                                            }
+
+                                            if (CheckForProperty("yPos", reader))
+                                            {
+                                                yPos = (int)(long)GetValueFromJSON(reader);
+                                            }
+
+                                            if (CheckForProperty("zPos", reader))
+                                            {
+                                                zPos = (int)(long)GetValueFromJSON(reader);
+                                            }
+
+                                        }
+
+                                        if (IsEndOfObject(reader))
+                                        {
+                                            unitsToPlace.Add(unitJSONFileName);
+                                            unitPositions.Add(new Vector3Int(xPos, yPos, zPos));
+
+                                            unitJSONFileName = "";
+                                            xPos = -255;
+                                            yPos = -255;
+                                            zPos = -255;
+                                        }
+                                    }
+                                }
+
+                                if(CheckForProperty("sceneChorerographies", reader))
+                                {
+                                    Dialogue dialogue = new Dialogue();
+                                    List<SceneAnimation> sceneAnimations = new List<SceneAnimation>();
+
+                                    reader.Read(); //StartArray
+                                    while (IsArrayOngoing(reader))
+                                    {
+                                        if(CheckForProperty("dialogue", reader))
+                                        {
+                                            string speakerID = "";
+                                            string textID = "";
+                                            string portraitFileName = "";
+                                            int portraitEmote = -1;
+
+                                            reader.Read(); //StartObject
+                                            if (CheckForProperty("speakerID", reader))
+                                            {
+                                                speakerID = (string)GetValueFromJSON(reader);
+                                            }
+
+                                            if (CheckForProperty("textID", reader))
+                                            {
+                                                textID = (string)GetValueFromJSON(reader);
+                                            }
+
+                                            if (CheckForProperty("portraitFileName", reader))
+                                            {
+                                                portraitFileName = (string)GetValueFromJSON(reader);
+                                            }
+
+                                            if (CheckForProperty("portraitEmote", reader))
+                                            {
+                                                portraitEmote = (int)(long)GetValueFromJSON(reader);
+                                            }
+
+                                            if (IsEndOfObject(reader))
+                                            {
+                                                dialogue = new Dialogue(speakerID, textID, portraitFileName, portraitEmote);
+
+                                                speakerID = "";
+                                                textID = "";
+                                                portraitFileName = "";
+                                                portraitEmote = -1;
+                                            }
+                                        }
+
+                                        if(CheckForProperty("animations", reader))
+                                        {
+                                            string unitName = "";
+                                            int unitIndex = -1;
+                                            int xPos = -255;
+                                            int yPos = -255;
+                                            int zPos = -255;
+                                            int animationIndex = -1;
+
+
+                                            reader.Read(); //StartArray
+                                            while (IsArrayOngoing(reader))
+                                            {
+                                                if (CheckForProperty("unitName", reader))
+                                                {
+                                                    unitName = (string)GetValueFromJSON(reader);
+                                                }
+
+                                                if(CheckForProperty("unitIndex", reader))
+                                                {
+                                                    unitIndex = (int)(long)GetValueFromJSON(reader);
+                                                }
+
+                                                if (CheckForProperty("moveToTile", reader))
+                                                {
+                                                    reader.Read(); //StartObject
+                                                    if (CheckForProperty("xPos", reader))
+                                                    {
+                                                        xPos = (int)(long)GetValueFromJSON(reader);
+                                                    }
+
+                                                    if (CheckForProperty("yPos", reader))
+                                                    {
+                                                        yPos = (int)(long)GetValueFromJSON(reader);
+                                                    }
+
+                                                    if (CheckForProperty("zPos", reader))
+                                                    {
+                                                        zPos = (int)(long)GetValueFromJSON(reader);
+                                                    }
+                                                }
+
+                                                if (CheckForProperty("animationIndex", reader))
+                                                {
+                                                    animationIndex = (int)(long)GetValueFromJSON(reader);
+                                                }
+
+                                                if (IsEndOfObject(reader))
+                                                {
+                                                    sceneAnimations.Add(new SceneAnimation(unitName, unitIndex, new Vector3Int(xPos, yPos, zPos), animationIndex));
+
+                                                    unitName = "";
+                                                    unitIndex = -1;
+                                                    xPos = -255;
+                                                    yPos = -255;
+                                                    zPos = -255;
+                                                    animationIndex = -1;
+                                                }
+                                            }
+                                        }
+
+                                        if (IsEndOfObject(reader))
+                                        {
+                                            sceneChoreographies.Add(new SceneChoreography(dialogue, sceneAnimations));
+                                        }
+                                    }
+                                }
+
+                                if (IsEndOfObject(reader))
+                                {
+                                    scenes.Add(new Scene(instanceJSONFileName, year, season, date, time, isCinematic, unitsToPlace, unitPositions, sceneChoreographies));
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Debug.Log("Token: " + reader.TokenType);
+                    }
+                }
+            }
+
+            #region Getters
+            public string GetNameID()
+            {
+                return nameID;
+            }
+
+            public List<Scene> GetScenes()
+            {
+                return scenes;
+            }
+            #endregion
+        }
+
+        public class RequestJSONParser : JSONParser
+        {
+            public RequestJSONParser()
             {
 
             }
@@ -1117,11 +1364,12 @@ namespace YuguLibrary
             #endregion
         }
 
-        public class RequestJSONParser : JSONParser
+        public class StatusJSONParser : JSONParser
         {
-            public RequestJSONParser()
+            public StatusJSONParser(string statusJSONFileName)
             {
-
+                JsonTextReader reader = new JsonTextReader(new StreamReader(UtilityFunctions.JSON_ASSETS_STATUS_FOLDER_PATH + statusJSONFileName));
+                ParseJSON(reader);
             }
 
             protected override void ParseJSON(JsonTextReader reader)

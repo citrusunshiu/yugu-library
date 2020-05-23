@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using YuguLibrary.Enumerations;
 using YuguLibrary.Utilities;
@@ -442,7 +443,7 @@ namespace YuguLibrary
             /// <remarks>
             /// Higher values decrease the animation time of certain skills. (100 attack speed = 2x speed)
             /// </remarks>
-            public int attackSpeed;
+            public float attackSpeed;
             #endregion
 
             /// <summary>
@@ -486,7 +487,7 @@ namespace YuguLibrary
             /// List of <see cref="HookFunction"/> objects to search through and execute during specific 
             /// <see cref="DelegateFlags"/> events.
             /// </summary>
-            private List<HookFunction> hookFunctions = new List<HookFunction>();
+            private Dictionary<string, HookFunction> hookFunctions = new Dictionary<string, HookFunction>();
 
             /// <summary>
             /// List of <see cref="OverworldAI"/> objects currently attached to the unit.
@@ -508,6 +509,8 @@ namespace YuguLibrary
             /// Whether or not the unit is currently executing an <see cref="OverworldAIAction"/>.
             /// </summary>
             private bool isExecutingOverworldAIAction;
+
+            private List<string> hitboxImmunities;
 
             #region Encounter-specific Variables
             /// <summary>
@@ -564,87 +567,19 @@ namespace YuguLibrary
             #endregion
 
             #region Functions
-            private void InitializeUnitBaseValues(UnitJSONParser unitJSONParser)
+            public void SetAnimation(int animationIndex, int framesGiven, bool isLooping)
             {
-                nameID = unitJSONParser.GetNameID();
-                animationScript = unitJSONParser.GetAnimationScript();
-                overworldObjectCoordinator.AttachAnimationScript(animationScript);
-                role = unitJSONParser.GetRole();
-                classification = unitJSONParser.GetClassification();
-                speedTier = unitJSONParser.GetSpeedTier();
-
-                hpScaling = unitJSONParser.GetHPScaling();
-                mpScaling = unitJSONParser.GetMPScaling();
-                mpRegenScaling = unitJSONParser.GetMPRegenScaling();
-                physicalAttackScaling = unitJSONParser.GetPhysicalAttackScaling();
-                magicalAttackScaling = unitJSONParser.GetMagicalAttackScaling();
-                physicalDefenseScaling = unitJSONParser.GetPhysicalDefenseScaling();
-                magicalDefenseScaling = unitJSONParser.GetMagicalDefenseScaling();
-                staggerThresholdScaling = unitJSONParser.GetStaggerThresholdScaling();
-                speedScaling = unitJSONParser.GetSpeedScaling();
-
-                List<SkillResource> skillResources = unitJSONParser.GetSkillResources();
-
-                foreach (SkillResource container in skillResources)
-                {
-                    AddSkillResource(container.GetResourceValue(), container);
-                }
+                overworldObjectCoordinator.SetAnimation(animationIndex, framesGiven, isLooping);
             }
 
-            private void InitializeStats()
-            {
-                hp = level * (int)hpScaling;
-                if (targetType == TargetTypes.Enemy)
-                {
-                    hp *= 1000;
-                }
-
-                mp = level * (int)mpScaling;
-
-                currentHP = hp;
-                currentMP = mp;
-
-
-                mpRegen = level * (int)mpRegenScaling;
-                physicalAttack = level * (int)physicalAttackScaling;
-                magicalAttack = level * (int)magicalAttackScaling;
-                physicalDefense = level * (int)physicalDefenseScaling;
-                magicalDefense = level * (int)magicalDefenseScaling;
-                speed = level * (int)speedScaling;
-                staggerThreshold = level * (int)staggerThresholdScaling;
-            }
-
-            private void InitializeUnitFunctionality(UnitJSONParser unitJSONParser)
-            {
-                List<Skill> skills = unitJSONParser.GetSkills();
-                foreach (Skill skill in skills)
-                {
-                    AddSkill(skill);
-                }
-
-                List<OverworldObjectAction> actions = unitJSONParser.GetActions();
-                foreach (OverworldObjectAction action in actions)
-                {
-                    AddOverworldObjectAction(action);
-                }
-
-                List<OverworldAI> overworldAIs = unitJSONParser.GetOverworldAIs();
-                foreach (OverworldAI overworldAI in overworldAIs)
-                {
-                    AddOverworldAI(overworldAI);
-                }
-
-                List<EncounterAI> encounterAIs = unitJSONParser.GetEncounterAIs();
-                foreach (EncounterAI encounterAI in encounterAIs)
-                {
-                    AddEncounterAI(encounterAI);
-                }
-            }
-
+            /// <summary>
+            /// Modifies the unit's current HP using a value provided from a hit calculation.
+            /// </summary>
+            /// <param name="calculation">The hit calculation that will modify the unit's current HP.</param>
             public void AlterHP(HitCalculation calculation)
             {
                 int alterAmount = calculation.GetDamageResult();
-
+                
                 currentHP -= alterAmount;
                 
                 if(alterAmount >= 0) //for damage
@@ -655,7 +590,7 @@ namespace YuguLibrary
                     }
                     else
                     {
-
+                        
                     }
                 }
                 else //for healing
@@ -667,14 +602,68 @@ namespace YuguLibrary
                 }
             }
 
+            /// <summary>
+            /// Modifies the unit's aggro distribution using a value provided from a hit calculatiotn.
+            /// </summary>
+            /// <param name="calculation">The hit calculation that will modify the unit's aggro.</param>
             public void AlterAggro(HitCalculation calculation)
             {
                 aggroSpread.InsertAggro(calculation.GetAttackingUnit(), calculation.GetAggroResult());
             }
 
+            /// <summary>
+            /// Applies a status effect to the unit.
+            /// </summary>
+            /// <param name="status">The status effect to be applied.</param>
+            /// <returns>Returns true if the status applied successfully; returns false if it fails.</returns>
+            public bool ApplyStatus(Status status)
+            {
+                status.SetAttachedUnit(this);
+                statuses.Add(status.GetStatusID(), status);
+
+                foreach(HookFunction hookFunction in status.GetHookFunctions())
+                {
+                    AddHookFunction(hookFunction);
+                }
+
+                return true;
+            }
+
+            /// <summary>
+            /// Removes a specified <see cref="Status"/> from the unit's <see cref="statuses"/> attribute.
+            /// </summary>
+            /// <param name="statusType">Enum value of the status to remove.</param>
+            /// <returns>Returns true if the status was removed successfully; returns false if it fails.</returns>
+            /// <seealso cref="Ailments"/> <seealso cref="Impairments"/> 
+            /// <seealso cref="BeneficialEffects"/> <seealso cref="SkillEffects"/>
+            public bool RemoveStatus(StatusEffects statusEffect)
+            {
+                Status status = statuses[statusEffect];
+
+                foreach(HookFunction hookFunction in status.GetHookFunctions())
+                {
+                    RemoveHookFunction(hookFunction.GetHookFunctionID());
+                }
+
+                statuses.Remove(statusEffect);
+
+                return true;
+            }
+
+            /// <summary>
+            /// Searches for all hook functions of a given delegate flag, and executes their logic.
+            /// </summary>
+            /// <param name="flag">The delegate flag to search for.</param>
+            /// <param name="hookBundle">The hook bundle to pass into the hook functions.</param>
             public void ExecuteDelegates(DelegateFlags flag, HookBundle hookBundle)
             {
-
+                foreach(HookFunction hookFunction in hookFunctions.Values)
+                {
+                    if (hookFunction.GetDelegateType() == flag)
+                    {
+                        hookFunction.ExecuteFunction(hookBundle);
+                    }
+                }
             }
 
             /// <summary>
@@ -696,17 +685,19 @@ namespace YuguLibrary
                 skill.AttachSkillToUnit(this);
             }
 
-
-            public TargetTypes GetTargetType()
-            {
-                return targetType;
-            }
-
+            /// <summary>
+            /// Adds an overworld AI pattern to the unit.
+            /// </summary>
+            /// <param name="overworldAI">The overworld AI pattern to be added.</param>
             public void AddOverworldAI(OverworldAI overworldAI)
             {
                 overworldAIs.Add(overworldAI);
             }
 
+            /// <summary>
+            /// Adds an encounter AI pattern to the unit.
+            /// </summary>
+            /// <param name="encounterAI">The encounter AI pattern to be added.</param>
             public void AddEncounterAI(EncounterAI encounterAI)
             {
                 encounterAIs.Add(encounterAI);
@@ -777,6 +768,132 @@ namespace YuguLibrary
             public Effectiveness GetSkillInteraction(HitAttributes hitAttribute)
             {
                 return skillInteractions[hitAttribute];
+            }
+
+            public TargetTypes GetTargetType()
+            {
+                return targetType;
+            }
+
+            public void AddHitboxImmunity(string hitboxGroupID)
+            {
+                hitboxImmunities.Add(hitboxGroupID);
+            }
+
+            public bool SearchHitboxImmunity(string hitboxGroupID)
+            {
+                return hitboxImmunities.Contains(hitboxGroupID);
+            }
+
+            /// <summary>
+            /// Sets the values for the unit using information from the unit's JSON data.
+            /// </summary>
+            /// <param name="unitJSONParser">The JSON parser containing the unit's data.</param>
+            private void InitializeUnitBaseValues(UnitJSONParser unitJSONParser)
+            {
+                nameID = unitJSONParser.GetNameID();
+                animationScript = unitJSONParser.GetAnimationScript();
+                overworldObjectCoordinator.AttachAnimationScript(animationScript);
+                role = unitJSONParser.GetRole();
+                classification = unitJSONParser.GetClassification();
+                speedTier = unitJSONParser.GetSpeedTier();
+
+                hpScaling = unitJSONParser.GetHPScaling();
+                mpScaling = unitJSONParser.GetMPScaling();
+                mpRegenScaling = unitJSONParser.GetMPRegenScaling();
+                physicalAttackScaling = unitJSONParser.GetPhysicalAttackScaling();
+                magicalAttackScaling = unitJSONParser.GetMagicalAttackScaling();
+                physicalDefenseScaling = unitJSONParser.GetPhysicalDefenseScaling();
+                magicalDefenseScaling = unitJSONParser.GetMagicalDefenseScaling();
+                staggerThresholdScaling = unitJSONParser.GetStaggerThresholdScaling();
+                speedScaling = unitJSONParser.GetSpeedScaling();
+
+                List<SkillResource> skillResources = unitJSONParser.GetSkillResources();
+
+                foreach (SkillResource container in skillResources)
+                {
+                    AddSkillResource(container.GetResourceValue(), container);
+                }
+            }
+
+            /// <summary>
+            /// Sets the unit's stats, dependent on its level, target type and stat scaling.
+            /// </summary>
+            private void InitializeStats()
+            {
+                hp = level * (int)hpScaling;
+                if (targetType == TargetTypes.Enemy)
+                {
+                    hp *= 1000;
+                }
+
+                mp = level * (int)mpScaling;
+
+                currentHP = hp;
+                currentMP = mp;
+
+
+                mpRegen = level * (int)mpRegenScaling;
+                physicalAttack = level * (int)physicalAttackScaling;
+                magicalAttack = level * (int)magicalAttackScaling;
+                physicalDefense = level * (int)physicalDefenseScaling;
+                magicalDefense = level * (int)magicalDefenseScaling;
+                speed = level * (int)speedScaling;
+                staggerThreshold = level * (int)staggerThresholdScaling;
+            }
+
+            /// <summary>
+            /// Attaches skills, actions, and AI to the unit using informatiotn from the unit's JSON data.
+            /// </summary>
+            /// <param name="unitJSONParser">The JSON parser containing the unit's data.</param>
+            private void InitializeUnitFunctionality(UnitJSONParser unitJSONParser)
+            {
+                List<Skill> skills = unitJSONParser.GetSkills();
+                foreach (Skill skill in skills)
+                {
+                    AddSkill(skill);
+                }
+
+                List<OverworldObjectAction> actions = unitJSONParser.GetActions();
+                foreach (OverworldObjectAction action in actions)
+                {
+                    AddOverworldObjectAction(action);
+                }
+
+                List<OverworldAI> overworldAIs = unitJSONParser.GetOverworldAIs();
+                foreach (OverworldAI overworldAI in overworldAIs)
+                {
+                    AddOverworldAI(overworldAI);
+                }
+
+                List<EncounterAI> encounterAIs = unitJSONParser.GetEncounterAIs();
+                foreach (EncounterAI encounterAI in encounterAIs)
+                {
+                    AddEncounterAI(encounterAI);
+                }
+            }
+
+            /// <summary>
+            /// Adds a hook function to the unit.
+            /// </summary>
+            /// <param name="hookFunction">The hook function to be added.</param>
+            private void AddHookFunction(HookFunction hookFunction)
+            {
+                hookFunctions.Add(hookFunction.GetHookFunctionID(), hookFunction);
+                hookFunction.SetAttachedUnit(this);
+                hookFunction.CheckApplicationEffect();
+
+            }
+
+            /// <summary>
+            /// Removes a hook function from the unit.
+            /// </summary>
+            /// <param name="hookFunctionId">The hook function to be removed.</param>
+            private void RemoveHookFunction(string hookFunctionId)
+            {
+                HookFunction hookFunction = hookFunctions[hookFunctionId];
+                hookFunction.CheckRemovalEffect();
+                hookFunctions.Remove(hookFunctionId);
             }
             #endregion
         }

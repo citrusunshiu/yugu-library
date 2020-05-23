@@ -188,6 +188,11 @@ namespace YuguLibrary
             #endregion
 
             #region Functions
+            public Vector3Int GetPosition()
+            {
+                return position;
+            }
+
             public void AddOverworldObjectAction(OverworldObjectAction overworldObjectAction)
             {
                 owoActions.Add(overworldObjectAction);

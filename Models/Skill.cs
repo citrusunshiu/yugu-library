@@ -1,7 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using YuguLibrary.Controllers;
 using YuguLibrary.Enumerations;
 using YuguLibrary.Utilities;
 
@@ -12,8 +14,9 @@ namespace YuguLibrary
         /// <summary>
         /// Unique actions that allow units to interact with each other in combat.
         /// </summary>
-        public class Skill
+        public abstract class Skill
         {
+            #region Variables
             /// <summary>
             /// The localized database ID containing the skill's displayed name.
             /// </summary>
@@ -101,10 +104,21 @@ namespace YuguLibrary
             /// </summary>
             private Unit unit;
 
+            /// <summary>
+            /// The level that the skill is obtained at.
+            /// </summary>
             private int levelObtained;
 
+            /// <summary>
+            /// The unit progression point that the skill becomes available at.
+            /// </summary>
+            /// <remarks>
+            /// Both the unit's progression point and level must be met for a skill to become available.
+            /// </remarks>
             private int progressionPointObtained;
-            
+            #endregion
+
+            #region Constructors
             public Skill(string skillJSONFileName, int levelObtained, int progressionPointObtained)
             {
                 this.levelObtained = levelObtained;
@@ -114,7 +128,94 @@ namespace YuguLibrary
 
                 InitializeSkillValues(skillJSONParser);
             }
+            #endregion
 
+            #region Functions
+            /// <summary>
+            /// Sets the owner of the skill object to a given unit.
+            /// </summary>
+            /// <param name="unit">The unit that the skill should be set to.</param>
+            public void AttachSkillToUnit(Unit unit)
+            {
+                this.unit = unit;
+            }
+
+            /// <summary>
+            /// Runs the function in <see cref="SkillHub"/> with the name specified by <see cref="skillFunctionName"/>
+            /// to execute the skill's logic.
+            /// </summary>
+            public void ExecuteSkill()
+            {
+                Debug.Log(skillFunctionName);
+                if (skillFunctionName.Equals(""))
+                {
+                    RunSkillDefault();
+                }
+                else
+                {
+                    MethodInfo method = GetType().GetMethod(skillFunctionName, BindingFlags.NonPublic | BindingFlags.Instance);
+                    method.Invoke(this, null);
+                }
+            }
+
+            /// <summary>
+            /// Runs all of the skill's skill choreographies in order.
+            /// </summary>
+            private void RunSkillDefault()
+            {
+                foreach(SkillChoreography skillChoreography in skillChoreographies)
+                {
+                    RunSkillChoreography(skillChoreography);
+                }
+            }
+
+            /// <summary>
+            /// Sets the unit's animation to the one specified by the skill choreography, and places the hitboxes 
+            /// specified.
+            /// </summary>
+            /// <param name="skillChoreography">The skill choreography to run.</param>
+            private void RunSkillChoreography(SkillChoreography skillChoreography)
+            {
+                int framesGiven = skillChoreography.GetTotalFrames();
+
+                if (skillChoreography.GetIsAttackSpeedDependent())
+                {
+                    framesGiven = (int)Math.Round(framesGiven/unit.attackSpeed);
+                }
+
+                unit.SetAnimation(skillChoreography.GetAnimationPatternIndex(), framesGiven, false);
+
+                UnitDetector unitDetector = UtilityFunctions.GetActiveUnitDetector();
+
+                foreach (List<Hitbox> hitboxGroup in skillChoreography.GetHitboxGroups())
+                {
+                    string hitboxGroupID = "id:" + 
+                        unit.GetHashCode() + 
+                        "_" + GetHashCode() + 
+                        "_" + skillChoreographies.GetHashCode() + 
+                        "_" + hitboxGroup.GetHashCode() + 
+                        "_" + UtilityFunctions.UnixTimeNow();
+
+                    foreach(Hitbox hitbox in hitboxGroup)
+                    {
+                        hitbox.SetHitboxGroupID(hitboxGroupID);
+                        hitbox.SetUnit(unit);
+                        hitbox.SetSkill(this);
+
+                        if (skillChoreography.GetIsAttackSpeedDependent())
+                        {
+                            hitbox.AdjustToAttackSpeed(unit.attackSpeed);
+                        }
+                        
+                        unitDetector.PlaceHitbox(hitbox);
+                    }
+                }
+            }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="skillJSONParser">The JSON parser containing the skill's data.</param>
             private void InitializeSkillValues(SkillJSONParser skillJSONParser)
             {
                 nameID = skillJSONParser.GetNameID();
@@ -131,25 +232,75 @@ namespace YuguLibrary
                 skillFunctionName = skillJSONParser.GetSkillFunctionName();
             }
 
+            public List<Hit> GetHits()
+            {
+                return hits;
+            }
+            #endregion
+        }
+
+        public class SkillChoreography
+        {
+            #region Variables
             /// <summary>
-            /// Sets the owner of the skill object to a given unit.
+            /// 
             /// </summary>
-            /// <param name="unit">The unit that the skill should be set to.</param>
-            public void AttachSkillToUnit(Unit unit)
+            private string nameID;
+
+            /// <summary>
+            /// 
+            /// </summary>
+            private int animationPatternIndex;
+
+            /// <summary>
+            /// 
+            /// </summary>
+            private int totalFrames;
+
+            /// <summary>
+            /// 
+            /// </summary>
+            private bool isAttackSpeedDependent;
+
+            /// <summary>
+            /// 
+            /// </summary>
+            private List<List<Hitbox>> hitboxGroups;
+            #endregion
+
+            #region Constructors
+            public SkillChoreography(string nameID, int animationPatternIndex, int totalFrames, bool isAttackSpeedDependent, List<List<Hitbox>> hitboxGroups)
             {
-                this.unit = unit;
+                this.nameID = nameID;
+                this.animationPatternIndex = animationPatternIndex;
+                this.totalFrames = totalFrames;
+                this.isAttackSpeedDependent = isAttackSpeedDependent;
+                this.hitboxGroups = hitboxGroups;
             }
 
-            public void ExecuteSkill()
+            #endregion
+
+            #region Functions
+            public int GetAnimationPatternIndex()
             {
-                MethodInfo method = GetType().GetMethod(skillFunctionName, BindingFlags.NonPublic | BindingFlags.Instance);
-                method.Invoke(this, null);
+                return animationPatternIndex;
             }
 
-            private void TestSkill()
+            public int GetTotalFrames()
             {
-                Debug.Log("Skill:TestSkill running");
+                return totalFrames;
             }
+
+            public bool GetIsAttackSpeedDependent()
+            {
+                return isAttackSpeedDependent;
+            }
+
+            public List<List<Hitbox>> GetHitboxGroups()
+            {
+                return hitboxGroups;
+            }
+            #endregion
         }
     }
 

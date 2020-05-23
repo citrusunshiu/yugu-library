@@ -17,6 +17,7 @@ namespace Tests
         [Test]
         public void JSONParserTestParseUnit()
         {
+            // get sample json file, and assert all values
             // Use the Assert class to test conditions
         }
         

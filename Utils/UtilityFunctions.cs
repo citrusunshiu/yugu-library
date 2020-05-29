@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 using YuguLibrary.Controllers;
+using Mono.Data.Sqlite;
+using System;
+using YuguLibrary.Models;
 
 namespace YuguLibrary
 {
@@ -9,7 +12,15 @@ namespace YuguLibrary
     {
         public static class UtilityFunctions
         {
+            /// <summary>
+            /// Random number generator for functions.
+            /// </summary>
+            private static System.Random random = new System.Random();
+
             #region Valid KeyCode Values
+            /// <summary>
+            /// The list of valid keyboard keys for rmapping <see cref="OverworldObjectActions"/> to.
+            /// </summary>
             public static KeyCode[] ValidKeyCodes =
             {
                 KeyCode.Tilde,
@@ -39,15 +50,71 @@ namespace YuguLibrary
             #endregion
 
             #region File Paths
+            /// <summary>
+            /// Path to the project's string database to retrieve text from.
+            /// </summary>
+            public static readonly string SQLITE_LOCALIZATION_DB_FILE_PATH = Application.dataPath + "/Databases/yugutext.db";
+
+            /// <summary>
+            /// Path to the project's root folder that stores all JSON assets.
+            /// </summary>
             public static readonly string JSON_ASSETS_FILE_PATH = Application.dataPath + "/Resources/JSON Assets/";
+
+            /// <summary>
+            /// Path to the project's root folder that stores JSON assets for the <see cref="Unit"/> class.
+            /// </summary>
             public static readonly string JSON_ASSETS_UNIT_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Units/";
-            public static readonly string SPRITESHEET_FILE_PATH = "";
+
+            /// <summary>
+            /// Path to the project's root folder that stores JSON assets for the <see cref="Instance"/> class.
+            /// </summary>
+            public static readonly string JSON_ASSETS_INSTANCE_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Instances/";
+            
+            /// <summary>
+            /// Path to the project's root folder that stores JSON assets for the <see cref="Status"/> class.
+            /// </summary>
+            public static readonly string JSON_ASSETS_STATUS_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Statuses/";
+
+            /// <summary>
+            /// Path to the project's root folder that stores JSON assets for the <see cref="Cutscene"/> class.
+            /// </summary>
+            public static readonly string JSON_ASSETS_CUTSCENE_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Cutscenes/";
+
+            /// <summary>
+            /// Path to the project's root folder that stores sprites for the UI.
+            /// </summary>
             public static readonly string UI_FILE_PATH = "Sprites/UI/";
+            
+            /// <summary>
+            /// Path to the project's root folder that stores UI icons.
+            /// </summary>
             public static readonly string ICONS_FILE_PATH = UI_FILE_PATH + "Icons/";
-            public static readonly string SPRITES_FILE_PATH = "Sprites/";
+
+            /// <summary>
+            /// Path to the project's root folder that stores UI borders.
+            /// </summary>
             public static readonly string BORDERS_FILE_PATH = SPRITES_FILE_PATH + "UI/Borders/";
-            public static readonly string LOCKED_ICON_FILE_PATH = SPRITES_FILE_PATH + "/Misc/lock";
+            
+            
+            /// <summary>
+            /// Path to the folder that stores the tilemaps used for instances.
+            /// </summary>
             public static readonly string GEOGRAPHY_FILE_PATH = "Prefabs/Geographies/";
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public static readonly string UNIT_SPRITESHEET_FILE_PATH = "Sprites/Units/";
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public static readonly string SPRITES_FILE_PATH = "Sprites/";
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public static readonly string LOCKED_ICON_FILE_PATH = SPRITES_FILE_PATH + "/Misc/lock";
             #endregion
 
             /// <summary>
@@ -82,13 +149,11 @@ namespace YuguLibrary
                 float xpos = 0;
                 float ypos = (currentPosition.z * 2.28f);
 
-                //Debug.Log("x: " + currentPosition.x + "; y: " + currentPosition.y + "; z: " + currentPosition.z);
-
-                //for every x: x += 1.225, y += 0.6125; if x is negative, equations are negated
+                //for every x: x += 1.225, y += 0.6125; 
                 xpos += (currentPosition.x * 1.225f);
                 ypos += (currentPosition.x * 0.6125f);
 
-                //for every y: x -= 1.225, y += 0.6125; if y is negative, equations are negated
+                //for every y: x -= 1.225, y += 0.6125;
                 xpos -= (currentPosition.y * 1.225f);
                 ypos += (currentPosition.y * 0.6125f);
                 float zpos = (currentPosition.z * 3.5f);
@@ -112,6 +177,73 @@ namespace YuguLibrary
                 translation.y -= position.z;
 
                 return translation;
+            }
+
+            /// <summary>
+            /// Retrieves a string by its given ID from SQLite database.
+            /// </summary>
+            /// <param name="id">The ID of the string to retrieve.</param>
+            /// <returns>Returns the string of the associated ID.</returns>
+            public static string GetStringFromSQL(string id)
+            {
+                SqliteConnection connection = new SqliteConnection("URI=file:" + SQLITE_LOCALIZATION_DB_FILE_PATH);
+                connection.Open();
+                
+                SqliteCommand command = connection.CreateCommand();
+                command.CommandText = @"SELECT text FROM Text WHERE textID='" + id + "'";
+
+                SqliteDataReader reader = command.ExecuteReader();
+                reader.Read();
+
+                return reader.GetString(0);
+            }
+
+            /// <summary>
+            /// Checks if 2 different <see cref="Vector3Int"/> objects have the same X, Y, and Z values.
+            /// </summary>
+            /// <param name="a">The first Vector3Int object to compare.</param>
+            /// <param name="b">The second Vector3Int object to compare.</param>
+            /// <returns>Returns true if both objects have the same X, Y, and Z values; returns false otherwise.</returns>
+            public static bool CompareVector3Ints(Vector3Int a, Vector3Int b)
+            {
+                if (a.x == b.x && a.y == b.y && a.z == b.z)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            /// <summary>
+            /// Rolls a random integer between 1-100, and compares it against a specified passing rate.
+            /// </summary>
+            /// <param name="passChance">The success rate of the roll.</param>
+            /// <returns>Returns true if passChance is higher than the number rolled, and false otherwise.</returns>
+            public static bool GetRandomPercentage(int passChance)
+            {
+
+                int randint = random.Next(0, 101);
+
+                if (passChance >= randint)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            /// <summary>
+            /// Returns the current Unix time.
+            /// </summary>
+            /// <returns>Returns the current Unix time.</returns>
+            public static long UnixTimeNow()
+            {
+                var timeSpan = (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0));
+                return (long)timeSpan.TotalSeconds;
             }
         }
     }

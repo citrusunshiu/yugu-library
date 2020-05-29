@@ -1,18 +1,65 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using YuguLibrary.Enumerations;
+using YuguLibrary.Models;
 
-public class HookBundle : MonoBehaviour
+namespace YuguLibrary
 {
-    // Start is called before the first frame update
-    void Start()
+    /// <summary>
+    /// Specifies information to pass to a <see cref="HookFunction"/>.
+    /// </summary>
+    /// <remarks>
+    /// Subclasses exist to add clarity when defining a new hook function.
+    /// </remarks>
+    public abstract class HookBundle
     {
-        
+
     }
 
-    // Update is called once per frame
-    void Update()
+    public class IncapacitationHookBundle : HookBundle
     {
-        
+        public IncapacitationHookBundle()
+        {
+
+        }
+    }
+
+    public class StatusAppliedHookBundle : HookBundle
+    {
+        /// <summary>
+        /// The status to be applied.
+        /// </summary>
+        public Status status;
+
+        /// <summary>
+        /// The unit turn of the unit to be afflicted by the status.
+        /// </summary>
+        public Unit target;
+
+        public StatusAppliedHookBundle(Status status, Unit target)
+        {
+            this.status = status;
+            this.target = target;
+        }
+    }
+
+    public class StatusRemovedHookBundle : HookBundle
+    {
+        /// <summary>
+        /// The status to be removed.
+        /// </summary>
+        public StatusEffects statusEffect;
+
+        /// <summary>
+        /// The unit turn of the unit afflicted by the status.
+        /// </summary>
+        public Unit target;
+
+        public StatusRemovedHookBundle(StatusEffects statusEffect, Unit target)
+        {
+            this.statusEffect = statusEffect;
+            this.target = target;
+        }
     }
 }

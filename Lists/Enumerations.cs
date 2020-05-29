@@ -170,7 +170,11 @@ namespace YuguLibrary
 
             OnEncounterCollectReceivingHealModifiers,
 
-            OnEncounterIncapacitation
+            OnEncounterIncapacitation,
+
+            OnApply,
+
+            OnRemove
         };
 
         /// <summary>
@@ -275,17 +279,6 @@ namespace YuguLibrary
             ElectricResistance,
             EarthResistance,
             WaterResistance,
-        };
-
-        public enum DialogueCharacters
-        {
-
-        }
-
-        public enum DialogueEmotions
-        {
-            None,
-            Default,
         }
 
         /// <summary>
@@ -436,8 +429,9 @@ namespace YuguLibrary
         /// <summary>
         /// List of all possible skill types.
         /// </summary>
-        public enum EncounterSkillTypes
+        public enum SkillTypes
         {
+            Overworld,
             /// <summary>
             /// Identifier for Primary-type skills. One can be used per <see cref="UnitTurn"/>.
             /// </summary>

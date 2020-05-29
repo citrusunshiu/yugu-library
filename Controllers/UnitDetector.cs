@@ -1,6 +1,4 @@
-﻿using Models;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -50,6 +48,8 @@ namespace YuguLibrary
             private List<LoadingZone> loadingZones = new List<LoadingZone>();
 
             private List<OverworldObject> overworldObjects = new List<OverworldObject>();
+
+            private List<Hitbox> hitboxes = new List<Hitbox>();
 
             /// <summary>
             /// References to all special floor tiles in the current instance.
@@ -123,7 +123,7 @@ namespace YuguLibrary
             /// <param name="spawnPosition">The position where the player will be placed at.</param>
             public void LoadNewInstance(Instance instance, Vector3Int spawnPosition)
             {
-                SwapGeography(instance.GeographyName);
+                SwapGeography(instance.GetGeographyName());
             }
             #endregion
 
@@ -232,9 +232,77 @@ namespace YuguLibrary
                 return true;
             }
 
+            /// <summary>
+            /// Adds a hitbox to the unit detector, and begins timers for hitbox arming, activation, lingering, and removal.
+            /// </summary>
+            /// <param name="hitbox">The hitbox to be placed.</param>
+            public void PlaceHitbox(Hitbox hitbox)
+            {
+                hitboxes.Add(hitbox);
+                // not done yet: hitbox arming/activation/lingering/removal; hitbox checkpoints.
+            }
 
+            /// <summary>
+            /// Executes a given hitbox on all units at its location.
+            /// </summary>
+            /// <param name="hitbox">The hitbox to be executed.</param>
+            private void CheckUnitsAtHitbox(Hitbox hitbox)
+            {
+                List<OverworldObject> overworldObjects = GetOverworldObjectsAtPosition(hitbox.GetPosition());
+                foreach (OverworldObject overworldObject in overworldObjects)
+                {
+                    if (overworldObject is Unit)
+                    {
+                        hitbox.ExecuteHitbox((Unit)overworldObject);
+                    }
+                }
+            }
 
+            /// <summary>
+            /// Executes all hitboxes at a given unit's position.
+            /// </summary>
+            /// <param name="unit">The unit to be affected.</param>
+            private void CheckHitboxesAtUnit(Unit unit)
+            {
+                foreach(Hitbox hitbox in hitboxes)
+                {
+                    if(UtilityFunctions.CompareVector3Ints(hitbox.GetPosition(), unit.GetPosition()))
+                    {
+                        hitbox.ExecuteHitbox(unit);
+                    }
+                }
+            }
+
+            private List<OverworldObject> GetOverworldObjectsAtPosition(Vector3Int posititon)
+            {
+                List<OverworldObject> overworldObjects = new List<OverworldObject>();
+
+                return overworldObjects;
+            }
             #endregion
+
+            public void FlagDelegate(DelegateFlags flag, HookBundle hookBundle, List<Unit> unitsAlerted)
+            {
+                foreach(Unit unit in unitsAlerted)
+                {
+                    unit.ExecuteDelegates(flag, hookBundle);
+                }
+            }
+
+            public List<Unit> GetAllUnits()
+            {
+                List<Unit> units = new List<Unit>();
+
+                foreach(OverworldObject overworldObject in overworldObjects)
+                {
+                    if(overworldObject is Unit)
+                    {
+                        units.Add((Unit)overworldObject);
+                    }
+                }
+
+                return units;
+            }
             
             /// <summary>
             /// Gets the highest floor tile at a given position.

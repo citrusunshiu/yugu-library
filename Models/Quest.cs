@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WeatherGenerator
+namespace YuguLibrary
 {
+    public class Quest
+    {
 
+    }
 }

@@ -1,0 +1,9 @@
+{
+    "nameID": "status_test_status",
+    "descriptionID": "",
+    "longDescriptionID": "",
+    "statusType": "",
+    "statusID": "",
+    "isStackable": "false",
+    "statusFunctionName": "TestStatus"
+}

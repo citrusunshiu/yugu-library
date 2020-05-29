@@ -20,6 +20,14 @@ namespace YuguLibrary
                 InitializeCutsceneValues(cutsceneJSONParser);
             }
 
+            public void StartCutscene()
+            {
+                foreach(Scene scene in scenes)
+                {
+                    scene.PlayScene();
+                }
+            }
+
             private void InitializeCutsceneValues(CutsceneJSONParser cutsceneJSONParser)
             {
                 nameID = cutsceneJSONParser.GetNameID();
@@ -61,6 +69,16 @@ namespace YuguLibrary
 
                 this.sceneChoreographies = sceneChoreographies;
             }
+
+            public void PlayScene()
+            {
+                //create new ud/geology; set instance, units, datetime
+
+                foreach(SceneChoreography sceneChoreography in sceneChoreographies)
+                {
+                    sceneChoreography.ExecuteSceneChoreography();
+                }
+            }
         }
 
         public class SceneChoreography
@@ -73,6 +91,15 @@ namespace YuguLibrary
                 this.dialogue = dialogue;
                 this.sceneAnimations = sceneAnimations;
 
+            }
+
+            public void ExecuteSceneChoreography()
+            {
+                dialogue.PlaceDialogue();
+                foreach(SceneAnimation sceneAnimation in sceneAnimations)
+                {
+                    sceneAnimation.ExeecuteSceneAnimation();
+                }
             }
         }
 
@@ -95,6 +122,17 @@ namespace YuguLibrary
             {
 
             }
+
+            public void PlaceDialogue()
+            {
+
+            }
+
+            private void ParseDialogueText()
+            {
+                string speaker = UtilityFunctions.GetStringFromSQL(dialogueSpeaker);
+                string dialogue = UtilityFunctions.GetStringFromSQL(dialogueText);
+            }
         }
 
         public class SceneAnimation
@@ -110,6 +148,11 @@ namespace YuguLibrary
                 this.unitIndex = unitIndex;
                 this.moveToTile = moveToTile;
                 this.animationIndex = animationIndex;
+            }
+
+            public void ExeecuteSceneAnimation()
+            {
+
             }
         }
     }

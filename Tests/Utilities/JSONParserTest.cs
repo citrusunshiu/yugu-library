@@ -13,7 +13,32 @@ namespace Tests
         {
             // Use the Assert class to test conditions
         }
-        
+        [Test]
+        public void JSONParserTestCheckForProperty()
+        {
+            // Use the Assert class to test conditions
+        }
+        [Test]
+        public void JSONParserTestIsArrayOngoing()
+        {
+            // Use the Assert class to test conditions
+        }
+        [Test]
+        public void JSONParserTestIsEndOfObject()
+        {
+            // Use the Assert class to test conditions
+        }
+        [Test]
+        public void JSONParserTestGetEnumerationFromJSONString()
+        {
+            // Use the Assert class to test conditions
+        }
+        [Test]
+        public void JSONParserTestGetValueFromJSON()
+        {
+            // Use the Assert class to test conditions
+        }
+
         [Test]
         public void JSONParserTestParseUnit()
         {
@@ -52,7 +77,7 @@ namespace Tests
         }
 
         [Test]
-        public void JSONParserTestParseRequest()
+        public void JSONParserTestParseQuest()
         {
             // Use the Assert class to test conditions
         }

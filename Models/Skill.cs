@@ -80,7 +80,7 @@ namespace YuguLibrary
             private List<SkillChoreography> skillChoreographies;
 
             /// <summary>
-            /// The name of the function associated with the skill object's logic.
+            /// The name of the function contained in <see cref="SkillHub"/> associated with the skill object's logic.
             /// </summary>
             private string skillFunctionName;
             

@@ -60,7 +60,6 @@ namespace YuguLibrary
         }
         #endregion
 
-
         #region Functions
         public StatusEffects GetStatusID()
         {

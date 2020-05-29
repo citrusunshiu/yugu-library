@@ -27,6 +27,9 @@ public class Hitbox
     /// </summary>
     private Vector3Int position;
 
+    /// <summary>
+    /// The name of the function contained in <see cref="SkillHub"/> associated with the hitbox object's logic.
+    /// </summary>
     private string hitFunctionName;
 
     private int hitIndex;
@@ -126,6 +129,21 @@ public class Hitbox
     public void SetSkill(Skill skill)
     {
         this.skill = skill;
+    }
+
+    public int GetStartFrame()
+    {
+        return startFrame;
+    }
+
+    public int GetDelayFrames()
+    {
+        return delayFrames;
+    }
+
+    public int GetLingerFrames()
+    {
+        return lingerFrames;
     }
     #endregion
 }

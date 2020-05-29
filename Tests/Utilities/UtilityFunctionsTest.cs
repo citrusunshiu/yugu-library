@@ -48,5 +48,11 @@ namespace Tests
             // set up a v3i; for every z, subtract x/y by 1; check positive, negative, zero
             throw new NotImplementedException();
         }
+
+        [Test]
+        public void UtilityFunctionsTestCompareVector3Ints()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

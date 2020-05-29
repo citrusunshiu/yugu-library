@@ -12,6 +12,9 @@ namespace YuguLibrary
 {
     namespace Utilities
     {
+        /// <summary>
+        /// Parses information from JSON files into C# objects.
+        /// </summary>
         public abstract class JSONParser
         {
             protected abstract void ParseJSON(JsonTextReader reader);
@@ -43,6 +46,9 @@ namespace YuguLibrary
             }
         }
 
+        /// <summary>
+        /// Parses data from a JSON file into a <see cref="Unit"/> object.
+        /// </summary>
         public class UnitJSONParser : JSONParser
         {
             private string nameID;
@@ -396,6 +402,9 @@ namespace YuguLibrary
 
         }
 
+        /// <summary>
+        /// Parses data from a JSON file into an <see cref="Instance"/> object.
+        /// </summary>
         public class InstanceJSONParser : JSONParser
         {
             private string nameID;
@@ -587,6 +596,9 @@ namespace YuguLibrary
             #endregion
         }
 
+        /// <summary>
+        /// Parses data from a JSON file into a <see cref="Skill"/> object.
+        /// </summary>
         public class SkillJSONParser : JSONParser
         {
             private string nameID;
@@ -950,6 +962,9 @@ namespace YuguLibrary
             #endregion
         }
 
+        /// <summary>
+        /// Parses data from a JSON file into an <see cref="AnimationScript"/> object.
+        /// </summary>
         public class AnimationScriptJSONParser : JSONParser
         {
             private string nameID;
@@ -1064,6 +1079,9 @@ namespace YuguLibrary
             #endregion
         }
 
+        /// <summary>
+        /// Parses data from a JSON file into a <see cref="Cutscene"/> object.
+        /// </summary>
         public class CutsceneJSONParser : JSONParser
         {
             string nameID;
@@ -1338,9 +1356,12 @@ namespace YuguLibrary
             #endregion
         }
 
-        public class RequestJSONParser : JSONParser
+        /// <summary>
+        /// Parses data from a JSON file into a <see cref="Quest"/> object.
+        /// </summary>
+        public class QuestJSONParser : JSONParser
         {
-            public RequestJSONParser()
+            public QuestJSONParser()
             {
 
             }
@@ -1364,6 +1385,9 @@ namespace YuguLibrary
             #endregion
         }
 
+        /// <summary>
+        /// Parses data from a JSON file into a <see cref="Status"/> object.
+        /// </summary>
         public class StatusJSONParser : JSONParser
         {
             public StatusJSONParser(string statusJSONFileName)

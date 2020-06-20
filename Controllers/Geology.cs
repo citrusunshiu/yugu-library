@@ -2,7 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Geology
+namespace YuguLibrary
 {
+    namespace Controllers
+    {
+        public class Geology
+        {
 
+        }
+    }
 }

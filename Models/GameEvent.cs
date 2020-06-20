@@ -2,7 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GameEvent
+namespace YuguLibrary
 {
+    namespace Models
+    {
+        public class GameEvent
+        {
 
+        }
+    }
 }

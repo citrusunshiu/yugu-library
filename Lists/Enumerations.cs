@@ -286,11 +286,11 @@ namespace YuguLibrary
         /// </summary>
         public enum SpeedTiers
         {
-            VeryFast = 5,
-            Fast = 10,
-            Normal = 15,
-            Slow = 20,
-            VerySlow = 25
+            VeryFast = 4,
+            Fast = 5,
+            Normal = 6,
+            Slow = 10,
+            VerySlow = 13
         }
 
         /// <summary>
@@ -647,7 +647,8 @@ namespace YuguLibrary
             Windy,
             Snow,
             Hail,
-            Fog
+            Fog,
+            TestWeather
         }
     }
 }

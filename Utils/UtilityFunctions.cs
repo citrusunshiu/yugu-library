@@ -224,7 +224,7 @@ namespace YuguLibrary
             public static bool GetRandomPercentage(int passChance)
             {
 
-                int randint = random.Next(0, 101);
+                int randint = random.Next(1, 101);
 
                 if (passChance >= randint)
                 {

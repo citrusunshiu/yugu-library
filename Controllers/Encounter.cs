@@ -2,7 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Encounter
+namespace YuguLibrary
 {
+    namespace Controllers
+    {
+        public class Encounter
+        {
 
+        }
+    }
 }

@@ -105,6 +105,7 @@ namespace YuguLibrary
                 return attributes[(int)attribute];
             }
 
+            #region Getters & Setters
             public float GetHitModifier()
             {
                 return hitModifier;
@@ -114,6 +115,7 @@ namespace YuguLibrary
             {
                 return aggroModifier;
             }
+            #endregion
             #endregion
         }
     }

@@ -142,7 +142,7 @@ namespace YuguLibrary
             /// <summary>
             /// Whether or not the overworld object is currently running.
             /// </summary>
-            public bool isRunning = false;
+            public bool isRunning = true;
 
             /// <summary>
             /// Whether or not the overworld object is currently stationary.
@@ -183,7 +183,7 @@ namespace YuguLibrary
             #region Constructors
             public OverworldObject()
             {
-                CalculateFrameSpeeds(30, 5, 5);
+
             }
             #endregion
 
@@ -242,11 +242,11 @@ namespace YuguLibrary
             /// <param name="walkFrames">The number of frames the overworld object should take to walk 1 tile.</param>
             /// <param name="ascentFrames">The number of frames the overworld object should take to ascend 1 tile.</param>
             /// <param name="descentFrames">The number of frames the overworld object should take to descend 1 tile.</param>
-            private void CalculateFrameSpeeds(int walkFrames, int ascentFrames, int descentFrames)
+            protected void CalculateFrameSpeeds(int walkFrames, int ascentFrames, int descentFrames)
             {
                 this.walkFrames = walkFrames;
                 walkDelay = walkFrames / 60F;
-                
+
                 runFrames = (int)speedTier;
                 runDelay = runFrames / 60F;
 

@@ -558,7 +558,7 @@ namespace YuguLibrary
                 InitializeUnitBaseValues(unitJSONParser);
                 InitializeStats();
                 InitializeUnitFunctionality(unitJSONParser);
-
+                CalculateFrameSpeeds(15, 5, 5);
 
             }
             #endregion

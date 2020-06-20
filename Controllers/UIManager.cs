@@ -2,7 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class UIManager
+namespace YuguLibrary
 {
+    namespace Controllers
+    {
+        public class UIManager
+        {
 
+        }
+    }
 }

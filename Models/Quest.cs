@@ -4,8 +4,11 @@ using UnityEngine;
 
 namespace YuguLibrary
 {
-    public class Quest
+    namespace Models
     {
+        public class Quest
+        {
 
+        }
     }
 }

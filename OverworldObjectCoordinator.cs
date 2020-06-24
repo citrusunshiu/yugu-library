@@ -126,7 +126,7 @@ namespace YuguLibrary
 
         private IEnumerator MoveSegment(Directions direction, int totalMoveFrames, int moveProgress = 0)
         {
-            yield return new WaitForSeconds(0.016667F);
+            yield return new WaitForSeconds(UtilityFunctions.FRAME_LENGTH);
 
             float dx = xmove / totalMoveFrames;
             float dy = ymove / totalMoveFrames;

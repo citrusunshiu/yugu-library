@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using YuguLibrary.Enumerations;
@@ -21,6 +23,8 @@ namespace YuguLibrary
             /// Reference to the tilemap used for overworld object movement.
             /// </summary>
             private Tilemap geography;
+
+            private List<Tilemap> hitboxIndicators = new List<Tilemap>();
 
             /// <summary>
             /// Reference to the tilemap used for colored tile indicators.
@@ -102,6 +106,10 @@ namespace YuguLibrary
                 overworldObject.position = position;
                 overworldObjects.Add(overworldObject);
                 UtilityFunctions.SetSpriteDefaultPosition(overworldObject.overworldObjectCoordinator);
+                if(overworldObject is Unit)
+                {
+                    CheckHitboxesAtUnit((Unit)overworldObject);
+                }
             }
 
             /// <summary>
@@ -202,6 +210,10 @@ namespace YuguLibrary
                     //UtilityFunctions.SetSpriteDefaultPosition(overworldObject.overworldObjectCoordinator);
 
                     DelayMovements(overworldObject, z);
+                    if(overworldObject is Unit)
+                    {
+                        CheckHitboxesAtUnit((Unit)overworldObject);
+                    }
 
                     return true;
                 }
@@ -239,7 +251,94 @@ namespace YuguLibrary
             public void PlaceHitbox(Hitbox hitbox)
             {
                 hitboxes.Add(hitbox);
-                // not done yet: hitbox arming/activation/lingering/removal; hitbox checkpoints.
+                controllerReference.StartCoroutine(ProgressHitboxInterval(hitbox));
+            }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="hitbox"></param>
+            /// <param name="frameProgress"></param>
+            /// <returns></returns>
+            private IEnumerator ProgressHitboxInterval(Hitbox hitbox, int frameProgress = 0)
+            {
+                yield return new WaitForSeconds(UtilityFunctions.FRAME_LENGTH);
+
+                frameProgress++;
+                ProgressHitboxVisual(hitbox, frameProgress);
+
+                if(frameProgress == hitbox.GetLingerFrames())
+                {
+                    hitbox.SetIsActive(true);
+                    CheckUnitsAtHitbox(hitbox);
+                }
+
+                if(frameProgress < hitbox.GetDelayFrames() + hitbox.GetLingerFrames())
+                {
+                    RepeatHitboxInterval(hitbox, frameProgress);
+                }
+                else
+                {
+                    hitbox.SetIsActive(false);
+                    hitboxes.Remove(hitbox);
+                }
+            }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="hitbox"></param>
+            /// <param name="frameProgress"></param>
+            private void RepeatHitboxInterval(Hitbox hitbox, int frameProgress)
+            {
+                controllerReference.StartCoroutine(ProgressHitboxInterval(hitbox, frameProgress));
+            }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="hitbox"></param>
+            /// <param name="frameProgress"></param>
+            private void ProgressHitboxVisual(Hitbox hitbox, int frameProgress)
+            {
+                Vector3Int adjustedPosition = hitbox.GetPosition();
+                adjustedPosition.z--;
+                adjustedPosition.x++;
+                adjustedPosition.y++;
+
+                TileBase hitboxTile = ScriptableObject.CreateInstance<HitboxTile>();
+                if (!indicators.HasTile(adjustedPosition))
+                {
+                    indicators.SetTile(adjustedPosition, hitboxTile);
+                    indicators.SetTileFlags(adjustedPosition, TileFlags.None);
+                }
+
+                Color white = new Color(255F/255F, 255F/255F, 255F/255F, 0.5F);
+                Color yellow = new Color(255F/255F, 234F/255F, 0F/255F, 0.5F);
+                Color orange = new Color(255F/255F, 128F/255F, 0F/255F, 0.5F);
+                Color red = new Color(255F/255F, 0F/255F, 0F/255F, 0.5F);
+                Color magenta = new Color(255F/255F, 0F/255F, 191F/255F, 0.5F);
+
+                if (frameProgress < hitbox.GetDelayFrames()/2) // white > yellow
+                {
+                    //indicators.SetColor(hitbox.GetPosition(), new Color());
+                }
+                else if(frameProgress < hitbox.GetDelayFrames()) // yellow > orange
+                {
+                    //indicators.SetColor(hitbox.GetPosition(), new Color());
+                }
+                else if(frameProgress < hitbox.GetDelayFrames() + (hitbox.GetLingerFrames() / 2)) // red > magenta
+                {
+                    indicators.SetColor(adjustedPosition, red);
+                }
+                else if(frameProgress < hitbox.GetDelayFrames() + hitbox.GetLingerFrames()) // magenta > white
+                {
+                    //indicators.SetColor(hitbox.GetPosition(), new Color());
+                }
+                else // remove
+                {
+                    indicators.SetTile(adjustedPosition, null);
+                }
             }
 
             /// <summary>
@@ -273,6 +372,11 @@ namespace YuguLibrary
                 }
             }
 
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="posititon"></param>
+            /// <returns></returns>
             private List<OverworldObject> GetOverworldObjectsAtPosition(Vector3Int posititon)
             {
                 List<OverworldObject> overworldObjects = new List<OverworldObject>();
@@ -281,6 +385,12 @@ namespace YuguLibrary
             }
             #endregion
 
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="flag"></param>
+            /// <param name="hookBundle"></param>
+            /// <param name="unitsAlerted"></param>
             public void FlagDelegate(DelegateFlags flag, HookBundle hookBundle, List<Unit> unitsAlerted)
             {
                 foreach(Unit unit in unitsAlerted)
@@ -289,6 +399,10 @@ namespace YuguLibrary
                 }
             }
 
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <returns></returns>
             public List<Unit> GetAllUnits()
             {
                 List<Unit> units = new List<Unit>();
@@ -360,6 +474,10 @@ namespace YuguLibrary
                 }
             }
 
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="name"></param>
             private void SwapGeography(string name)
             {
                 if (geography != null)
@@ -377,6 +495,14 @@ namespace YuguLibrary
                 geography.transform.SetParent(GameObject.Find("Controller Hub").transform);
             }
             #endregion
+        }
+
+        public class HitboxTile : TileBase
+        {
+            public override void GetTileData(Vector3Int position, ITilemap tilemap, ref TileData tileData)
+            {
+                tileData.sprite = Resources.Load<Sprite>("Sprites/Tiles/Prototype/hitbox");
+            }
         }
     }
 }

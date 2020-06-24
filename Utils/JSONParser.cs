@@ -140,7 +140,7 @@ namespace YuguLibrary
                                 if (reader.TokenType == JsonToken.EndObject)
                                 {
                                     skillResources.Add(new SkillResource(resource, (int)maxValue));
-                                    Debug.Log("created: " + resource + " (max value: " + maxValue + ")");
+                                    //Debug.Log("created: " + resource + " (max value: " + maxValue + ")");
                                     resource = SkillResources.HP;
                                     maxValue = 0;
                                 }
@@ -220,7 +220,7 @@ namespace YuguLibrary
                                 if (IsEndOfObject(reader))
                                 {
                                     skills.Add(new SkillHub(skillJSONFileName, (int)levelObtained, (int)progressionPointObtained));
-                                    Debug.Log("created: " + skillJSONFileName + " (levelObtained: " + levelObtained + ", progressionPointObtained: " + progressionPointObtained + ")");
+                                    //Debug.Log("created: " + skillJSONFileName + " (levelObtained: " + levelObtained + ", progressionPointObtained: " + progressionPointObtained + ")");
                                     skillJSONFileName = "";
                                     levelObtained = 0;
                                     progressionPointObtained = 0;
@@ -239,14 +239,12 @@ namespace YuguLibrary
                                 if (CheckForProperty("className", reader))
                                 {
                                     actionClassName = (string)GetValueFromJSON(reader);
-                                    Debug.Log(actionClassName);
                                 }
 
                                 if (IsEndOfObject(reader))
                                 {
                                     Type type = Type.GetType(actionClassName);
                                     actions.Add((OverworldObjectAction)Activator.CreateInstance(type));
-                                    Debug.Log("created: " + actionClassName);
                                     actionClassName = "";
                                 }
                             }
@@ -631,7 +629,7 @@ namespace YuguLibrary
                 {
                     if (reader.Value != null)
                     {
-                        Debug.Log("Token: " + reader.TokenType + ", Value: " + reader.Value);
+                        //Debug.Log("Token: " + reader.TokenType + ", Value: " + reader.Value);
                         if(CheckForProperty("nameID", reader))
                         {
                             nameID = (string)GetValueFromJSON(reader);
@@ -876,7 +874,8 @@ namespace YuguLibrary
                                 if (IsEndOfObject(reader))
                                 {
                                     SkillChoreography skillChoreography = new SkillChoreography(choreographyNameID, animationPatternIndex, totalFrames, isAttackSpeedDependent, hitboxGroups);
-                                    
+                                    skillChoreographies.Add(skillChoreography);
+
                                     choreographyNameID = "";
                                     animationPatternIndex = -1;
                                     totalFrames = -1;
@@ -894,7 +893,7 @@ namespace YuguLibrary
                     }
                     else
                     {
-                        Debug.Log("Token: " + reader.TokenType);
+                        //Debug.Log("Token: " + reader.TokenType);
                     }
                 }
             }
@@ -985,7 +984,7 @@ namespace YuguLibrary
                 {
                     if (reader.Value != null)
                     {
-                        Debug.Log("Token: " + reader.TokenType + ", Value: " + reader.Value);
+                        //Debug.Log("Token: " + reader.TokenType + ", Value: " + reader.Value);
                         if(CheckForProperty("nameID", reader))
                         {
                             nameID = (string)GetValueFromJSON(reader);
@@ -1056,7 +1055,7 @@ namespace YuguLibrary
                     }
                     else
                     {
-                        Debug.Log("Token: " + reader.TokenType);
+                        //Debug.Log("Token: " + reader.TokenType);
                     }
                 }
             }

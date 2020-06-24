@@ -146,6 +146,7 @@ namespace YuguLibrary
             /// </summary>
             public void ExecuteSkill()
             {
+                Debug.Log("execskill");
                 Debug.Log(skillFunctionName);
                 if (skillFunctionName.Equals(""))
                 {
@@ -163,7 +164,8 @@ namespace YuguLibrary
             /// </summary>
             private void RunSkillDefault()
             {
-                foreach(SkillChoreography skillChoreography in skillChoreographies)
+                Debug.Log("skilldefault: count = " + skillChoreographies.Count);
+                foreach (SkillChoreography skillChoreography in skillChoreographies)
                 {
                     RunSkillChoreography(skillChoreography);
                 }
@@ -176,10 +178,13 @@ namespace YuguLibrary
             /// <param name="skillChoreography">The skill choreography to run.</param>
             private void RunSkillChoreography(SkillChoreography skillChoreography)
             {
+                Debug.Log("skillcho");
                 int framesGiven = skillChoreography.GetTotalFrames();
 
                 if (skillChoreography.GetIsAttackSpeedDependent())
                 {
+                    Debug.Log(framesGiven);
+                    Debug.Log(unit.attackSpeed);
                     framesGiven = (int)Math.Round(framesGiven/unit.attackSpeed);
                 }
 
@@ -201,6 +206,7 @@ namespace YuguLibrary
                         hitbox.SetHitboxGroupID(hitboxGroupID);
                         hitbox.SetUnit(unit);
                         hitbox.SetSkill(this);
+                        hitbox.AdjustPositionToUnit();
 
                         if (skillChoreography.GetIsAttackSpeedDependent())
                         {

@@ -440,7 +440,7 @@ namespace YuguLibrary
             /// <remarks>
             /// Higher values decrease the animation time of certain skills. (100 attack speed = 2x speed)
             /// </remarks>
-            public float attackSpeed;
+            public float attackSpeed = 1;
             #endregion
 
             /// <summary>

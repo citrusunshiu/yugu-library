@@ -1,7 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Net.Http.Headers;
 using System.Reflection;
 using UnityEngine;
+using YuguLibrary.Enumerations;
 using YuguLibrary.Models;
 
 public class Hitbox
@@ -27,6 +29,8 @@ public class Hitbox
     /// </summary>
     private Vector3Int position;
 
+    private Vector3Int basePosition;
+
     /// <summary>
     /// The name of the function contained in <see cref="SkillHub"/> associated with the hitbox object's logic.
     /// </summary>
@@ -48,6 +52,10 @@ public class Hitbox
     /// Used to ensure units cannot be hit by hitboxes in the same group more than once.
     /// </remarks>
     private string hitboxGroupID;
+
+    private bool isActive;
+
+    private string hitboxIndicatorTilemapName;
     #endregion
 
     #region Constructors
@@ -57,6 +65,7 @@ public class Hitbox
         this.delayFrames = delayFrames;
         this.lingerFrames = lingerFrames;
         this.position = position;
+        this.basePosition = position;
         this.hitFunctionName = hitFunctionName;
         this.hitIndex = hitIndex;
     }
@@ -82,6 +91,35 @@ public class Hitbox
         else
         {
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Sets the hitbox's position relative to the casting unit's position and direction.
+    /// </summary>
+    public void AdjustPositionToUnit()
+    {
+        
+        Debug.Log(unit.position);
+        position = unit.position;
+        switch (unit.direction)
+        {
+            case Directions.NW:
+                position.y += basePosition.x;
+                position.x += basePosition.y;
+                break;
+            case Directions.NE:
+                position.y -= basePosition.y;
+                position.x += basePosition.x;
+                break;
+            case Directions.SW:
+                position.y += basePosition.y;
+                position.x -= basePosition.x;
+                break;
+            case Directions.SE:
+                position.y -= basePosition.x;
+                position.x -= basePosition.y;
+                break;
         }
     }
 
@@ -144,6 +182,16 @@ public class Hitbox
     public int GetLingerFrames()
     {
         return lingerFrames;
+    }
+
+    public bool IsActive()
+    {
+        return isActive;
+    }
+
+    public void SetIsActive(bool isActive)
+    {
+        this.isActive = isActive;
     }
     #endregion
 }

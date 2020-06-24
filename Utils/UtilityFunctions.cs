@@ -12,6 +12,7 @@ namespace YuguLibrary
     {
         public static class UtilityFunctions
         {
+            public static float FRAME_LENGTH = 0.016667F;
             /// <summary>
             /// Random number generator for functions.
             /// </summary>

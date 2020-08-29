@@ -56,6 +56,9 @@ namespace YuguLibrary
             private UnitRoles role;
             private UnitClassifications classification;
             private SpeedTiers speedTier;
+            private float baseMovementFrames;
+            private float baseDescentFrames;
+            private float baseAscentFrames;
 
             private List<SkillResource> skillResources;
 
@@ -117,6 +120,21 @@ namespace YuguLibrary
                         if (CheckForProperty("speedTier", reader))
                         {
                             speedTier = (SpeedTiers)GetEnumerationFromJSONString(typeof(SpeedTiers), (string)GetValueFromJSON(reader));
+                        }
+
+                        if (CheckForProperty("baseMovementFrames", reader))
+                        {
+                            baseMovementFrames = (long)GetValueFromJSON(reader);
+                        }
+
+                        if (CheckForProperty("baseDescentFrames", reader))
+                        {
+                            baseDescentFrames = (long)GetValueFromJSON(reader);
+                        }
+
+                        if (CheckForProperty("baseAscentFrames", reader))
+                        {
+                            baseAscentFrames = (long)GetValueFromJSON(reader);
                         }
 
                         if (CheckForProperty("skillResources", reader))
@@ -325,6 +343,21 @@ namespace YuguLibrary
             public SpeedTiers GetSpeedTier()
             {
                 return speedTier;
+            }
+
+            public float GetBaseMovementFrames()
+            {
+                return baseMovementFrames;
+            }
+
+            public float GetBaseDescentFrames()
+            {
+                return baseDescentFrames;
+            }
+
+            public float GetBaseAscentFrames()
+            {
+                return baseAscentFrames;
             }
 
             public float GetHPScaling()
@@ -1391,7 +1424,7 @@ namespace YuguLibrary
         {
             public StatusJSONParser(string statusJSONFileName)
             {
-                JsonTextReader reader = new JsonTextReader(new StreamReader(UtilityFunctions.JSON_ASSETS_STATUS_FOLDER_PATH + statusJSONFileName));
+                JsonTextReader reader = new JsonTextReader(new StreamReader(UtilityFunctions.JSON_ASSETS_COMMON_STATUS_FOLDER_PATH + statusJSONFileName));
                 ParseJSON(reader);
             }
 

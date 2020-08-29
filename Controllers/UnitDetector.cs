@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using TileIndicators;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using YuguLibrary.Enumerations;
@@ -87,6 +88,8 @@ namespace YuguLibrary
             /// </summary>
             public static AreaOfEffect aggroRadius;
 
+            private bool automaticAIActivity = true;
+
             public UnitDetector(Tilemap geography, Tilemap indicators, MonoBehaviour controllerReference)
             {
                 this.geography = geography;
@@ -123,6 +126,55 @@ namespace YuguLibrary
                 GameObject.Destroy(overworldObject.overworldObjectCoordinator.gameObject);
             }
 
+            /// <summary>
+            /// Marks instance tiles with a specified tile indicator type.
+            /// </summary>
+            /// <param name="tilesToMark">The tiles to be marked with indicators.</param>
+            /// <param name="indicatorType">The type of indicator to mark the tiles with.</param>
+            public void AddIndicatorTiles(List<Vector3Int> tilesToMark, TileIndicatorTypes indicatorType)
+            {
+                if (indicatorTiles.ContainsKey(indicatorType))
+                {
+                    indicatorTiles[indicatorType] = tilesToMark;
+                }
+                else
+                {
+                    indicatorTiles.Add(indicatorType, tilesToMark);
+                }
+
+                MarkIndicatorTiles();
+            }
+
+            public void RemoveIndicatorTiles(TileIndicatorTypes indicatorType)
+            {
+                if (indicatorTiles.ContainsKey(indicatorType))
+                {
+                    indicatorTiles.Remove(indicatorType);
+                }
+
+                MarkIndicatorTiles();
+            }
+
+            public void WipeIndicatorTiles()
+            {
+                indicators.ClearAllTiles();
+                indicatorTiles = new Dictionary<TileIndicatorTypes, List<Vector3Int>>();
+            }
+
+            public void SetAutomaticAIActivity(bool automaticAIActivity)
+            {
+                this.automaticAIActivity = automaticAIActivity;
+            }
+
+            public void AssignAndExecuteUnitAIs()
+            {
+                if (automaticAIActivity)
+                {
+                    AssignUnitAIs();
+                    ExecuteUnitAIs();
+                }
+            }
+
             #region Instance Functions
             /// <summary>
             /// Changes the current unit detector instance.
@@ -132,6 +184,7 @@ namespace YuguLibrary
             public void LoadNewInstance(Instance instance, Vector3Int spawnPosition)
             {
                 SwapGeography(instance.GetGeographyName());
+                // stuff regarding: resetting unit detector, placing player unit, setting instance special tiles (+ spawning units) ?
             }
             #endregion
 
@@ -205,7 +258,11 @@ namespace YuguLibrary
                     Vector3Int tileToPlace = newPosition;
 
                     overworldObject.position = tileToPlace;
-                    overworldObject.direction = moveDirection;
+
+                    if (overworldObject.canTurn)
+                    {
+                        overworldObject.direction = moveDirection;
+                    }
 
                     //UtilityFunctions.SetSpriteDefaultPosition(overworldObject.overworldObjectCoordinator);
 
@@ -242,6 +299,65 @@ namespace YuguLibrary
             public bool BlinkTo(OverworldObject overworldObject, Vector3Int to)
             {
                 return true;
+            }
+            /// <summary>
+            /// Returns a list of all floor tiles at a given position.
+            /// </summary>
+            /// <param name="position">The position to search for tiles at.</param>
+            /// <param name="minZ">The minimum Z-axis value to search through.</param>
+            /// <param name="maxZ">The maximum Z-axis value to search through.</param>
+            /// <returns>Returns a List of all positions where a tile was located.</returns>
+            public List<Vector3Int> GetAllTilesAtPosition(Vector3Int position, int minZ, int maxZ)
+            {
+                List<Vector3Int> tiles = new List<Vector3Int>();
+
+                for (int i = minZ; i <= maxZ; i++)
+                {
+                    Vector3Int tile = new Vector3Int(position.x - i, position.y - i, position.z + i);
+                    if (IsTileOpen(tile, true))
+                    {
+                        tiles.Add(tile);
+                    }
+                }
+
+                return tiles;
+            }
+
+            /// <summary>
+            /// Checks if a unit or terrain is at a specified location.
+            /// </summary>
+            /// <param name="position">Location to check</param>
+            /// <param name="ignoreUnits">Whether or not units should be ignored while performing tile check.</param>
+            /// <returns>Returns true if no terrain or units present, and false otherwise.</returns>
+            public bool IsTileOpen(Vector3Int position, bool ignoreUnits)
+            {
+                // TODO: tilebelow check might break dropping off of the floor; check later n see
+                //Vector3Int tileBelow = new Vector3Int(position.x + 1, position.y + 1, position.z - 1);
+
+                Vector3Int tileBelow = GetHighestFloorTileAtPosition(position);
+
+                if (ignoreUnits)
+                {
+                    if (geography.HasTile(tileBelow) && !geography.HasTile(position))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    if (geography.HasTile(tileBelow) && !geography.HasTile(position) && GetOverworldObjectsAtPosition(position).Count == 0)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
             }
 
             /// <summary>
@@ -377,13 +493,50 @@ namespace YuguLibrary
             /// </summary>
             /// <param name="posititon"></param>
             /// <returns></returns>
-            private List<OverworldObject> GetOverworldObjectsAtPosition(Vector3Int posititon)
+            public List<OverworldObject> GetOverworldObjectsAtPosition(Vector3Int posititon)
             {
                 List<OverworldObject> overworldObjects = new List<OverworldObject>();
 
                 return overworldObjects;
             }
             #endregion
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="unitSetup"></param>
+            /// <param name="centerTile"></param>
+            /// <param name="direction"></param>
+            public void LoadUnitSetup(UnitSetup unitSetup, Vector3Int centerTile, Directions direction)
+            {
+                Dictionary<string, Vector3Int> units = unitSetup.GetUnitSetup(direction, centerTile);
+
+                foreach (string unitJSONFileName in units.Keys)
+                {
+                    //50 is placeholder
+                    
+                    Unit allyUnit = new Unit(unitJSONFileName, 50, TargetTypes.Ally);
+
+                    if (IsTileOpen(units[unitJSONFileName], false))
+                    {
+                        SpawnOverworldObject(allyUnit, units[unitJSONFileName]);
+                    }
+                    else
+                    {
+                        Debug.Log("tile already occupied; come back later to expand breadth search");
+                        SpawnOverworldObject(allyUnit, units[unitJSONFileName]);
+                    }
+
+                }
+            }
+
+            /// <summary>
+            /// Removes allied units spawned via unit setup from the field after an encounter is closed.
+            /// </summary>
+            public void RemoveUnitSetup()
+            {
+
+            }
 
             /// <summary>
             /// 
@@ -417,7 +570,7 @@ namespace YuguLibrary
 
                 return units;
             }
-            
+
             /// <summary>
             /// Gets the highest floor tile at a given position.
             /// </summary>
@@ -493,6 +646,69 @@ namespace YuguLibrary
                 geography = GameObject.Find(name + "(Clone)").GetComponentInChildren<Tilemap>();
                 geography.gameObject.transform.parent.gameObject.name = "trashed";
                 geography.transform.SetParent(GameObject.Find("Controller Hub").transform);
+            }
+
+            private void MarkIndicatorTiles()
+            {
+                indicators.ClearAllTiles();
+
+                for (int i = 0; i < Enum.GetNames(typeof(TileIndicatorTypes)).Length; i++)
+                {
+                    TileIndicatorTypes indicatorType = (TileIndicatorTypes)i;
+
+                    if (indicatorTiles.ContainsKey(indicatorType))
+                    {
+                        List<Vector3Int> tilesToMark = indicatorTiles[indicatorType];
+
+                        TileBase tileBase = GetTileFromIndicator(indicatorType);
+
+                        foreach (Vector3Int tile in tilesToMark)
+                        {
+
+                            Vector3Int placement = new Vector3Int(tile.x + 1, tile.y + 1, tile.z - 1);
+
+                            if (geography.HasTile(placement))
+                            {
+                                indicators.SetTile(placement, tileBase);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+            }
+
+            private TileBase GetTileFromIndicator(TileIndicatorTypes indicatorType)
+            {
+                switch (indicatorType)
+                {
+                    case TileIndicatorTypes.Movement:
+                        return ScriptableObject.CreateInstance<MovementIndicator>();
+                    case TileIndicatorTypes.LoadingZone:
+                        return ScriptableObject.CreateInstance<LoadingZoneIndicator>();
+                    case TileIndicatorTypes.Aggro:
+                        return ScriptableObject.CreateInstance<AggroIndicator>();
+                    case TileIndicatorTypes.Encounter:
+                        return ScriptableObject.CreateInstance<EncounterIndicator>();
+                    case TileIndicatorTypes.AllyTargetingSkill:
+                        return ScriptableObject.CreateInstance<AllyTargetingSkillIndicator>();
+                    case TileIndicatorTypes.EnemyTargetingSkill:
+                        return ScriptableObject.CreateInstance<EnemyTargetingSkillIndicator>();
+                    default:
+                        return ScriptableObject.CreateInstance<MovementIndicator>();
+                }
+            }
+
+            private void AssignUnitAIs()
+            {
+
+            }
+
+            private void ExecuteUnitAIs()
+            {
+
             }
             #endregion
         }

@@ -61,6 +61,7 @@ namespace YuguLibrary
         #endregion
 
         #region Functions
+        #region Getters & Setters
         public StatusEffects GetStatusID()
         {
             return statusId;
@@ -75,6 +76,12 @@ namespace YuguLibrary
         {
             this.attachedUnit = attachedUnit;
         }
+        #endregion
+
+
+        #region Protected Status Functionality Parts
+
+        #endregion
         #endregion
 
     }

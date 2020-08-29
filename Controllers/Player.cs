@@ -248,11 +248,11 @@ namespace YuguLibrary
             /// <param name="overworldObject">The overworld object to add the actions to.</param>
             private void AttachPlayerOverworldObjectActions(OverworldObject overworldObject)
             {
-                overworldObject.AddOverworldObjectAction(new TestOWOAction(ControllerInputs.TopFace, overworldObject));
-                overworldObject.AddOverworldObjectAction(new Interact(ControllerInputs.RightFace, overworldObject));
-                overworldObject.AddOverworldObjectAction(new Jump(ControllerInputs.BottomFace, overworldObject));
-                overworldObject.AddOverworldObjectAction(new ToggleRun(ControllerInputs.RightBumper, overworldObject));
-                overworldObject.AddOverworldObjectAction(new ToggleStationary(ControllerInputs.LeftBumper, overworldObject));
+                overworldObject.AddOverworldObjectAction(new TestOWOAction(ControllerInputs.TopFace, KeyCode.None, overworldObject));
+                overworldObject.AddOverworldObjectAction(new Interact(ControllerInputs.RightFace, KeyCode.None, overworldObject));
+                overworldObject.AddOverworldObjectAction(new Jump(ControllerInputs.BottomFace, KeyCode.Space, overworldObject));
+                overworldObject.AddOverworldObjectAction(new ToggleRun(ControllerInputs.RightBumper, KeyCode.LeftShift, overworldObject));
+                overworldObject.AddOverworldObjectAction(new ToggleStationary(ControllerInputs.LeftBumper, KeyCode.None, overworldObject));
             }
 
             /// <summary>

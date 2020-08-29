@@ -648,6 +648,18 @@ namespace YuguLibrary
             }
 
             /// <summary>
+            /// Searches <see cref="statuses"/> for a specified status.
+            /// </summary>
+            /// <param name="statusType">Enum value of the status to search for.</param>
+            /// <returns>Returns true if the status is found in statuses, and returns false otherwise.</returns>
+            /// <seealso cref="Ailments"/> <seealso cref="Impairments"/> 
+            /// <seealso cref="BeneficialEffects"/> <seealso cref="SkillEffects"/>
+            public bool SearchStatuses(StatusEffects statusType)
+            {
+                return statuses.ContainsKey(statusType);
+            }
+
+            /// <summary>
             /// Searches for all hook functions of a given delegate flag, and executes their logic.
             /// </summary>
             /// <param name="flag">The delegate flag to search for.</param>
@@ -680,6 +692,14 @@ namespace YuguLibrary
             {
                 skills.Add(skill);
                 skill.AttachSkillToUnit(this);
+            }
+
+            public void ResetAllCooldowns()
+            {
+                foreach (Skill skill in skills)
+                {
+                    skill.ResetCooldown();
+                }
             }
 
             /// <summary>
@@ -794,6 +814,9 @@ namespace YuguLibrary
                 role = unitJSONParser.GetRole();
                 classification = unitJSONParser.GetClassification();
                 speedTier = unitJSONParser.GetSpeedTier();
+                runFrames = unitJSONParser.GetBaseMovementFrames();
+                descentFrames = unitJSONParser.GetBaseDescentFrames();
+                ascentFrames = unitJSONParser.GetBaseAscentFrames();
 
                 hpScaling = unitJSONParser.GetHPScaling();
                 mpScaling = unitJSONParser.GetMPScaling();

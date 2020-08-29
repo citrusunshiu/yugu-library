@@ -131,6 +131,7 @@ namespace YuguLibrary
             #endregion
 
             #region Functions
+            #region Public Functions
             /// <summary>
             /// Sets the owner of the skill object to a given unit.
             /// </summary>
@@ -158,11 +159,17 @@ namespace YuguLibrary
                     method.Invoke(this, null);
                 }
             }
+            public void ResetCooldown()
+            {
+                currentCooldown = 0;
+            }
+            #endregion
 
+            #region Private Functions
             /// <summary>
             /// Runs all of the skill's skill choreographies in order.
             /// </summary>
-            private void RunSkillDefault()
+            protected void RunSkillDefault()
             {
                 Debug.Log("skilldefault: count = " + skillChoreographies.Count);
                 foreach (SkillChoreography skillChoreography in skillChoreographies)
@@ -237,11 +244,27 @@ namespace YuguLibrary
                 skillChoreographies = skillJSONParser.GetSkillChoreographies();
                 skillFunctionName = skillJSONParser.GetSkillFunctionName();
             }
+            #endregion
 
+            #region Getters & Setters
             public List<Hit> GetHits()
             {
                 return hits;
             }
+            #endregion
+
+            #region Protected Skill Functionality Parts
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="hit"></param>
+            /// <param name="range"></param>
+            /// <param name="projectileSpriteName"></param>
+            protected void LaunchProjectile(Hit hit, int range, string projectileSpriteName)
+            {
+                //may need more params/extra info from json
+            }
+            #endregion
             #endregion
         }
 

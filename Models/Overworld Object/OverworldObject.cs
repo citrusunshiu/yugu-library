@@ -45,10 +45,12 @@ namespace YuguLibrary
             
             private List<OverworldObjectAction> owoActions = new List<OverworldObjectAction>();
 
+
+
             /// <summary>
             /// The number of frames it takes for the overworld object to walk across 1 tile.
             /// </summary>
-            public int walkFrames;
+            public float walkFrames;
 
             /// <summary>
             /// Amount of delay (in seconds) that the unit undergoes while walking.
@@ -64,7 +66,7 @@ namespace YuguLibrary
             /// <summary>
             /// The number of frames it takes for the overworld object to run across 1 tile.
             /// </summary>
-            public int runFrames;
+            public float runFrames;
 
             /// <summary>
             /// Amount of delay (in seconds) that the unit undergoes during movement.
@@ -80,7 +82,7 @@ namespace YuguLibrary
             /// <summary>
             /// The number of frames it takes for the overworld object to ascend up 1 tile.
             /// </summary>
-            public int ascentFrames;
+            public float ascentFrames;
 
             /// <summary>
             /// Amount of delay (in seconds) that the unit undergoes during jump ascent.
@@ -93,7 +95,7 @@ namespace YuguLibrary
             /// <summary>
             /// The number of frames it takes for the overworld object to descend down 1 tile.
             /// </summary>
-            public int descentFrames;
+            public float descentFrames;
 
             /// <summary>
             /// Amount of delay (in seconds) that the unit undergoes during jump descent.
@@ -135,6 +137,11 @@ namespace YuguLibrary
             public bool isJumping = false;
 
             /// <summary>
+            /// 
+            /// </summary>
+            public bool canFloat = false;
+
+            /// <summary>
             /// Whether or not the overworld object is currently floating.
             /// </summary>
             public bool isFloating = false;
@@ -151,6 +158,16 @@ namespace YuguLibrary
             /// Stationary overworld objects will not move when a direction is pressed, but they will turn to face that direction.
             /// </remarks>
             public bool isStationary = false;
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public bool manualMovementToggle = false;
+
+            /// <summary>
+            /// Whether or not the overworld object can change its facing direction.
+            /// </summary>
+            public bool canTurn = true;
 
             /// <summary>
             /// Whether or not the overworld object's movement is currently being unlocked.
@@ -247,13 +264,13 @@ namespace YuguLibrary
                 this.walkFrames = walkFrames;
                 walkDelay = walkFrames / 60F;
 
-                runFrames = (int)speedTier;
+                //runFrames = (int)speedTier;
                 runDelay = runFrames / 60F;
 
-                this.ascentFrames = ascentFrames;
+                //this.ascentFrames = ascentFrames;
                 ascentDelay = ascentFrames / 60F;
 
-                this.descentFrames = descentFrames;
+                //this.descentFrames = descentFrames;
                 descentDelay = descentFrames / 60F;
             }
 
@@ -272,9 +289,38 @@ namespace YuguLibrary
             /// </summary>
             /// <returns>Returns <see cref="runFrames"/> if <see cref="isRunning"/> is true, and returns 
             /// <see cref="walkFrames"/> otherwise.</returns>
-            public int GetTotalMovementFrames()
+            public float GetTotalMovementFrames()
             {
                 return isRunning ? runFrames : walkFrames;
+            }
+
+            public bool Jump()
+            {
+                if (!isJumping)
+                {
+                    overworldObjectCoordinator.StartCoroutine(ProgressJump());
+                }
+                return true;
+            }
+
+            private IEnumerator ProgressJump()
+            {
+                isJumping = true;
+                while(currentJump < jumpHeight)
+                {
+                    MoveInDirection(Directions.Up);
+                    currentJump++;
+                    yield return new WaitUntil(() => canAscend == true /*something signifying its ok to ascend/descend again*/ );
+                }
+                while(currentJump > 0)
+                {
+                    MoveInDirection(Directions.Down);
+                    currentJump--;
+                    yield return new WaitUntil(() => canDescend == true /*something signifying its ok to ascend/descend again*/ );
+                }
+                isJumping = false;
+                currentJump = 0;
+                yield return null;
             }
 
             /// <summary>
@@ -298,10 +344,11 @@ namespace YuguLibrary
                     case Directions.SE:
                         return MoveSE();
                     case Directions.Up:
-                        //Jump();
-                        return true;
+                        return MoveUp();
+                    case Directions.Down:
+                        return MoveDown();
                     default:
-                        return MoveNW();
+                        return false;
                 }
             }
 

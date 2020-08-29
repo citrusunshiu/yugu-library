@@ -37,7 +37,7 @@ namespace YuguLibrary
             /// <summary>
             /// The overworld object that the OverworldObjectAction object is attached to.
             /// </summary>
-            private OverworldObject overworldObject;
+            protected OverworldObject overworldObject;
 
             /// <summary>
             /// The file path to the overworld object action's display icon.
@@ -49,18 +49,6 @@ namespace YuguLibrary
             public OverworldObjectAction()
             {
 
-            }
-
-            public OverworldObjectAction(ControllerInputs input, OverworldObject overworldObject)
-            {
-                controllerInput = input;
-                this.overworldObject = overworldObject;
-            }
-
-            public OverworldObjectAction(KeyCode input, OverworldObject overworldObject)
-            {
-                keyboardInput = input;
-                this.overworldObject = overworldObject;
             }
 
             public OverworldObjectAction(ControllerInputs controllerInput, KeyCode keyboardInput, OverworldObject overworldObject)
@@ -143,16 +131,6 @@ namespace YuguLibrary
 
             }
 
-            public TestOWOAction(ControllerInputs input, OverworldObject overworldObject) : base(input, overworldObject)
-            {
-
-            }
-
-            public TestOWOAction(KeyCode input, OverworldObject overworldObject) : base(input, overworldObject)
-            {
-
-            }
-
             public TestOWOAction(ControllerInputs controllerInput, KeyCode keyboardInput, OverworldObject overworldObject) : base(controllerInput, keyboardInput, overworldObject)
             {
             }
@@ -167,14 +145,6 @@ namespace YuguLibrary
 
         public class Interact : OverworldObjectAction
         {
-            public Interact(ControllerInputs input, OverworldObject overworldObject) : base(input, overworldObject)
-            {
-            }
-
-            public Interact(KeyCode input, OverworldObject overworldObject) : base(input, overworldObject)
-            {
-            }
-
             public Interact(ControllerInputs controllerInput, KeyCode keyboardInput, OverworldObject overworldObject) : base(controllerInput, keyboardInput, overworldObject)
             {
             }
@@ -189,14 +159,6 @@ namespace YuguLibrary
 
         public class Jump : OverworldObjectAction
         {
-            public Jump(ControllerInputs input, OverworldObject overworldObject) : base(input, overworldObject)
-            {
-            }
-
-            public Jump(KeyCode input, OverworldObject overworldObject) : base(input, overworldObject)
-            {
-            }
-
             public Jump(ControllerInputs controllerInput, KeyCode keyboardInput, OverworldObject overworldObject) : base(controllerInput, keyboardInput, overworldObject)
             {
             }
@@ -206,20 +168,12 @@ namespace YuguLibrary
 
             public override void ExecuteAction()
             {
-                throw new System.NotImplementedException();
+                overworldObject.Jump();
             }
         }
 
         public class FloatAscend : OverworldObjectAction
         {
-            public FloatAscend(ControllerInputs input, OverworldObject overworldObject) : base(input, overworldObject)
-            {
-            }
-
-            public FloatAscend(KeyCode input, OverworldObject overworldObject) : base(input, overworldObject)
-            {
-            }
-
             public FloatAscend(ControllerInputs controllerInput, KeyCode keyboardInput, OverworldObject overworldObject) : base(controllerInput, keyboardInput, overworldObject)
             {
             }
@@ -234,14 +188,6 @@ namespace YuguLibrary
 
         public class FloatDescend : OverworldObjectAction
         {
-            public FloatDescend(ControllerInputs input, OverworldObject overworldObject) : base(input, overworldObject)
-            {
-            }
-
-            public FloatDescend(KeyCode input, OverworldObject overworldObject) : base(input, overworldObject)
-            {
-            }
-
             public FloatDescend(ControllerInputs controllerInput, KeyCode keyboardInput, OverworldObject overworldObject) : base(controllerInput, keyboardInput, overworldObject)
             {
             }
@@ -256,14 +202,6 @@ namespace YuguLibrary
 
         public class ToggleRun : OverworldObjectAction
         {
-            public ToggleRun(ControllerInputs input, OverworldObject overworldObject) : base(input, overworldObject)
-            {
-            }
-
-            public ToggleRun(KeyCode input, OverworldObject overworldObject) : base(input, overworldObject)
-            {
-            }
-
             public ToggleRun(ControllerInputs controllerInput, KeyCode keyboardInput, OverworldObject overworldObject) : base(controllerInput, keyboardInput, overworldObject)
             {
             }
@@ -278,16 +216,40 @@ namespace YuguLibrary
 
         public class ToggleStationary : OverworldObjectAction
         {
-            public ToggleStationary(ControllerInputs input, OverworldObject overworldObject) : base(input, overworldObject)
-            {
-            }
-
-            public ToggleStationary(KeyCode input, OverworldObject overworldObject) : base(input, overworldObject)
-            {
-            }
-
             public ToggleStationary(ControllerInputs controllerInput, KeyCode keyboardInput, OverworldObject overworldObject) : base(controllerInput, keyboardInput, overworldObject)
             {
+
+            }
+
+            public override string IconFilePath => throw new System.NotImplementedException();
+
+            public override void ExecuteAction()
+            {
+                throw new System.NotImplementedException();
+            }
+        }
+
+        public class ToggleTurn : OverworldObjectAction
+        {
+            public ToggleTurn(ControllerInputs controllerInput, KeyCode keyboardInput, OverworldObject overworldObject) : base(controllerInput, keyboardInput, overworldObject)
+            {
+
+            }
+
+            public override string IconFilePath => throw new System.NotImplementedException();
+
+            public override void ExecuteAction()
+            {
+                throw new System.NotImplementedException();
+            }
+        }
+
+
+        public class ToggleManualMovement : OverworldObjectAction
+        {
+            public ToggleManualMovement(ControllerInputs controllerInput, KeyCode keyboardInput, OverworldObject overworldObject) : base(controllerInput, keyboardInput, overworldObject)
+            {
+
             }
 
             public override string IconFilePath => throw new System.NotImplementedException();
@@ -301,16 +263,6 @@ namespace YuguLibrary
         public class UseSkill : OverworldObjectAction
         {
             Skill skill;
-
-            public UseSkill(ControllerInputs input, OverworldObject overworldObject, Skill skill) : base(input, overworldObject)
-            {
-                this.skill = skill;
-            }
-
-            public UseSkill(KeyCode input, OverworldObject overworldObject, Skill skill) : base(input, overworldObject)
-            {
-                this.skill = skill;
-            }
 
             public UseSkill(ControllerInputs controllerInput, KeyCode keyboardInput, OverworldObject overworldObject, Skill skill) : base(controllerInput, keyboardInput, overworldObject)
             {

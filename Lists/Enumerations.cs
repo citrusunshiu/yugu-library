@@ -13,6 +13,8 @@ namespace YuguLibrary
         /// </summary>
         public enum ControllerInputs
         {
+            None,
+
             /// <summary>
             /// PS4: Cross, XBONE: A, SWITCH: B
             /// </summary>
@@ -69,9 +71,7 @@ namespace YuguLibrary
             /// <summary>
             /// PS4: R2, XBONE: LT, SWITCH: ZR
             /// </summary>
-            RightTrigger,
-
-            None
+            RightTrigger
         }
 
         /// <summary>
@@ -351,6 +351,7 @@ namespace YuguLibrary
         {
             HP,
             MP,
+            EssentiaPoints,
             MirageEssence,
             _gsFirearms,
             _gsIce,

@@ -70,11 +70,16 @@ namespace YuguLibrary
             /// Path to the project's root folder that stores JSON assets for the <see cref="Instance"/> class.
             /// </summary>
             public static readonly string JSON_ASSETS_INSTANCE_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Instances/";
-            
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public static readonly string JSON_ASSETS_COMMON_SKILL_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Common Skills/";
+
             /// <summary>
             /// Path to the project's root folder that stores JSON assets for the <see cref="Status"/> class.
             /// </summary>
-            public static readonly string JSON_ASSETS_STATUS_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Statuses/";
+            public static readonly string JSON_ASSETS_COMMON_STATUS_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Common Statuses/";
 
             /// <summary>
             /// Path to the project's root folder that stores JSON assets for the <see cref="Cutscene"/> class.
@@ -138,6 +143,17 @@ namespace YuguLibrary
                 GameObject controllerHub = GameObject.Find("Controller Hub");
                 Player player = controllerHub.GetComponent<PlayerController>().player;
                 return player;
+            }
+
+            /// <summary>
+            /// Gets the encounter currently active in the scene.
+            /// </summary>
+            /// <returns>Returns the Encounter object from the current scene.</returns>
+            public static Encounter GetActiveEncounter()
+            {
+                GameObject controllerHub = GameObject.Find("Controller Hub");
+                Encounter encounter = controllerHub.GetComponent<EncounterController>().encounter;
+                return encounter;
             }
 
             /// <summary>
@@ -245,6 +261,11 @@ namespace YuguLibrary
             {
                 var timeSpan = (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0));
                 return (long)timeSpan.TotalSeconds;
+            }
+
+            public static string GetUnitName(UnitTurn unitTurn)
+            {
+                return unitTurn.unit.GetType() + " (" + unitTurn.GetHashCode() + ")";
             }
         }
     }

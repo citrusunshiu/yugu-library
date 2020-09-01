@@ -509,6 +509,11 @@ namespace YuguLibrary
 
             private List<string> hitboxImmunities;
 
+            /// <summary>
+            /// The UnitSpawner object that created the unit.
+            /// </summary>
+            private UnitSpawner unitSpawner;
+
             #region Encounter-specific Variables
             /// <summary>
             /// The number of tiles outward a unit is legally allowed to move during their turn.
@@ -790,6 +795,16 @@ namespace YuguLibrary
             public TargetTypes GetTargetType()
             {
                 return targetType;
+            }
+
+            public UnitSpawner GetUnitSpawner()
+            {
+                return unitSpawner;
+            }
+
+            public void SetUnitSpawner(UnitSpawner unitSpawner)
+            {
+                this.unitSpawner = unitSpawner;
             }
 
             public void AddHitboxImmunity(string hitboxGroupID)

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using YuguLibrary.Utilities;
 
 namespace YuguLibrary
 {
@@ -19,9 +20,11 @@ namespace YuguLibrary
                 this.spawnLocation = spawnLocation;
             }
 
-            public void LoadZone()
+            public void LoadZone(OverworldObject playerUnit)
             {
                 Debug.Log("LOADING AREA: " + instanceJSONFileName);
+                Instance instance = new Instance(instanceJSONFileName);
+                UtilityFunctions.GetActiveUnitDetector().LoadNewInstance(instance, spawnLocation, playerUnit);
             }
         }
 

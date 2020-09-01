@@ -56,6 +56,7 @@ namespace YuguLibrary
             {
                 currentOverworldObject = overworldObject;
                 AttachPlayerOverworldObjectActions(currentOverworldObject);
+                overworldObject.overworldObjectCoordinator.SetCameraPosition();
             }
 
             public OverworldObject GetCurrentOverworldObject()

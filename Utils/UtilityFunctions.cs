@@ -173,7 +173,7 @@ namespace YuguLibrary
                 //for every y: x -= 1.225, y += 0.6125;
                 xpos -= (currentPosition.y * 1.225f);
                 ypos += (currentPosition.y * 0.6125f);
-                float zpos = (currentPosition.z * 3.5f);
+                float zpos = (currentPosition.z * 4f);
 
                 Vector3 position = new Vector3(xpos, ypos, zpos);
 

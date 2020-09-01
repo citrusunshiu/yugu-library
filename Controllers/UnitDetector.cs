@@ -181,10 +181,73 @@ namespace YuguLibrary
             /// </summary>
             /// <param name="instance">The instance that the unit detector will change to.</param>
             /// <param name="spawnPosition">The position where the player will be placed at.</param>
-            public void LoadNewInstance(Instance instance, Vector3Int spawnPosition)
+            public void LoadNewInstance(Instance instance, Vector3Int spawnPosition, OverworldObject playerUnit)
             {
+                OverworldObject player = playerUnit;
+
+                string playerUnitJSONFileName;
+                int playerLevel;
+                int playerProgressionPoint;
+
+
+                ResetUnitDetector();
+
+                //Unit newPlayerUnit = new Unit(playerUnitJSONFileName, playerLevel, TargetTypes.Ally);
+
                 SwapGeography(instance.GetGeographyName());
+
                 // stuff regarding: resetting unit detector, placing player unit, setting instance special tiles (+ spawning units) ?
+
+                if (instance.GetUnitSpawners() != null)
+                {
+                    foreach (UnitSpawner unitSpawner in instance.GetUnitSpawners())
+                    {
+                        AddUnitSpawner(unitSpawner);
+                    }
+                }
+
+                if (instance.GetLoadingZones() != null)
+                {
+                    foreach (LoadingZone loadingZone in instance.GetLoadingZones())
+                    {
+                        Debug.Log("adding loading zone at position " + loadingZone.position);
+                        loadingZones.Add(loadingZone);
+                    }
+                }
+
+
+                Debug.Log(geography);
+
+                MarkLoadingZones();
+
+                currentInstance = instance;
+
+                Debug.Log("counts; unitspawners: " + unitSpawners.Count + "; loadingzones: " + loadingZones.Count);
+                Debug.Log("onload overworldobject count: " + overworldObjects.Count);
+
+                //UtilityFunctions.GetActiveGeology().SetLocation(instance);
+
+                Debug.Log("spawn pos: " + spawnPosition);
+
+                //UtilityFunctions.GetActiveUnitDetector().SpawnOverworldObject(newPlayerUnit, spawnPosition);
+                //UtilityFunctions.GetActivePlayer().SetCurrentOverworldObject(newPlayerUnit);
+
+                //InitializeInstance(spawnPosition, leadUnit);
+            }
+
+            private void ResetUnitDetector()
+            {
+
+            }
+
+            /// <summary>
+            /// Adds a unit spawneer to the current instance, and spawns the maximum allowed number of units.
+            /// </summary>
+            /// <param name="unitSpawner">UnitSpawner object to add.</param>
+            public void AddUnitSpawner(UnitSpawner unitSpawner)
+            {
+                unitSpawners.Add(unitSpawner);
+                unitSpawner.SpawnAllUnits();
             }
             #endregion
 
@@ -205,22 +268,7 @@ namespace YuguLibrary
 
                 Vector3Int currentPosition = overworldObject.position;
                 Vector3Int newPosition = new Vector3Int(currentPosition.x + x, currentPosition.y + y, currentPosition.z + z);
-
                 Vector3Int highestFloorTile = GetHighestFloorTileAtPosition(newPosition);
-
-                /* If not ascending or descending but the floor isn't directly below the overworld object, drop it down */
-                /*
-                if(z == 0 && !overworldObject.isJumping && newPosition.x != highestFloorTile.x + 1)
-                {
-                    x++;
-                    y++;
-                    z--;
-
-                    newPosition.x++;
-                    newPosition.y++;
-                    newPosition.z--;
-                }
-                */
 
                 Directions moveDirection;
 
@@ -252,7 +300,6 @@ namespace YuguLibrary
                 }
 
                 if (!overworldObject.isStationary && !geography.HasTile(newPosition) && highestFloorTile.z != -255)
-                //if(true)
                 {
                     Vector3Int oldPosition = overworldObject.position;
                     Vector3Int tileToPlace = newPosition;
@@ -264,12 +311,27 @@ namespace YuguLibrary
                         overworldObject.direction = moveDirection;
                     }
 
-                    //UtilityFunctions.SetSpriteDefaultPosition(overworldObject.overworldObjectCoordinator);
-
                     DelayMovements(overworldObject, z);
                     if(overworldObject is Unit)
                     {
                         CheckHitboxesAtUnit((Unit)overworldObject);
+                    }
+
+                    //if unit moved was the player, check for loading zones
+                    if (UtilityFunctions.GetActivePlayer().GetCurrentOverworldObject().Equals(overworldObject))
+                    {
+                        Vector3Int tileBelow = 
+                            new Vector3Int(overworldObject.position.x + 1, overworldObject.position.y + 1, overworldObject.position.z - 1);
+                        Debug.Log("getting loadingzone at " + tileBelow);
+                        LoadingZone loadingZone = GetLoadingZoneAtPosition(tileBelow);
+
+                        Debug.Log(loadingZone);
+
+                        if (loadingZone != null /*&& !UtilityFunctions.GetActiveEncounter().IsEncounterActive()*/)
+                        {
+                            Debug.Log("loading new area");
+                            loadingZone.LoadZone(overworldObject);
+                        }
                     }
 
                     return true;
@@ -277,17 +339,178 @@ namespace YuguLibrary
 
                 return false;
             }
-            
+
             /// <summary>
             /// Finds the shortest traversable path from one location to another.
             /// </summary>
-            /// <param name="overworldObject">Overworld object attempting to travel.</param>
+            /// <param name="unit">Unit attempting to travel.</param>
             /// <param name="to">Location to pathfind to.</param>
             /// <returns>Returns the direction for the unit to move to next to reach the desired location, or returns 
             /// <see cref="Directions.Down"/> if there is none.</returns>
-            public Directions PathfindTo(OverworldObject overworldObject, Vector3Int to)
+            public Directions PathfindTo(Unit unit, Vector3Int to)
             {
-                return Directions.Down;
+                Vector3Int from = unit.position;
+
+                List<AStarNode> openList = new List<AStarNode>();
+                List<AStarNode> closedList = new List<AStarNode>();
+
+                AStarNode start = new AStarNode(null, from, 0, 0);
+
+                openList.Add(start);
+
+                AStarNode endNode = null;
+
+                int passCount = 0;
+                //keep searching for route
+                while (openList.Count > 0)
+                {
+                    passCount++;
+
+                    AStarNode shortestNode = null;
+
+                    for (int i = 0; i < openList.Count; i++)
+                    {
+                        AStarNode node = openList[i];
+                        if (shortestNode == null || shortestNode.GetTotalDistance() > node.GetTotalDistance())
+                        {
+                            shortestNode = node;
+                        }
+                    }
+
+
+                    openList.Remove(shortestNode);
+
+                    List<AStarNode> neighbours = new List<AStarNode>();
+
+                    List<Vector3Int> positions = GetSurroundingTiles(unit, shortestNode.position);
+
+                    //find valid tiles of movement for the unit
+                    foreach (Vector3Int position in positions)
+                    {
+                        AStarNode n = new AStarNode(shortestNode, position, shortestNode.GetDistanceFromStart() + 1,
+                            CalculateTileDistance(position, to));
+
+                        neighbours.Add(n);
+                    }
+
+                    //checking for endpoint, adding valid tiles to openList for next pass
+                    foreach (AStarNode neighbour in neighbours)
+                    {
+                        if (UtilityFunctions.CompareVector3Ints(neighbour.position, to))
+                        {
+                            endNode = neighbour;
+                            break;
+                        }
+
+                        bool shouldSkip = false;
+
+                        for (int i = 0; i < openList.Count; i++)
+                        {
+                            if (UtilityFunctions.CompareVector3Ints(neighbour.position, openList[i].position)
+                                && neighbour.GetTotalDistance() >= openList[i].GetTotalDistance())
+                            {
+                                shouldSkip = true;
+                            }
+                        }
+
+                        for (int i = 0; i < closedList.Count; i++)
+                        {
+                            if (UtilityFunctions.CompareVector3Ints(neighbour.position, closedList[i].position)
+                                && neighbour.GetTotalDistance() >= closedList[i].GetTotalDistance())
+                            {
+                                shouldSkip = true;
+                            }
+                        }
+
+                        if (shouldSkip)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            openList.Add(neighbour);
+                        }
+                    }
+
+                    if (endNode != null)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        closedList.Add(shortestNode);
+                    }
+                }
+
+                //if there is a path, figure out how to move the unit 1 step closer
+                if (endNode != null)
+                {
+                    AStarNode firstMovement = endNode;
+
+                    while (firstMovement.parent != null)
+                    {
+                        AStarNode temp = firstMovement.parent;
+
+                        if (temp.parent != null)
+                        {
+                            firstMovement = firstMovement.parent;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    Vector3Int moveTo = firstMovement.position;
+
+                    //TODO: need to adjust for z-y offset;
+                    int dx = unit.position.x - moveTo.x;
+                    int dy = unit.position.y - moveTo.y;
+                    int dz = unit.position.z - moveTo.z;
+
+                    if (dx > 0)
+                    {
+                        return Directions.SW;
+                    }
+                    else if (dx < 0)
+                    {
+                        return Directions.NE;
+                    }
+
+                    if (dy > 0)
+                    {
+                        return Directions.SE;
+                    }
+                    else if (dy < 0)
+                    {
+                        return Directions.NW;
+                    }
+
+                    return Directions.Up;
+                }
+                else
+                {
+                    Debug.Log("no path found");
+                    return Directions.None;
+                }
+            }
+
+            private List<Vector3Int> GetSurroundingTiles(Unit unit, Vector3Int position)
+            {
+                //when looking for surrounding tiles, should search 10 tiles down and unit.jumpheight tiles up
+                List<Vector3Int> surroundingTiles = new List<Vector3Int>();
+
+                Vector3Int nwTile = new Vector3Int(position.x, position.y + 1, position.z);
+                Vector3Int neTile = new Vector3Int(position.x + 1, position.y, position.z);
+                Vector3Int swTile = new Vector3Int(position.x - 1, position.y, position.z);
+                Vector3Int seTile = new Vector3Int(position.x, position.y - 1, position.z);
+
+                surroundingTiles.AddRange(GetAllTilesAtPosition(nwTile, 0, 0));
+                surroundingTiles.AddRange(GetAllTilesAtPosition(neTile, 0, 0));
+                surroundingTiles.AddRange(GetAllTilesAtPosition(swTile, 0, 0));
+                surroundingTiles.AddRange(GetAllTilesAtPosition(seTile, 0, 0));
+
+                return surroundingTiles;
             }
 
             /// <summary>
@@ -296,10 +519,61 @@ namespace YuguLibrary
             /// <param name="overworldObject">OverworldObject attempting to travel.</param>
             /// <param name="to">Location to travel to.</param>
             /// <returns>Returns true if the overworld object moved successfully, and false otherwise.</returns>
-            public bool BlinkTo(OverworldObject overworldObject, Vector3Int to)
+            public bool BlinkTo(OverworldObject overworldObject, Vector3Int to, bool ignoreUnits)
             {
-                return true;
+                bool valid = false;
+                if (ignoreUnits)
+                {
+                    valid = IsTileOpen(to, true);
+                }
+                else
+                {
+                    valid = IsTileOpen(to, false);
+                }
+
+                if (valid)
+                {
+                    Vector3Int oldPosition = overworldObject.position;
+                    overworldObject.position = to;
+                    SetSurroundingTileOpacity(oldPosition, overworldObject.position);
+                    UtilityFunctions.SetSpriteDefaultPosition(overworldObject.overworldObjectCoordinator);
+                    if (overworldObject == UtilityFunctions.GetActivePlayer().GetCurrentOverworldObject())
+                    {
+                        overworldObject.overworldObjectCoordinator.SetCameraPosition();
+                    }
+
+                    return true;
+                }
+
+                return false;
             }
+
+            /// <summary>
+            /// Lowers the opacity of the tiles surrounding a unit's current position after they move.
+            /// </summary>
+            /// <param name="oldPosition">The unit's position before moving.</param>
+            /// <param name="newPosition">The unit's position after moving.</param>
+            /// <remarks>Sets the tile opacity around the unit's old tile back to normal if there are no other units nearby.</remarks>
+            private void SetSurroundingTileOpacity(Vector3Int oldPosition, Vector3Int newPosition)
+            {
+                //remove opacity from old position; add it to new position
+                //Debug.Log("TODO: set surrounding tile opacity");
+            }
+
+            /// <summary>
+            /// Calculates the distance between 2 tiles, ignoring terrain and including diagonals.
+            /// </summary>
+            /// <param name="tile1">The first tile to check distance between.</param>
+            /// <param name="tile2">The second tile to check distance between.</param>
+            /// <returns>Returns an integer equal to the number of tiles required for tile1 to connect to tile2.</returns>
+            private static int CalculateTileDistance(Vector3Int tile1, Vector3Int tile2)
+            {
+                int dx = (tile1.x > tile2.x) ? tile1.x - tile2.x : tile2.x - tile1.x;
+                int dy = (tile1.y > tile2.y) ? tile1.y - tile2.y : tile2.y - tile1.y;
+
+                return dx + dy;
+            }
+
             /// <summary>
             /// Returns a list of all floor tiles at a given position.
             /// </summary>
@@ -358,6 +632,43 @@ namespace YuguLibrary
                         return false;
                     }
                 }
+            }
+
+            /// <summary>
+            /// Checks if a unit is currently in the air.
+            /// </summary>
+            /// <param name="unit">Unit to check.</param>
+            /// <returns>Returns true if the unit is airborne, and false otherwise.</returns>
+            public bool IsAirborne(OverworldObject overworldObject)
+            {
+                Vector3Int currentPosition = overworldObject.position;
+
+                currentPosition.x++;
+                currentPosition.y++;
+                currentPosition.z--;
+                if (geography.HasTile(currentPosition))
+                {
+                    return false;
+                }
+                return true;
+            }
+
+            /// <summary>
+            /// Gets the <see cref="LoadingZone"/> at a given position, if it exists.
+            /// </summary>
+            /// <param name="position">The position of the LoadingZone.</param>
+            /// <returns>Returns the LoadingZone at the location, or null if there is none.</returns>
+            private LoadingZone GetLoadingZoneAtPosition(Vector3Int position)
+            {
+                Debug.Log(loadingZones.Count);
+                foreach (LoadingZone loadingZone in loadingZones)
+                {
+                    if (UtilityFunctions.CompareVector3Ints(loadingZone.position, position))
+                    {
+                        return loadingZone;
+                    }
+                }
+                return null;
             }
 
             /// <summary>
@@ -699,6 +1010,17 @@ namespace YuguLibrary
                     default:
                         return ScriptableObject.CreateInstance<MovementIndicator>();
                 }
+            }
+
+            private void MarkLoadingZones()
+            {
+                List<Vector3Int> loadingZoneTiles = new List<Vector3Int>();
+                foreach (LoadingZone loadingZone in loadingZones)
+                {
+                    loadingZoneTiles.Add(loadingZone.position);
+                }
+
+                AddIndicatorTiles(loadingZoneTiles, TileIndicatorTypes.LoadingZone);
             }
 
             private void AssignUnitAIs()

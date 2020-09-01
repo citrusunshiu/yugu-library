@@ -310,16 +310,26 @@ namespace YuguLibrary
                 {
                     MoveInDirection(Directions.Up);
                     currentJump++;
-                    yield return new WaitUntil(() => canAscend == true /*something signifying its ok to ascend/descend again*/ );
+                    yield return new WaitUntil(() => canAscend == true);
                 }
                 while(currentJump > 0)
                 {
                     MoveInDirection(Directions.Down);
                     currentJump--;
-                    yield return new WaitUntil(() => canDescend == true /*something signifying its ok to ascend/descend again*/ );
+                    yield return new WaitUntil(() => canDescend == true);
                 }
                 isJumping = false;
                 currentJump = 0;
+                yield return null;
+            }
+
+            private IEnumerator FallLoop()
+            {
+                while (UtilityFunctions.GetActiveUnitDetector().IsAirborne(this))
+                {
+                    MoveDown();
+                    yield return new WaitUntil(() => canDescend == true);
+                }
                 yield return null;
             }
 
@@ -330,6 +340,13 @@ namespace YuguLibrary
             /// <returns>Returns true if the overworld object moved successfully, and false otherwise.</returns>
             public bool MoveInDirection(Directions direction)
             {
+                //for gravity
+                if (!isJumping)
+                {
+                    overworldObjectCoordinator.StartCoroutine(FallLoop());
+                    //MoveDown();
+                }
+
                 switch (direction)
                 {
                     case Directions.NW:
@@ -343,10 +360,13 @@ namespace YuguLibrary
 
                     case Directions.SE:
                         return MoveSE();
+
                     case Directions.Up:
                         return MoveUp();
+                    
                     case Directions.Down:
                         return MoveDown();
+                    
                     default:
                         return false;
                 }
@@ -445,7 +465,7 @@ namespace YuguLibrary
 
                 return false;
             }
-            
+
             /// <summary>
             /// Sets <see cref="canMove"/> to true after the seconds specified by <see cref="walkDelay"/> or 
             /// <see cref="runDelay"/> have passed.

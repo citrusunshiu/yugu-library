@@ -110,7 +110,7 @@ namespace YuguLibrary
 
                         Debug.Log("start of turn loop");
                         StartTurn(unitTurn);
-                        //Selecting actions (primary/auxiliary/movement)
+                        //Selecting actions (primary/auxiliary/...)
                         yield return new WaitUntil(() => unitTurn.isCompleted == true);
 
                         EndTurn(unitTurn);
@@ -128,7 +128,9 @@ namespace YuguLibrary
                 currentRound++;
                 Debug.Log(this + ":beginning of round #" + currentRound);
                 RefreshTurnOrder();
-                //CheckAllHookFunctions(DelegateFlags.OnEncounterRoundStart, new RoundStartHookBundle());
+
+                UtilityFunctions.GetActiveUnitDetector()
+                    .FlagDelegate(DelegateFlags.OnEncounterRoundStart, new RoundStartHookBundle(), GetEncounterUnitList());
             }
 
 
@@ -139,7 +141,9 @@ namespace YuguLibrary
             /// <param name="unitTurn">The <see cref="UnitTurn"/> of the current unit's turn.</param>
             void StartTurn(UnitTurn unitTurn)
             {
-                //CheckAllHookFunctions(DelegateFlags.OnEncounterTurnStart, new TurnStartHookBundle(unitTurn));
+                UtilityFunctions.GetActiveUnitDetector()
+                    .FlagDelegate(DelegateFlags.OnEncounterTurnStart, new TurnStartHookBundle(unitTurn), GetEncounterUnitList());
+
                 unitTurn.isActive = true;
                 currentTurn = unitTurn;
                 currentUnitMoveBounds = new AreaOfEffect(unitTurn.unit.position, 5);
@@ -176,7 +180,9 @@ namespace YuguLibrary
                 Debug.Log(UtilityFunctions.GetUnitName(unitTurn) + ":turn ended; proceeding");
                 unitTurn.isActive = false;
                 //uiController.PushUI(UIScreens.EncounterScreen, true);
-                //CheckAllHookFunctions(DelegateFlags.OnEncounterTurnEnd, new TurnEndHookBundle(unitTurn));
+                UtilityFunctions.GetActiveUnitDetector()
+                    .FlagDelegate(DelegateFlags.OnEncounterTurnEnd, new TurnEndHookBundle(unitTurn), GetEncounterUnitList());
+
                 unitTurn.isCompleted = true;
             }
 
@@ -187,7 +193,8 @@ namespace YuguLibrary
             {
                 Debug.Log("end of round #" + currentRound);
                 CheckEncounterEndstate();
-                //CheckAllHookFunctions(DelegateFlags.OnEncounterRoundEnd, new RoundEndHookBundle());
+                UtilityFunctions.GetActiveUnitDetector()
+                    .FlagDelegate(DelegateFlags.OnEncounterRoundEnd, new RoundEndHookBundle(), GetEncounterUnitList());
                 //CheckAggroDecay();
                 AdvanceSurroundingEnemies();
                 //CheckCCResistanceBarReset();
@@ -304,7 +311,7 @@ namespace YuguLibrary
             /// <summary>
             /// Resets the statuses and stats of all units in an encounter.
             /// </summary>
-            void CleanSlate()
+            private void CleanSlate()
             {
                 //TODO: cleanses all buffs/debuffs, and restores HP/MP values to full, resets aggro radius
                 foreach (UnitTurn unitTurn in turnOrder)
@@ -316,7 +323,7 @@ namespace YuguLibrary
             /// <summary>
             /// Logic for player's defeat.
             /// </summary>
-            void TriggerDefeat()
+            private void TriggerDefeat()
             {
                 //game over (prompt retry/return to last safe zone/return to title)
             }
@@ -413,6 +420,11 @@ namespace YuguLibrary
                 }
             }
 
+            /// <summary>
+            /// Retrieves the <see cref="UnitTurn"/> object from <see cref="turnOrder"/> that corresponds to the given Unit object.
+            /// </summary>
+            /// <param name="unit">The Unit object contained in the UnitTurn object to search for.</param>
+            /// <returns>Returns the UnitTurn object associated with the given Unit object.</returns>
             private UnitTurn GetUnitTurn(Unit unit)
             {
                 foreach (UnitTurn unitTurn in turnOrder)
@@ -495,6 +507,25 @@ namespace YuguLibrary
                 return true;
             }
 
+            private List<Unit> GetEncounterUnitList()
+            {
+                List<Unit> unitList = new List<Unit>();
+                for (int i = 0; i < turnOrder.Count; i++)
+                {
+                    unitList.Add(turnOrder[i].unit);
+                }
+
+                return unitList;
+            }
+
+            public bool IsEncounterActive()
+            {
+                return encounterActive;
+            }
+
+            /// <summary>
+            /// IComparer for properly ordering a list of <see cref="UnitTurn"/> objects for <see cref="Encounter"/>.
+            /// </summary>
             class UnitTurnSorter : IComparer<UnitTurn>
             {
                 //TODO: sort by isCompleted also?

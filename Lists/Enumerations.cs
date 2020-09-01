@@ -202,6 +202,7 @@ namespace YuguLibrary
         /// </remarks>
         public enum Directions
         {
+            None,
             NW,
             NE,
             SE,

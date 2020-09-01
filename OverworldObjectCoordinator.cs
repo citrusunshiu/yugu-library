@@ -11,16 +11,12 @@ namespace YuguLibrary
 {
     public class OverworldObjectCoordinator : MonoBehaviour
     {
-        float currentx = 0;
-        float currenty = 0;
-        float currentz = 0;
-
         #region Variables
         #region Transform Movement Constants
         readonly float xmove = 1.225f;
         readonly float ymove = 0.6125f;
-        readonly float zmove = 2.28f / 2;
-        readonly float zforward = 3.5f;
+        readonly float zmove = (2.28f / 2) + (0.6125f / 5);
+        readonly float zforward = 4f;
         #endregion
         /// <summary>
         /// The <see cref="GameObject"/>'s sprite renderer.
@@ -164,12 +160,12 @@ namespace YuguLibrary
                     break;
                 case Directions.Up:
                     dx = 0;
-                    dy = zmove / totalMoveFrames;
+                    dy = (zmove / totalMoveFrames);
                     dz = zforward / totalMoveFrames;
                     break;
                 case Directions.Down:
                     dx = 0;
-                    dy = (zmove / totalMoveFrames) * -1;
+                    dy = ((zmove / totalMoveFrames)) * -1;
                     dz = (zforward / totalMoveFrames) * -1;
                     break;
             }
@@ -198,7 +194,7 @@ namespace YuguLibrary
             }
         }
 
-        private void SetCameraPosition()
+        public void SetCameraPosition()
         {
             Player player = UtilityFunctions.GetActivePlayer();
 

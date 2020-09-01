@@ -284,7 +284,7 @@ namespace YuguLibrary
                                 {
                                     Type type = Type.GetType(overworldAIClassName);
                                     overworldAIs.Add((OverworldAI)Activator.CreateInstance(type));
-                                    Debug.Log("created: " + overworldAIClassName);
+                                    //Debug.Log("created: " + overworldAIClassName);
                                     overworldAIClassName = "";
                                 }
                             }
@@ -306,7 +306,7 @@ namespace YuguLibrary
                                 {
                                     Type type = Type.GetType(encounterAIClassName);
                                     encounterAIs.Add((EncounterAI)Activator.CreateInstance(type));
-                                    Debug.Log("created: " + encounterAIClassName);
+                                    //Debug.Log("created: " + encounterAIClassName);
                                     encounterAIClassName = "";
                                 }
                             }
@@ -467,7 +467,8 @@ namespace YuguLibrary
                 {
                     if (reader.Value != null)
                     {
-                        //Debug.Log("Token: " + reader.TokenType + ", Value: " + reader.Value);
+                        Debug.Log("Token: " + reader.TokenType + ", Value: " + reader.Value);
+                        
                         if(CheckForProperty("nameID", reader))
                         {
                             nameID = (string)GetValueFromJSON(reader);
@@ -500,24 +501,32 @@ namespace YuguLibrary
                             long zPos = 0;
 
                             reader.Read(); //StartObject
-                            if(CheckForProperty("xPos", reader))
+                            reader.Read();
+                            if (CheckForProperty("xPos", reader))
                             {
                                 xPos = (long)GetValueFromJSON(reader);
+                                Debug.Log(xPos);
+                                reader.Read();
                             }
 
                             if (CheckForProperty("yPos", reader))
                             {
                                 yPos = (long)GetValueFromJSON(reader);
+                                Debug.Log(yPos);
+                                reader.Read();
                             }
 
                             if (CheckForProperty("zPos", reader))
                             {
                                 zPos = (long)GetValueFromJSON(reader);
+                                Debug.Log(zPos);
+                                reader.Read();
                             }
 
                             if (IsEndOfObject(reader))
                             {
                                 instanceCoordinates = new Vector3Int((int)xPos, (int)yPos, (int)zPos);
+                                Debug.Log(instanceCoordinates);
                             }
                         }
 
@@ -528,43 +537,137 @@ namespace YuguLibrary
 
                         if(CheckForProperty("unitSpawners", reader))
                         {
-                            reader.Read(); //StartArray
+                            /*reader.Read(); //StartArray
                             while (IsArrayOngoing(reader))
                             {
 
-                            }
+                            } */
                         }
 
                         if (CheckForProperty("loadingZones", reader))
                         {
+                            string instanceJSONFileName = "";
+                            Vector3Int loadingZonePosition = new Vector3Int(-255, -255, -255);
+                            Vector3Int playerUnitSpawnPosition = new Vector3Int(-255, -255, -255);
+
                             reader.Read(); //StartArray
                             while (IsArrayOngoing(reader))
                             {
+                                if (CheckForProperty("instanceJSONFileName", reader))
+                                {
+                                    instanceJSONFileName = (string)GetValueFromJSON(reader);
+                                }
 
+                                if (CheckForProperty("loadingZonePosition", reader))
+                                {
+                                    long xPos = -255;
+                                    long yPos = -255;
+                                    long zPos = -255;
+
+                                    reader.Read(); //StartObject
+                                    reader.Read();
+                                    if (CheckForProperty("xPos", reader))
+                                    {
+                                        xPos = (long)GetValueFromJSON(reader);
+                                        reader.Read();
+                                    }
+
+                                    if (CheckForProperty("yPos", reader))
+                                    {
+                                        yPos = (long)GetValueFromJSON(reader);
+                                        reader.Read();
+                                    }
+
+                                    if (CheckForProperty("zPos", reader))
+                                    {
+                                        zPos = (long)GetValueFromJSON(reader);
+                                        reader.Read();
+                                    }
+
+                                    if (IsEndOfObject(reader))
+                                    {
+                                        loadingZonePosition = new Vector3Int((int)xPos, (int)yPos, (int)zPos);
+                                        Debug.Log(loadingZonePosition);
+                                    }
+                                }
+
+                                if (CheckForProperty("playerUnitSpawnPosition", reader))
+                                {
+                                    long xPos = -255;
+                                    long yPos = -255;
+                                    long zPos = -255;
+
+                                    reader.Read(); //StartObject
+                                    reader.Read();
+                                    if (CheckForProperty("xPos", reader))
+                                    {
+                                        xPos = (long)GetValueFromJSON(reader);
+                                        reader.Read();
+                                    }
+
+                                    if (CheckForProperty("yPos", reader))
+                                    {
+                                        yPos = (long)GetValueFromJSON(reader);
+                                        reader.Read();
+                                    }
+
+                                    if (CheckForProperty("zPos", reader))
+                                    {
+                                        zPos = (long)GetValueFromJSON(reader);
+                                        reader.Read();
+                                    }
+
+                                    if (IsEndOfObject(reader))
+                                    {
+                                        Debug.Log("testtt");
+                                        playerUnitSpawnPosition = new Vector3Int((int)xPos, (int)yPos, (int)zPos);
+                                        Debug.Log(playerUnitSpawnPosition);
+                                    }
+                                }
+
+                                if (IsEndOfObject(reader))
+                                {
+                                    if (!instanceJSONFileName.Equals("") && loadingZonePosition.x != -255 && playerUnitSpawnPosition.x != -255)
+                                    {
+                                        Debug.Log("test");
+                                        LoadingZone loadingZone = new LoadingZone(loadingZonePosition, instanceJSONFileName, playerUnitSpawnPosition);
+                                        loadingZones.Add(loadingZone);
+                                        Debug.Log(loadingZone);
+
+                                        Debug.Log(playerUnitSpawnPosition);
+
+                                        instanceJSONFileName = "";
+                                        loadingZonePosition = new Vector3Int(-255, -255, -255);
+                                        playerUnitSpawnPosition = new Vector3Int(-255, -255, -255);
+                                    }
+                                }
                             }
                         }
 
                         if (CheckForProperty("eventMarkers", reader))
                         {
+                            /*
                             reader.Read(); //StartArray
                             while (IsArrayOngoing(reader))
                             {
 
-                            }
+                            } */
                         }
 
                         if (CheckForProperty("weather", reader))
                         {
+                            /*
                             reader.Read(); //StartArray
                             while (IsArrayOngoing(reader))
                             {
 
-                            }
+                            } */
                         }
+                        
                     }
                     else
                     {
-                        //Debug.Log("Token: " + reader.TokenType);
+                        Debug.Log("Token: " + reader.TokenType);
                     }
                 }
             }

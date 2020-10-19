@@ -15,6 +15,7 @@ namespace YuguLibrary
     {
         public class UnitDetector
         {
+            #region Variables
             /// <summary>
             /// Reference to the controller the unit detector is attached to.
             /// </summary>
@@ -89,13 +90,16 @@ namespace YuguLibrary
             public static AreaOfEffect aggroRadius;
 
             private bool automaticAIActivity = true;
+            #endregion
 
+            #region Constructors
             public UnitDetector(Tilemap geography, Tilemap indicators, MonoBehaviour controllerReference)
             {
                 this.geography = geography;
                 this.indicators = indicators;
                 this.controllerReference = controllerReference;
             }
+            #endregion
 
             #region Functions
 
@@ -229,8 +233,9 @@ namespace YuguLibrary
 
                 Debug.Log("spawn pos: " + spawnPosition);
 
-                //UtilityFunctions.GetActiveUnitDetector().SpawnOverworldObject(newPlayerUnit, spawnPosition);
-                //UtilityFunctions.GetActivePlayer().SetCurrentOverworldObject(newPlayerUnit);
+                UtilityFunctions.GetActiveUnitDetector().SpawnOverworldObject(playerUnit, spawnPosition);
+                UtilityFunctions.GetActivePlayer().SetCurrentOverworldObject(playerUnit);
+                //UtilityFunctions.SetSpriteDefaultPosition(playerUnit.overworldObjectCoordinator);
 
                 //InitializeInstance(spawnPosition, leadUnit);
             }
@@ -324,8 +329,6 @@ namespace YuguLibrary
                             new Vector3Int(overworldObject.position.x + 1, overworldObject.position.y + 1, overworldObject.position.z - 1);
                         Debug.Log("getting loadingzone at " + tileBelow);
                         LoadingZone loadingZone = GetLoadingZoneAtPosition(tileBelow);
-
-                        Debug.Log(loadingZone);
 
                         if (loadingZone != null /*&& !UtilityFunctions.GetActiveEncounter().IsEncounterActive()*/)
                         {

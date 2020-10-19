@@ -74,7 +74,7 @@ namespace YuguLibrary
 
             private List<Skill> skills;
             private List<OverworldObjectAction> actions;
-            private List<OverworldAI> overworldAIs;
+            private List<UnitAI> unitAIs;
             private List<EncounterAI> encounterAIs;
 
             public UnitJSONParser(string unitJSONFileName)
@@ -82,7 +82,7 @@ namespace YuguLibrary
                 skillResources = new List<SkillResource>();
                 skills = new List<Skill>();
                 actions = new List<OverworldObjectAction>();
-                overworldAIs = new List<OverworldAI>();
+                unitAIs = new List<UnitAI>();
                 encounterAIs = new List<EncounterAI>();
 
                 JsonTextReader reader = new JsonTextReader(new StreamReader(UtilityFunctions.JSON_ASSETS_UNIT_FOLDER_PATH + unitJSONFileName));
@@ -283,7 +283,7 @@ namespace YuguLibrary
                                 if (IsEndOfObject(reader))
                                 {
                                     Type type = Type.GetType(overworldAIClassName);
-                                    overworldAIs.Add((OverworldAI)Activator.CreateInstance(type));
+                                    unitAIs.Add((UnitAI)Activator.CreateInstance(type));
                                     //Debug.Log("created: " + overworldAIClassName);
                                     overworldAIClassName = "";
                                 }
@@ -420,9 +420,9 @@ namespace YuguLibrary
                 return actions;
             }
 
-            public List<OverworldAI> GetOverworldAIs()
+            public List<UnitAI> GetUnitAIs()
             {
-                return overworldAIs;
+                return unitAIs;
             }
 
             public List<EncounterAI> GetEncounterAIs()

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
 using YuguLibrary.Enumerations;
 using YuguLibrary.Utilities;
@@ -487,12 +488,17 @@ namespace YuguLibrary
             private Dictionary<string, HookFunction> hookFunctions = new Dictionary<string, HookFunction>();
 
             /// <summary>
-            /// List of <see cref="OverworldAI"/> objects currently attached to the unit.
+            /// List of <see cref="UnitAI"/> objects currently attached to the unit.
             /// </summary>
             /// <remarks>
             /// Determines how the unit will interact with other units and tiles in the overworld.
             /// </remarks>
-            private List<OverworldAI> overworldAIs = new List<OverworldAI>();
+            private List<UnitAI> unitAIs = new List<UnitAI>();
+
+            /// <summary>
+            /// The name of the UnitAIHub function that is executed when searching for a new unitAIAction.
+            /// </summary>
+            private string unitAIFunctionName;
 
             /// <summary>
             /// The unit's current <see cref="OverworldAIAction"/>.
@@ -500,7 +506,7 @@ namespace YuguLibrary
             /// <remarks>
             /// When determined, the unit will execute the action when they are free.
             /// </remarks>
-            private OverworldAIAction currentOverworldAIAction;
+            private UnitAIAction currentUnitAIAction;
 
             /// <summary>
             /// Whether or not the unit is currently executing an <see cref="OverworldAIAction"/>.
@@ -652,6 +658,16 @@ namespace YuguLibrary
                 return true;
             }
 
+            public void RemoveAllBeneficialStatuses()
+            {
+
+            }
+
+            public void RemoveHarmfulStatuses()
+            {
+
+            }
+
             /// <summary>
             /// Searches <see cref="statuses"/> for a specified status.
             /// </summary>
@@ -710,10 +726,22 @@ namespace YuguLibrary
             /// <summary>
             /// Adds an overworld AI pattern to the unit.
             /// </summary>
-            /// <param name="overworldAI">The overworld AI pattern to be added.</param>
-            public void AddOverworldAI(OverworldAI overworldAI)
+            /// <param name="unitAI">The overworld AI pattern to be added.</param>
+            public void AddUnitAI(UnitAI unitAI)
             {
-                overworldAIs.Add(overworldAI);
+                unitAIs.Add(unitAI);
+            }
+
+            public bool CheckForUnitAI(Type unitAIType)
+            {
+                foreach(UnitAI unitAI in unitAIs)
+                {
+                    if(unitAI.GetType().Equals(unitAIType))
+                    {
+                        return true;
+                    }
+                }
+                return false;
             }
 
             /// <summary>
@@ -817,6 +845,13 @@ namespace YuguLibrary
                 return hitboxImmunities.Contains(hitboxGroupID);
             }
 
+            public Skill FindSkillByNameID(string nameID)
+            {
+                Skill skill = null;
+
+                return skill;
+            }
+
             /// <summary>
             /// Sets the values for the unit using information from the unit's JSON data.
             /// </summary>
@@ -895,10 +930,10 @@ namespace YuguLibrary
                     AddOverworldObjectAction(action);
                 }
 
-                List<OverworldAI> overworldAIs = unitJSONParser.GetOverworldAIs();
-                foreach (OverworldAI overworldAI in overworldAIs)
+                List<UnitAI> overworldAIs = unitJSONParser.GetUnitAIs();
+                foreach (UnitAI overworldAI in overworldAIs)
                 {
-                    AddOverworldAI(overworldAI);
+                    AddUnitAI(overworldAI);
                 }
 
                 List<EncounterAI> encounterAIs = unitJSONParser.GetEncounterAIs();

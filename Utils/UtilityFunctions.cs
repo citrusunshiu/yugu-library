@@ -5,6 +5,7 @@ using YuguLibrary.Controllers;
 using Mono.Data.Sqlite;
 using System;
 using YuguLibrary.Models;
+using System.Runtime.CompilerServices;
 
 namespace YuguLibrary
 {
@@ -17,6 +18,8 @@ namespace YuguLibrary
             /// Random number generator for functions.
             /// </summary>
             private static System.Random random = new System.Random();
+
+            private static PlayerFile currentFile;
 
             #region Valid KeyCode Values
             /// <summary>
@@ -154,6 +157,37 @@ namespace YuguLibrary
                 GameObject controllerHub = GameObject.Find("Controller Hub");
                 Encounter encounter = controllerHub.GetComponent<EncounterController>().encounter;
                 return encounter;
+            }
+
+            public static UIManager GetActiveUIManager()
+            {
+                GameObject controllerHub = GameObject.Find("Controller Hub");
+                UIManager uiManager = controllerHub.GetComponent<UIController>().uiManager;
+                return uiManager;
+            }
+
+            public static QuestManager GetActiveQuestManager()
+            {
+                GameObject controllerHub = GameObject.Find("Controller Hub");
+                QuestManager questManager = controllerHub.GetComponent<QuestController>().questManager;
+                return questManager;
+            }
+
+            public static Geology GetActiveGeology()
+            {
+                GameObject controllerHub = GameObject.Find("Controller Hub");
+                Geology geology = controllerHub.GetComponent<GeologyController>().geology;
+                return geology;
+            }
+
+            public static void SetCurrentFile(PlayerFile file)
+            {
+                currentFile = file;
+            }
+
+            public static PlayerFile GetCurrentFile()
+            {
+                return currentFile;
             }
 
             /// <summary>

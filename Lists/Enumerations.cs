@@ -74,6 +74,16 @@ namespace YuguLibrary
             RightTrigger
         }
 
+        public enum YuguUIScreens
+        {
+            Landing,
+            Landing_FileSelect,
+            Overworld,
+            Menu,
+            Encounter,
+            Cutscene
+        }
+
         /// <summary>
         /// List of all possible UI states.
         /// </summary>
@@ -142,6 +152,19 @@ namespace YuguLibrary
         /// </remarks>
         public enum DelegateFlags
         {
+            /// <summary>
+            /// Checked after a <see cref="HookFunction"/> is attached to a unit.
+            /// </summary>
+            OnApply,
+
+            /// <summary>
+            /// Checked before a <see cref="HookFunction"/> is removed from a unit.
+            /// </summary>
+            OnRemove,
+
+            /// <summary>
+            /// 
+            /// </summary>
             OnEncounterRoundStart,
 
             OnEncounterTurnStart,
@@ -162,19 +185,21 @@ namespace YuguLibrary
 
             OnStatusRemoved,
 
-            OnEncounterTurnEnd,
-
-            OnEncounterRoundEnd,
-
             OnEncounterCollectCastingHealModifiers,
 
             OnEncounterCollectReceivingHealModifiers,
 
-            OnEncounterIncapacitation,
+            OnHP0,
 
-            OnApply,
+            /// <summary>
+            /// Checked after a unit recceives <see cref="StatusEffects.Incapacitation"/> status.
+            /// </summary>
+            OnIncapacitation,
 
-            OnRemove
+            OnEncounterTurnEnd,
+
+            OnEncounterRoundEnd,
+
         };
 
         /// <summary>

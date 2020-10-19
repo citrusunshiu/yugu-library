@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using YuguLibrary.Enumerations;
 using YuguLibrary.Models;
+using YuguLibrary.Utilities;
 
 namespace YuguLibrary
 {
@@ -274,6 +275,7 @@ namespace YuguLibrary
             public override void ExecuteAction()
             {
                 Debug.Log("UseSkill:ExecuteAction running");
+                UtilityFunctions.SetSpriteDefaultPosition(overworldObject.overworldObjectCoordinator);
                 skill.ExecuteSkill();
             }
         }

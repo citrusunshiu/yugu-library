@@ -159,9 +159,29 @@ namespace YuguLibrary
                     method.Invoke(this, null);
                 }
             }
+
+            /// <summary>
+            /// Sets the cooldown of the skill to 0.
+            /// </summary>
             public void ResetCooldown()
             {
                 currentCooldown = 0;
+            }
+
+            /// <summary>
+            /// Allows the skill to be executed.
+            /// </summary>
+            public void EnableSkill()
+            {
+                isEnabled = true;
+            }
+
+            /// <summary>
+            /// Prevents the skill from being executed.
+            /// </summary>
+            public void DisableSkill()
+            {
+                isEnabled = false;
             }
             #endregion
 
@@ -251,6 +271,11 @@ namespace YuguLibrary
             {
                 return hits;
             }
+
+            public bool IsEnabled()
+            {
+                return isEnabled;
+            }
             #endregion
 
             #region Protected Skill Functionality Parts
@@ -263,6 +288,21 @@ namespace YuguLibrary
             protected void LaunchProjectile(Hit hit, int range, string projectileSpriteName)
             {
                 //may need more params/extra info from json
+            }
+
+            protected void Type2Target()
+            {
+
+            }
+
+            protected void Type3Target()
+            {
+
+            }
+
+            protected void MultiPromptInput()
+            {
+
             }
             #endregion
             #endregion

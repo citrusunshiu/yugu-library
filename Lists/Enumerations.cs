@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using YuguLibrary.Models;
 
 namespace YuguLibrary
 {
@@ -163,32 +164,8 @@ namespace YuguLibrary
             OnRemove,
 
             /// <summary>
-            /// 
+            /// Checked when a unit's <see cref="Unit.currentHP"/> reaches 0.
             /// </summary>
-            OnEncounterRoundStart,
-
-            OnEncounterTurnStart,
-
-            OnEncounterBeforeAttack,
-
-            OnEncounterBeforeDefend,
-
-            OnEncounterCollectAttackerModifiers,
-
-            OnEncounterCollectDefenderModifiers,
-
-            OnEncounterAfterAttack,
-
-            OnEncounterAfterDefend,
-
-            OnStatusApplied,
-
-            OnStatusRemoved,
-
-            OnEncounterCollectCastingHealModifiers,
-
-            OnEncounterCollectReceivingHealModifiers,
-
             OnHP0,
 
             /// <summary>
@@ -196,9 +173,13 @@ namespace YuguLibrary
             /// </summary>
             OnIncapacitation,
 
+            OnEncounterRoundStart,
+
+            OnEncounterTurnStart,
+
             OnEncounterTurnEnd,
 
-            OnEncounterRoundEnd,
+            OnEncounterRoundEnd
 
         };
 

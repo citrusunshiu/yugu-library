@@ -5,6 +5,17 @@ using YuguLibrary.Models;
 
 public static class InteractionFunctions
 {
+
+    public static void SummonUnit(Unit unit, string unitJSONFileName)
+    {
+
+    }
+
+    public static void SpawnOverworldObject(Unit unit, string unitJSONFileName)
+    {
+
+    }
+
     /// <summary>
     /// Checks if a given unit type is present in the current map.
     /// </summary>
@@ -36,16 +47,6 @@ public static class InteractionFunctions
     {
         Unit target;
         return null;
-    }
-
-    public static void SummonUnit(Unit unit, string unitJSONFileName)
-    {
-
-    }
-
-    public static void SpawnOverworldObject(Unit unit, string unitJSONFileName)
-    {
-
     }
 
     public static void RemoveHarmfulEffects(Unit unit)

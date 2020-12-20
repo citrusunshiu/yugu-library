@@ -304,17 +304,19 @@ namespace YuguLibrary
                     moveDirection = overworldObject.direction;
                 }
 
-                if (!overworldObject.isStationary && !geography.HasTile(newPosition) && highestFloorTile.z != -255)
+                if (overworldObject.canTurn)
+                {
+                    overworldObject.direction = moveDirection;
+                }
+
+                if (IsTileOpen(newPosition, false) && !overworldObject.isStationary && !geography.HasTile(newPosition) && highestFloorTile.z != -255)
                 {
                     Vector3Int oldPosition = overworldObject.position;
                     Vector3Int tileToPlace = newPosition;
 
                     overworldObject.position = tileToPlace;
+                    Debug.Log(overworldObject.position);
 
-                    if (overworldObject.canTurn)
-                    {
-                        overworldObject.direction = moveDirection;
-                    }
 
                     DelayMovements(overworldObject, z);
                     if(overworldObject is Unit)
@@ -325,10 +327,8 @@ namespace YuguLibrary
                     //if unit moved was the player, check for loading zones
                     if (UtilityFunctions.GetActivePlayer().GetCurrentOverworldObject().Equals(overworldObject))
                     {
-                        Vector3Int tileBelow = 
-                            new Vector3Int(overworldObject.position.x + 1, overworldObject.position.y + 1, overworldObject.position.z - 1);
-                        Debug.Log("getting loadingzone at " + tileBelow);
-                        LoadingZone loadingZone = GetLoadingZoneAtPosition(tileBelow);
+                        Debug.Log("getting loadingzone at " + overworldObject.position);
+                        LoadingZone loadingZone = GetLoadingZoneAtPosition(overworldObject.position);
 
                         if (loadingZone != null /*&& !UtilityFunctions.GetActiveEncounter().IsEncounterActive()*/)
                         {
@@ -777,11 +777,13 @@ namespace YuguLibrary
             /// <param name="hitbox">The hitbox to be executed.</param>
             private void CheckUnitsAtHitbox(Hitbox hitbox)
             {
+                //Debug.Log("searching for units at " + hitbox.GetPosition());
                 List<OverworldObject> overworldObjects = GetOverworldObjectsAtPosition(hitbox.GetPosition());
                 foreach (OverworldObject overworldObject in overworldObjects)
                 {
                     if (overworldObject is Unit)
                     {
+                        //Debug.Log("found: " + overworldObject);
                         hitbox.ExecuteHitbox((Unit)overworldObject);
                     }
                 }
@@ -805,13 +807,21 @@ namespace YuguLibrary
             /// <summary>
             /// 
             /// </summary>
-            /// <param name="posititon"></param>
+            /// <param name="position"></param>
             /// <returns></returns>
-            public List<OverworldObject> GetOverworldObjectsAtPosition(Vector3Int posititon)
+            public List<OverworldObject> GetOverworldObjectsAtPosition(Vector3Int position)
             {
-                List<OverworldObject> overworldObjects = new List<OverworldObject>();
+                List<OverworldObject> owObjects = new List<OverworldObject>();
 
-                return overworldObjects;
+                for(int i = 0; i < overworldObjects.Count; i++)
+                {
+                    if(UtilityFunctions.CompareVector3Ints(overworldObjects[i].GetPosition(), position))
+                    {
+                        owObjects.Add(overworldObjects[i]);
+                    }
+                }
+
+                return owObjects;
             }
             #endregion
 
@@ -896,19 +906,19 @@ namespace YuguLibrary
                  * be incremented to match
                  * */
 
-                Vector3Int p = position;
+                Vector3Int pos = position;
                 Vector3Int highestFloorTile = new Vector3Int(-255, -255, -255);
 
 
                 int i;
                 for (i = 0; i < 10; i++)
                 {
-                    p.x++;
-                    p.y++;
-                    p.z--;
-                    if (geography.HasTile(p))
+                    pos.x++;
+                    pos.y++;
+                    pos.z--;
+                    if (geography.HasTile(pos))
                     {
-                        highestFloorTile = p;
+                        highestFloorTile = pos;
                         break;
                     }
                 }
@@ -956,6 +966,8 @@ namespace YuguLibrary
                 }
 
                 GameObject.Instantiate(Resources.Load(UtilityFunctions.GEOGRAPHY_FILE_PATH + name));
+
+                Debug.Log(UtilityFunctions.GEOGRAPHY_FILE_PATH + name);
 
                 geography = GameObject.Find(name + "(Clone)").GetComponentInChildren<Tilemap>();
                 geography.gameObject.transform.parent.gameObject.name = "trashed";

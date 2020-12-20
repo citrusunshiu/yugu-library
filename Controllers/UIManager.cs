@@ -10,23 +10,28 @@ namespace YuguLibrary
         public class UIManager
         {
 
-            Stack<YuguUIScreens> uiStack;
+            Stack<UIConfiguration> uiStack;
 
-            YuguUIScreens currentUIScreen;
+            UIConfiguration currentUI;
 
             public UIManager()
             {
-                uiStack = new Stack<YuguUIScreens>();
+                uiStack = new Stack<UIConfiguration>();
             }
 
-            public void PushUI(YuguUIScreens uiScreen, bool clearsStack)
+            public void PushUI(UIConfiguration ui, bool clearsStack)
             {
-
+                uiStack.Push(ui);
+                ui.LoadUI(GameObject.Find("UI Container"));
             }
 
             public void PopUI()
             {
-
+                if(uiStack.Count > 1)
+                {
+                    uiStack.Pop();
+                    uiStack.Peek().LoadUI(GameObject.Find("UI Container"));
+                }
             }
         }
     }

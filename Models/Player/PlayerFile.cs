@@ -1,5 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 using YuguLibrary.Enumerations;
 using YuguLibrary.Models;
@@ -11,21 +14,23 @@ public class PlayerFile
     int day;
     Times time;
     int timeSegment;
-    WeatherConditions weather;
+    Dictionary<string, WeatherConditions> weather;
     string currentInstanceJSONFileName;
     Vector3Int playerPosition;
     List<PlayerUnit> playerUnits;
     List<UnitSetup> unitSetups;
     List<Quest> questProgression;
 
+    string leadUnitJSONFileName;
+
     public PlayerFile()
     {
-
+        
     }
 
     public PlayerFile(int year, Seasons season, int day, Times time, int timeSegment,
-        WeatherConditions weather, string currentInstanceJSONFileName, Vector3Int playerPosition, List<PlayerUnit> playerUnits,
-        List<Quest> questProgression, List<UnitSetup> unitSetups)
+        Dictionary<string, WeatherConditions> weather, string currentInstanceJSONFileName, Vector3Int playerPosition, List<PlayerUnit> playerUnits,
+        List<Quest> questProgression, List<UnitSetup> unitSetups, string leadUnitJSONFileName)
     {
         this.year = year;
         this.season = season;
@@ -38,8 +43,67 @@ public class PlayerFile
         this.questProgression = questProgression;
         this.playerUnits = playerUnits;
         this.unitSetups = unitSetups;
+        this.leadUnitJSONFileName = leadUnitJSONFileName;
     }
 
+    public void SaveToFile()
+    {
+        Debug.Log("saving file to " + Application.persistentDataPath + "/testSave.ygs");
+        BinaryFormatter binaryFormatter = new BinaryFormatter();
+        FileStream fileStream = new FileStream(Application.persistentDataPath + "/testSave.ygs", FileMode.Create);
+        SerializablePlayerFile serializablePlayerFile = ConvertToSerializablePlayerFile();
+        binaryFormatter.Serialize(fileStream, serializablePlayerFile);
+        fileStream.Close();
+    }
+
+    public static PlayerFile LoadFromFile(string fileName)
+    {
+        if (File.Exists(Application.persistentDataPath + "/" + fileName))
+        {
+            BinaryFormatter binaryFormatter = new BinaryFormatter();
+            FileStream fileStream = new FileStream(Application.persistentDataPath + "/testSave.ygs", FileMode.Create);
+            SerializablePlayerFile serializablePlayerFile = (SerializablePlayerFile)binaryFormatter.Deserialize(fileStream);
+            fileStream.Close();
+
+            PlayerFile playerFile = serializablePlayerFile.ConvertToPlayerFile();
+            return playerFile;
+        }
+        else
+        {
+            return null;
+        }
+    }
+
+    public SerializablePlayerFile ConvertToSerializablePlayerFile()
+    {
+        return new SerializablePlayerFile(this);
+    }
+
+    public static PlayerFile CreateNewFile()
+    {
+        PlayerFile playerFile = new PlayerFile();
+        return playerFile;
+    }
+
+}
+
+[Serializable]
+public class SerializablePlayerFile
+{
+    public SerializablePlayerFile()
+    {
+
+    }
+
+    public SerializablePlayerFile(PlayerFile playerFile)
+    {
+
+    }
+
+    public PlayerFile ConvertToPlayerFile()
+    {
+        return null;
+    }
 }
 
 public class PlayerUnit

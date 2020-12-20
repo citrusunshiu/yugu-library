@@ -186,7 +186,7 @@ namespace YuguLibrary
             else
             {
                 SetAnimation(0, -1, true);
-                //UtilityFunctions.SetSpriteDefaultPosition(this);
+                UtilityFunctions.SetSpriteDefaultPosition(this);
                 if (overworldObject.Equals(player.GetCurrentOverworldObject()))
                 {
                     SetCameraPosition();

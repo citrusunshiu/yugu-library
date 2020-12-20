@@ -108,7 +108,7 @@ namespace YuguLibrary
             /// <summary>
             /// Amount of tiles upwards that the overworld object can travel during a jump.
             /// </summary>
-            public int jumpHeight = 3;
+            public int jumpHeight = 2;
 
             /// <summary>
             /// The overworld object's current progression in their jump.

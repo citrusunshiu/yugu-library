@@ -444,6 +444,10 @@ namespace YuguLibrary
             public float attackSpeed = 1;
             #endregion
 
+            private int expYield;
+
+            private Dictionary<string, float> dropTable = new Dictionary<string, float>();
+
             /// <summary>
             /// The list of attributes that the unit currently has.
             /// </summary>
@@ -513,7 +517,7 @@ namespace YuguLibrary
             /// </summary>
             private bool isExecutingOverworldAIAction;
 
-            private List<string> hitboxImmunities;
+            private List<string> hitboxImmunities = new List<string>();
 
             /// <summary>
             /// The UnitSpawner object that created the unit.
@@ -589,6 +593,7 @@ namespace YuguLibrary
                 int alterAmount = calculation.GetDamageResult();
                 
                 currentHP -= alterAmount;
+
                 
                 if(alterAmount >= 0) //for damage
                 {
@@ -608,6 +613,7 @@ namespace YuguLibrary
                         currentHP = hp;
                     }
                 }
+                Debug.Log("HP altered by " + alterAmount + " (HP: " + currentHP + "/" + hp + ")");
             }
 
             /// <summary>
@@ -617,6 +623,7 @@ namespace YuguLibrary
             public void AlterAggro(HitCalculation calculation)
             {
                 aggroSpread.InsertAggro(calculation.GetAttackingUnit(), calculation.GetAggroResult());
+                Debug.Log("aggro altered by " + calculation.GetAggroResult());
             }
 
             /// <summary>
@@ -842,6 +849,7 @@ namespace YuguLibrary
 
             public bool SearchHitboxImmunity(string hitboxGroupID)
             {
+                //Debug.Log(hitboxImmunities.Contains(hitboxGroupID));
                 return hitboxImmunities.Contains(hitboxGroupID);
             }
 

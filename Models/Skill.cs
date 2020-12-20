@@ -77,7 +77,7 @@ namespace YuguLibrary
             /// <summary>
             /// The list of animations and hitbox timings that the skill has access to during usage.
             /// </summary>
-            private List<SkillChoreography> skillChoreographies;
+            protected List<SkillChoreography> skillChoreographies;
 
             /// <summary>
             /// The name of the function contained in <see cref="SkillHub"/> associated with the skill object's logic.
@@ -280,14 +280,19 @@ namespace YuguLibrary
 
             #region Protected Skill Functionality Parts
             /// <summary>
-            /// 
+            /// Moves a specified projectile hitbox a specified number of tiles at a specified speed.
             /// </summary>
-            /// <param name="hit"></param>
-            /// <param name="range"></param>
-            /// <param name="projectileSpriteName"></param>
-            protected void LaunchProjectile(Hit hit, int range, string projectileSpriteName)
+            /// <param name="projectileChoreography">The <see cref="SkillChoreography"/> to be ran during the projectile's travel time.</param>
+            /// <param name="onConnect">The <see cref="SkillChoreography"/> to be ran when the projectile connects with a target.</param>
+            /// <param name="range">The amount of tiles the projectile should travel.</param>
+            /// <param name="movementFrames">The amount of frames taken for the projectile to advance one tile.</param>
+            protected void LaunchProjectile(SkillChoreography projectileChoreography, SkillChoreography onConnect, int range, 
+                float movementFrames)
             {
                 //may need more params/extra info from json
+
+                //TODO: projectile fire/movement
+                RunSkillChoreography(onConnect);
             }
 
             protected void Type2Target()

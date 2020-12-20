@@ -16,6 +16,11 @@ public static class InteractionFunctions
 
     }
 
+    public static void CreateSpecialTiles(List<Vector3Int> positions, SpecialTile tile, Unit creator, int duration)
+    {
+
+    }
+
     /// <summary>
     /// Checks if a given unit type is present in the current map.
     /// </summary>
@@ -49,12 +54,13 @@ public static class InteractionFunctions
         return null;
     }
 
-    public static void RemoveHarmfulEffects(Unit unit)
+
+    public static void RemoveHarmfulStatuses(Unit unit)
     {
 
     }
 
-    public static void RemoveBeneficialEffects(Unit unit)
+    public static void RemoveBeneficialStatuses(Unit unit)
     {
 
     }

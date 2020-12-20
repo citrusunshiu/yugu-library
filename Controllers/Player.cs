@@ -225,6 +225,23 @@ namespace YuguLibrary
             }
 
             /// <summary>
+            /// Attempts to either move the current overworld object in a given direction, or set the manunal movement cursor to a given 
+            /// direction, dependent on the value of <see cref="OverworldObject.manualMovementToggle"/>.
+            /// </summary>
+            /// <param name="direction">The direction to send for the movement command.</param>
+            private void SendMovementCommand(Directions direction)
+            {
+                if (currentOverworldObject.manualMovementToggle)
+                {
+
+                }
+                else
+                {
+                    currentOverworldObject.MoveInDirection(direction);
+                }
+            }
+
+            /// <summary>
             /// Reads inputs for movement on the game's overworld.
             /// </summary>
             /// <param name="xAxis">The position of the input's x axis.</param>
@@ -233,17 +250,16 @@ namespace YuguLibrary
             {
                 if ((xAxis > 0.25f && yAxis > 0.25f) || (Input.GetKey(arrowRight) && Input.GetKey(arrowDown))) // right && down
                 {
-                    currentOverworldObject.MoveInDirection(Directions.SE);
-
+                    SendMovementCommand(Directions.SE);
                 }else if ((xAxis < -0.25f && yAxis < -0.25f) || (Input.GetKey(arrowLeft) && Input.GetKey(arrowUp))) // left && up
                 {
-                    currentOverworldObject.MoveInDirection(Directions.NW);
+                    SendMovementCommand(Directions.NW);
                 }else if ((yAxis > 0.25f && xAxis < -0.25f) || (Input.GetKey(arrowDown) && Input.GetKey(arrowLeft))) // down && left
                 {
-                    currentOverworldObject.MoveInDirection(Directions.SW);
+                    SendMovementCommand(Directions.SW);
                 }else if ((yAxis < -0.25f && xAxis > 0.25f) || (Input.GetKey(arrowUp) && Input.GetKey(arrowRight))) // up && right
                 {
-                    currentOverworldObject.MoveInDirection(Directions.NE);
+                    SendMovementCommand(Directions.NE);
                 }
             }
 

@@ -75,7 +75,7 @@ namespace YuguLibrary
             RightTrigger
         }
 
-        public enum YuguUIScreens
+        public enum UIScreens
         {
             Landing,
             Landing_FileSelect,
@@ -88,7 +88,7 @@ namespace YuguLibrary
         /// <summary>
         /// List of all possible UI states.
         /// </summary>
-        public enum UIScreens
+        public enum OldUIScreens
         {
             StartScreen,
             StartScreen_FileSelect,

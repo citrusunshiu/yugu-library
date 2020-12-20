@@ -10,20 +10,6 @@
         "zPos": 3
     },
     "isHostile": true,
-    "unitSpawners": [
-        {
-            "unitJSONFileName": "unit.json",
-            "maxUnits": "3",
-            "areaOfEffect": {
-                "xPos": 15,
-                "yPos": 1,
-                "zPos": 1,
-                "radius": 5
-            },
-            "unitLevel": 50,
-            "unitSpawnTime": 60
-        }
-    ],
     "loadingZones": [
         {
             "instanceJSONFileName": "instance.json",
@@ -37,16 +23,97 @@
                 "yPos": 0,
                 "zPos": 1
             }
-        }
-    ],
-    "eventMarkers": [
+        },
         {
-
+            "instanceJSONFileName": "instance2.json",
+            "loadingZonePosition": {
+                "xPos": 15,
+                "yPos": 2,
+                "zPos": 1
+            },
+            "playerUnitSpawnPosition": {
+                "xPos": 5,
+                "yPos": 3,
+                "zPos": 1
+            }
         }
     ],
     "weather": [
         {
 
+        }
+    ],
+    "unitSpawners": [
+        {
+            "unitJSONFileName": "unit.json",
+            "maxUnits": 3,
+            "areaOfEffect": {
+                "xPos": 15,
+                "yPos": 1,
+                "zPos": 1,
+                "radius": 5
+            },
+            "unitLevel": 50,
+            "unitSpawnTime": 60
+        },
+        {
+            "unitJSONFileName": "unit2.json",
+            "maxUnits": 1,
+            "areaOfEffect": {
+                "xPos": 12,
+                "yPos": 5,
+                "zPos": 1,
+                "radius": 5
+            },
+            "unitLevel": 20,
+            "unitSpawnTime": 70
+        }
+    ],
+    "eventMarkers": [
+        {
+            "position": {
+                "xPos": 0,
+                "yPos": 0,
+                "zPos": 1
+            },
+            "gameEvents": [
+                {
+                    "eventType": "PlayCutscene",
+                    "cutsceneJSONFileName": "cutscene.json"
+                },
+                {
+                    "eventType": "ChangeDate",
+                    "year": 1,
+                    "season": "Spring",
+                    "date": 25,
+                    "time": "EarlyMorning"
+                },
+                {
+                    "eventType": "MoveLocation",
+                    "instanceJSONFileName": "instance.json",
+                    "position": {
+                        "xPos": 0,
+                        "yPos": 0,
+                        "zPos": 1
+                    }
+                }
+            ]
+        },
+        {
+            "position": {
+                "xPos": 10,
+                "yPos": 5,
+                "zPos": 1
+            },
+            "gameEvents": [
+                {
+                    "eventType": "ChangeDate",
+                    "year": 1,
+                    "season": "Spring",
+                    "date": 25,
+                    "time": "EarlyMorning"
+                }
+            ]
         }
     ]
 }

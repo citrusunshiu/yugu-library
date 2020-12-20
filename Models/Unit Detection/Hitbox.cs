@@ -82,15 +82,21 @@ public class Hitbox
         // not done yet
     }
 
-    private bool TryHitbox(Unit target)
+    /// <summary>
+    /// Checks to see if a given target has already been affected by the hitbox.
+    /// </summary>
+    /// <param name="target">The target to check the hitbox against.</param>
+    /// <returns>Returns false if the target has not been affected by the hitbox, and true otherwise.</returns>
+    private bool CheckHitboxImmunity(Unit target)
     {
+        //Debug.Log("tryhitbox; " + unit.GetTargetType() + " vs " + target.GetTargetType());
         if(unit.GetTargetType() != target.GetTargetType())
         {
             return target.SearchHitboxImmunity(hitboxGroupID);
         }
         else
         {
-            return false;
+            return true;
         }
     }
 
@@ -100,7 +106,7 @@ public class Hitbox
     public void AdjustPositionToUnit()
     {
         
-        Debug.Log(unit.position);
+        //Debug.Log(unit.position);
         position = unit.position;
         switch (unit.direction)
         {
@@ -125,9 +131,8 @@ public class Hitbox
 
     public void ExecuteHitbox(Unit target)
     {
-        if (TryHitbox(target))
+        if (!CheckHitboxImmunity(target))
         {
-            Debug.Log(hitFunctionName);
             if (hitFunctionName.Equals(""))
             {
                 RunHitboxDefault(target);
@@ -145,7 +150,9 @@ public class Hitbox
 
     private void RunHitboxDefault(Unit target)
     {
-        HitCalculation hitCalculation = new HitCalculation(unit, skill.GetHits()[hitIndex], target);
+        Debug.Log("running hitbox");
+        Debug.Log(hitIndex);
+        HitCalculation hitCalculation = new HitCalculation(unit, skill.GetHits()[0], target);
         hitCalculation.ApplyHitCalculation();
     }
 

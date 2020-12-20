@@ -6,6 +6,9 @@ using Mono.Data.Sqlite;
 using System;
 using YuguLibrary.Models;
 using System.Runtime.CompilerServices;
+using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
+using UIConfirgurations;
 
 namespace YuguLibrary
 {
@@ -14,6 +17,7 @@ namespace YuguLibrary
         public static class UtilityFunctions
         {
             public static float FRAME_LENGTH = 0.016667F;
+
             /// <summary>
             /// Random number generator for functions.
             /// </summary>
@@ -62,7 +66,7 @@ namespace YuguLibrary
             /// <summary>
             /// Path to the project's root folder that stores all JSON assets.
             /// </summary>
-            public static readonly string JSON_ASSETS_FILE_PATH = Application.dataPath + "/Resources/JSON Assets/";
+            public static readonly string JSON_ASSETS_FILE_PATH = Application.dataPath + "/JSONsHubs/JSON Assets/";
 
             /// <summary>
             /// Path to the project's root folder that stores JSON assets for the <see cref="Unit"/> class.
@@ -90,14 +94,19 @@ namespace YuguLibrary
             public static readonly string JSON_ASSETS_CUTSCENE_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Cutscenes/";
 
             /// <summary>
+            /// Path to the project's root folder that stores UI screens.
+            /// </summary>
+            public static readonly string UI_FILE_PATH = "Prefabs/UI/";
+
+            /// <summary>
             /// Path to the project's root folder that stores sprites for the UI.
             /// </summary>
-            public static readonly string UI_FILE_PATH = "Sprites/UI/";
+            public static readonly string UI_SPRITES_FILE_PATH = "Sprites/UI/";
             
             /// <summary>
             /// Path to the project's root folder that stores UI icons.
             /// </summary>
-            public static readonly string ICONS_FILE_PATH = UI_FILE_PATH + "Icons/";
+            public static readonly string ICONS_FILE_PATH = UI_SPRITES_FILE_PATH + "Icons/";
 
             /// <summary>
             /// Path to the project's root folder that stores UI borders.
@@ -159,11 +168,23 @@ namespace YuguLibrary
                 return encounter;
             }
 
+            /// <summary>
+            /// Gets the UI manager currently active in the scene.
+            /// </summary>
+            /// <returns>Returns the UIManager object from the current scene.</returns>
             public static UIManager GetActiveUIManager()
             {
                 GameObject controllerHub = GameObject.Find("Controller Hub");
                 UIManager uiManager = controllerHub.GetComponent<UIController>().uiManager;
                 return uiManager;
+            }
+
+            public static EventSystem GetActiveEventSystem()
+            {
+                GameObject controllerHub = GameObject.Find("Controller Hub");
+                EventSystem eventSystem = controllerHub.GetComponent<UIController>().uiEventHandler;
+
+                return eventSystem;
             }
 
             public static QuestManager GetActiveQuestManager()
@@ -190,6 +211,11 @@ namespace YuguLibrary
                 return currentFile;
             }
 
+            public static void LoadCurrentPlayerFile()
+            {
+                SceneManager.LoadScene("Instance");
+            }
+
             /// <summary>
             /// Sets a sprite to a position in the game world relative to its location.
             /// </summary>
@@ -199,6 +225,7 @@ namespace YuguLibrary
                 Vector3Int currentPosition = overworldObjectCoordinator.overworldObject.position;
                 float xpos = 0;
                 float ypos = (currentPosition.z * 2.28f);
+
 
                 //for every x: x += 1.225, y += 0.6125; 
                 xpos += (currentPosition.x * 1.225f);

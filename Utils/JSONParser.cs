@@ -282,8 +282,9 @@ namespace YuguLibrary
 
                                 if (IsEndOfObject(reader))
                                 {
-                                    Type type = Type.GetType(overworldAIClassName);
-                                    unitAIs.Add((UnitAI)Activator.CreateInstance(type));
+                                    Type type = Type.GetType(overworldAIClassName); 
+                                    //Debug.Log("created: " + overworldAIClassName);
+                                    //unitAIs.Add((UnitAI)Activator.CreateInstance(type));
                                     //Debug.Log("created: " + overworldAIClassName);
                                     overworldAIClassName = "";
                                 }
@@ -467,7 +468,7 @@ namespace YuguLibrary
                 {
                     if (reader.Value != null)
                     {
-                        Debug.Log("Token: " + reader.TokenType + ", Value: " + reader.Value);
+                        //Debug.Log("Token: " + reader.TokenType + ", Value: " + reader.Value);
                         
                         if(CheckForProperty("nameID", reader))
                         {
@@ -667,7 +668,7 @@ namespace YuguLibrary
                     }
                     else
                     {
-                        Debug.Log("Token: " + reader.TokenType);
+                        //Debug.Log("Token: " + reader.TokenType);
                     }
                 }
             }
@@ -838,9 +839,10 @@ namespace YuguLibrary
 
                         if (CheckForProperty("hits", reader))
                         {
-                            string hitNameID;
-                            float damageModifier;
-                            float aggroModifier;
+                            Debug.Log("in hits");
+                            string hitNameID = "";
+                            float damageModifier = -1;
+                            float aggroModifier = -1;
                             List<HitAttributes> attributes = new List<HitAttributes>();
                             Dictionary<string, int> statuses = new Dictionary<string, int>();
 
@@ -859,7 +861,7 @@ namespace YuguLibrary
 
                                 if (CheckForProperty("aggroModifier", reader))
                                 {
-                                    aggroModifier= (long)GetValueFromJSON(reader);
+                                    aggroModifier = (long)GetValueFromJSON(reader);
                                 }
 
                                 if (CheckForProperty("attributes", reader))
@@ -903,6 +905,21 @@ namespace YuguLibrary
                                         
                                     }
                                 }
+
+                                if (IsEndOfObject(reader))
+                                {
+                                    Hit hit = new Hit(hitNameID, damageModifier, aggroModifier, attributes, statuses);
+                                    hits.Add(hit);
+
+                                    hitNameID = "";
+                                    damageModifier = -1;
+                                    aggroModifier = -1;
+                                    attributes = new List<HitAttributes>();
+                                    statuses = new Dictionary<string, int>();
+
+
+                                }
+
                             }
                         }
 
@@ -964,6 +981,17 @@ namespace YuguLibrary
                                             lingerFrames = (int)(long)GetValueFromJSON(reader);
                                         }
 
+                                        if (CheckForProperty("hitIndex", reader))
+                                        {
+                                            Debug.Log("IN HIT INDEX");
+                                            hitIndex = (int)(long)GetValueFromJSON(reader);
+                                        }
+
+                                        if (CheckForProperty("hitFunctionName", reader))
+                                        {
+                                            hitFunctionName = (string)GetValueFromJSON(reader);
+                                        }
+
                                         if (CheckForProperty("hitboxes", reader))
                                         {
                                             int xPos = 0;
@@ -990,6 +1018,7 @@ namespace YuguLibrary
 
                                                 if (IsEndOfObject(reader))
                                                 {
+                                                    Debug.Log(hitIndex);
                                                     hitboxes.Add(new Hitbox(startFrame, delayFrames, lingerFrames, 
                                                         new Vector3Int(xPos, yPos, zPos), hitFunctionName, hitIndex));
 
@@ -1017,6 +1046,7 @@ namespace YuguLibrary
                                     totalFrames = -1;
                                     isAttackSpeedDependent = false;
                                     hitboxGroups = new List<List<Hitbox>>();
+                                    
                                 }
                             }
                         }
@@ -1548,6 +1578,22 @@ namespace YuguLibrary
 
             #region Getters
             #endregion
+        }
+
+        public class ItemJSONParser : JSONParser
+        {
+            protected override void ParseJSON(JsonTextReader reader)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public class HitEffectJSONParser : JSONParser
+        {
+            protected override void ParseJSON(JsonTextReader reader)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

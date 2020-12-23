@@ -56,6 +56,9 @@ namespace YuguLibrary
             private UnitRoles role;
             private UnitClassifications classification;
             private SpeedTiers speedTier;
+            private float baseMovementFrames;
+            private float baseDescentFrames;
+            private float baseAscentFrames;
 
             private List<SkillResource> skillResources;
 
@@ -71,7 +74,7 @@ namespace YuguLibrary
 
             private List<Skill> skills;
             private List<OverworldObjectAction> actions;
-            private List<OverworldAI> overworldAIs;
+            private List<UnitAI> unitAIs;
             private List<EncounterAI> encounterAIs;
 
             public UnitJSONParser(string unitJSONFileName)
@@ -79,7 +82,7 @@ namespace YuguLibrary
                 skillResources = new List<SkillResource>();
                 skills = new List<Skill>();
                 actions = new List<OverworldObjectAction>();
-                overworldAIs = new List<OverworldAI>();
+                unitAIs = new List<UnitAI>();
                 encounterAIs = new List<EncounterAI>();
 
                 JsonTextReader reader = new JsonTextReader(new StreamReader(UtilityFunctions.JSON_ASSETS_UNIT_FOLDER_PATH + unitJSONFileName));
@@ -119,6 +122,21 @@ namespace YuguLibrary
                             speedTier = (SpeedTiers)GetEnumerationFromJSONString(typeof(SpeedTiers), (string)GetValueFromJSON(reader));
                         }
 
+                        if (CheckForProperty("baseMovementFrames", reader))
+                        {
+                            baseMovementFrames = (long)GetValueFromJSON(reader);
+                        }
+
+                        if (CheckForProperty("baseDescentFrames", reader))
+                        {
+                            baseDescentFrames = (long)GetValueFromJSON(reader);
+                        }
+
+                        if (CheckForProperty("baseAscentFrames", reader))
+                        {
+                            baseAscentFrames = (long)GetValueFromJSON(reader);
+                        }
+
                         if (CheckForProperty("skillResources", reader))
                         {
                             SkillResources resource = SkillResources.HP;
@@ -140,7 +158,7 @@ namespace YuguLibrary
                                 if (reader.TokenType == JsonToken.EndObject)
                                 {
                                     skillResources.Add(new SkillResource(resource, (int)maxValue));
-                                    Debug.Log("created: " + resource + " (max value: " + maxValue + ")");
+                                    //Debug.Log("created: " + resource + " (max value: " + maxValue + ")");
                                     resource = SkillResources.HP;
                                     maxValue = 0;
                                 }
@@ -220,7 +238,7 @@ namespace YuguLibrary
                                 if (IsEndOfObject(reader))
                                 {
                                     skills.Add(new SkillHub(skillJSONFileName, (int)levelObtained, (int)progressionPointObtained));
-                                    Debug.Log("created: " + skillJSONFileName + " (levelObtained: " + levelObtained + ", progressionPointObtained: " + progressionPointObtained + ")");
+                                    //Debug.Log("created: " + skillJSONFileName + " (levelObtained: " + levelObtained + ", progressionPointObtained: " + progressionPointObtained + ")");
                                     skillJSONFileName = "";
                                     levelObtained = 0;
                                     progressionPointObtained = 0;
@@ -239,14 +257,12 @@ namespace YuguLibrary
                                 if (CheckForProperty("className", reader))
                                 {
                                     actionClassName = (string)GetValueFromJSON(reader);
-                                    Debug.Log(actionClassName);
                                 }
 
                                 if (IsEndOfObject(reader))
                                 {
                                     Type type = Type.GetType(actionClassName);
                                     actions.Add((OverworldObjectAction)Activator.CreateInstance(type));
-                                    Debug.Log("created: " + actionClassName);
                                     actionClassName = "";
                                 }
                             }
@@ -266,9 +282,10 @@ namespace YuguLibrary
 
                                 if (IsEndOfObject(reader))
                                 {
-                                    Type type = Type.GetType(overworldAIClassName);
-                                    overworldAIs.Add((OverworldAI)Activator.CreateInstance(type));
-                                    Debug.Log("created: " + overworldAIClassName);
+                                    Type type = Type.GetType(overworldAIClassName); 
+                                    //Debug.Log("created: " + overworldAIClassName);
+                                    //unitAIs.Add((UnitAI)Activator.CreateInstance(type));
+                                    //Debug.Log("created: " + overworldAIClassName);
                                     overworldAIClassName = "";
                                 }
                             }
@@ -290,7 +307,7 @@ namespace YuguLibrary
                                 {
                                     Type type = Type.GetType(encounterAIClassName);
                                     encounterAIs.Add((EncounterAI)Activator.CreateInstance(type));
-                                    Debug.Log("created: " + encounterAIClassName);
+                                    //Debug.Log("created: " + encounterAIClassName);
                                     encounterAIClassName = "";
                                 }
                             }
@@ -327,6 +344,21 @@ namespace YuguLibrary
             public SpeedTiers GetSpeedTier()
             {
                 return speedTier;
+            }
+
+            public float GetBaseMovementFrames()
+            {
+                return baseMovementFrames;
+            }
+
+            public float GetBaseDescentFrames()
+            {
+                return baseDescentFrames;
+            }
+
+            public float GetBaseAscentFrames()
+            {
+                return baseAscentFrames;
             }
 
             public float GetHPScaling()
@@ -389,9 +421,9 @@ namespace YuguLibrary
                 return actions;
             }
 
-            public List<OverworldAI> GetOverworldAIs()
+            public List<UnitAI> GetUnitAIs()
             {
-                return overworldAIs;
+                return unitAIs;
             }
 
             public List<EncounterAI> GetEncounterAIs()
@@ -437,6 +469,7 @@ namespace YuguLibrary
                     if (reader.Value != null)
                     {
                         //Debug.Log("Token: " + reader.TokenType + ", Value: " + reader.Value);
+                        
                         if(CheckForProperty("nameID", reader))
                         {
                             nameID = (string)GetValueFromJSON(reader);
@@ -469,19 +502,23 @@ namespace YuguLibrary
                             long zPos = 0;
 
                             reader.Read(); //StartObject
-                            if(CheckForProperty("xPos", reader))
+                            reader.Read();
+                            if (CheckForProperty("xPos", reader))
                             {
                                 xPos = (long)GetValueFromJSON(reader);
+                                reader.Read();
                             }
 
                             if (CheckForProperty("yPos", reader))
                             {
                                 yPos = (long)GetValueFromJSON(reader);
+                                reader.Read();
                             }
 
                             if (CheckForProperty("zPos", reader))
                             {
                                 zPos = (long)GetValueFromJSON(reader);
+                                reader.Read();
                             }
 
                             if (IsEndOfObject(reader))
@@ -497,39 +534,126 @@ namespace YuguLibrary
 
                         if(CheckForProperty("unitSpawners", reader))
                         {
-                            reader.Read(); //StartArray
+                            /*reader.Read(); //StartArray
                             while (IsArrayOngoing(reader))
                             {
 
-                            }
+                            } */
                         }
 
                         if (CheckForProperty("loadingZones", reader))
                         {
+                            string instanceJSONFileName = "";
+                            Vector3Int loadingZonePosition = new Vector3Int(-255, -255, -255);
+                            Vector3Int playerUnitSpawnPosition = new Vector3Int(-255, -255, -255);
+
                             reader.Read(); //StartArray
                             while (IsArrayOngoing(reader))
                             {
+                                if (CheckForProperty("instanceJSONFileName", reader))
+                                {
+                                    instanceJSONFileName = (string)GetValueFromJSON(reader);
+                                }
 
+                                if (CheckForProperty("loadingZonePosition", reader))
+                                {
+                                    long xPos = -255;
+                                    long yPos = -255;
+                                    long zPos = -255;
+
+                                    reader.Read(); //StartObject
+                                    reader.Read();
+                                    if (CheckForProperty("xPos", reader))
+                                    {
+                                        xPos = (long)GetValueFromJSON(reader);
+                                        reader.Read();
+                                    }
+
+                                    if (CheckForProperty("yPos", reader))
+                                    {
+                                        yPos = (long)GetValueFromJSON(reader);
+                                        reader.Read();
+                                    }
+
+                                    if (CheckForProperty("zPos", reader))
+                                    {
+                                        zPos = (long)GetValueFromJSON(reader);
+                                        reader.Read();
+                                    }
+
+                                    if (IsEndOfObject(reader))
+                                    {
+                                        loadingZonePosition = new Vector3Int((int)xPos, (int)yPos, (int)zPos);
+                                    }
+                                }
+
+                                if (CheckForProperty("playerUnitSpawnPosition", reader))
+                                {
+                                    long xPos = -255;
+                                    long yPos = -255;
+                                    long zPos = -255;
+
+                                    reader.Read(); //StartObject
+                                    reader.Read();
+                                    if (CheckForProperty("xPos", reader))
+                                    {
+                                        xPos = (long)GetValueFromJSON(reader);
+                                        reader.Read();
+                                    }
+
+                                    if (CheckForProperty("yPos", reader))
+                                    {
+                                        yPos = (long)GetValueFromJSON(reader);
+                                        reader.Read();
+                                    }
+
+                                    if (CheckForProperty("zPos", reader))
+                                    {
+                                        zPos = (long)GetValueFromJSON(reader);
+                                        reader.Read();
+                                    }
+
+                                    if (IsEndOfObject(reader))
+                                    {
+                                        playerUnitSpawnPosition = new Vector3Int((int)xPos, (int)yPos, (int)zPos);
+                                    }
+                                }
+
+                                if (IsEndOfObject(reader))
+                                {
+                                    if (!instanceJSONFileName.Equals("") && loadingZonePosition.x != -255 && playerUnitSpawnPosition.x != -255)
+                                    {
+                                        LoadingZone loadingZone = new LoadingZone(loadingZonePosition, instanceJSONFileName, playerUnitSpawnPosition);
+                                        loadingZones.Add(loadingZone);
+
+                                        instanceJSONFileName = "";
+                                        loadingZonePosition = new Vector3Int(-255, -255, -255);
+                                        playerUnitSpawnPosition = new Vector3Int(-255, -255, -255);
+                                    }
+                                }
                             }
                         }
 
                         if (CheckForProperty("eventMarkers", reader))
                         {
+                            /*
                             reader.Read(); //StartArray
                             while (IsArrayOngoing(reader))
                             {
 
-                            }
+                            } */
                         }
 
                         if (CheckForProperty("weather", reader))
                         {
+                            /*
                             reader.Read(); //StartArray
                             while (IsArrayOngoing(reader))
                             {
 
-                            }
+                            } */
                         }
+                        
                     }
                     else
                     {
@@ -631,7 +755,7 @@ namespace YuguLibrary
                 {
                     if (reader.Value != null)
                     {
-                        Debug.Log("Token: " + reader.TokenType + ", Value: " + reader.Value);
+                        //Debug.Log("Token: " + reader.TokenType + ", Value: " + reader.Value);
                         if(CheckForProperty("nameID", reader))
                         {
                             nameID = (string)GetValueFromJSON(reader);
@@ -704,9 +828,9 @@ namespace YuguLibrary
 
                         if (CheckForProperty("hits", reader))
                         {
-                            string hitNameID;
-                            float damageModifier;
-                            float aggroModifier;
+                            string hitNameID = "";
+                            float damageModifier = -1;
+                            float aggroModifier = -1;
                             List<HitAttributes> attributes = new List<HitAttributes>();
                             Dictionary<string, int> statuses = new Dictionary<string, int>();
 
@@ -725,7 +849,7 @@ namespace YuguLibrary
 
                                 if (CheckForProperty("aggroModifier", reader))
                                 {
-                                    aggroModifier= (long)GetValueFromJSON(reader);
+                                    aggroModifier = (long)GetValueFromJSON(reader);
                                 }
 
                                 if (CheckForProperty("attributes", reader))
@@ -769,6 +893,21 @@ namespace YuguLibrary
                                         
                                     }
                                 }
+
+                                if (IsEndOfObject(reader))
+                                {
+                                    Hit hit = new Hit(hitNameID, damageModifier, aggroModifier, attributes, statuses);
+                                    hits.Add(hit);
+
+                                    hitNameID = "";
+                                    damageModifier = -1;
+                                    aggroModifier = -1;
+                                    attributes = new List<HitAttributes>();
+                                    statuses = new Dictionary<string, int>();
+
+
+                                }
+
                             }
                         }
 
@@ -830,6 +969,16 @@ namespace YuguLibrary
                                             lingerFrames = (int)(long)GetValueFromJSON(reader);
                                         }
 
+                                        if (CheckForProperty("hitIndex", reader))
+                                        {
+                                            hitIndex = (int)(long)GetValueFromJSON(reader);
+                                        }
+
+                                        if (CheckForProperty("hitFunctionName", reader))
+                                        {
+                                            hitFunctionName = (string)GetValueFromJSON(reader);
+                                        }
+
                                         if (CheckForProperty("hitboxes", reader))
                                         {
                                             int xPos = 0;
@@ -876,12 +1025,14 @@ namespace YuguLibrary
                                 if (IsEndOfObject(reader))
                                 {
                                     SkillChoreography skillChoreography = new SkillChoreography(choreographyNameID, animationPatternIndex, totalFrames, isAttackSpeedDependent, hitboxGroups);
-                                    
+                                    skillChoreographies.Add(skillChoreography);
+
                                     choreographyNameID = "";
                                     animationPatternIndex = -1;
                                     totalFrames = -1;
                                     isAttackSpeedDependent = false;
                                     hitboxGroups = new List<List<Hitbox>>();
+                                    
                                 }
                             }
                         }
@@ -894,7 +1045,7 @@ namespace YuguLibrary
                     }
                     else
                     {
-                        Debug.Log("Token: " + reader.TokenType);
+                        //Debug.Log("Token: " + reader.TokenType);
                     }
                 }
             }
@@ -985,7 +1136,7 @@ namespace YuguLibrary
                 {
                     if (reader.Value != null)
                     {
-                        Debug.Log("Token: " + reader.TokenType + ", Value: " + reader.Value);
+                        //Debug.Log("Token: " + reader.TokenType + ", Value: " + reader.Value);
                         if(CheckForProperty("nameID", reader))
                         {
                             nameID = (string)GetValueFromJSON(reader);
@@ -1056,7 +1207,7 @@ namespace YuguLibrary
                     }
                     else
                     {
-                        Debug.Log("Token: " + reader.TokenType);
+                        //Debug.Log("Token: " + reader.TokenType);
                     }
                 }
             }
@@ -1392,7 +1543,7 @@ namespace YuguLibrary
         {
             public StatusJSONParser(string statusJSONFileName)
             {
-                JsonTextReader reader = new JsonTextReader(new StreamReader(UtilityFunctions.JSON_ASSETS_STATUS_FOLDER_PATH + statusJSONFileName));
+                JsonTextReader reader = new JsonTextReader(new StreamReader(UtilityFunctions.JSON_ASSETS_COMMON_STATUS_FOLDER_PATH + statusJSONFileName));
                 ParseJSON(reader);
             }
 
@@ -1413,6 +1564,22 @@ namespace YuguLibrary
 
             #region Getters
             #endregion
+        }
+
+        public class ItemJSONParser : JSONParser
+        {
+            protected override void ParseJSON(JsonTextReader reader)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public class HitEffectJSONParser : JSONParser
+        {
+            protected override void ParseJSON(JsonTextReader reader)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

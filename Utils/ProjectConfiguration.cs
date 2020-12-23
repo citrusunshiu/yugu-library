@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace YuguLibrary
 {
-    namespace Models
+    namespace Utilities
     {
-        public class Quest
+        public class ProjectConfiguration
         {
 
         }

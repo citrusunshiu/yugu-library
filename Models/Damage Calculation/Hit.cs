@@ -80,9 +80,10 @@ namespace YuguLibrary
             #endregion
 
             #region Constructors
-            public Hit(float hitModifier, float aggroMultiplier, List<HitAttributes> attributes,
+            public Hit(string nameID, float hitModifier, float aggroMultiplier, List<HitAttributes> attributes,
                 Dictionary<string, int> statuses)
             {
+                this.nameID = nameID;
                 this.hitModifier = hitModifier;
                 this.aggroModifier = aggroMultiplier;
                 this.statuses = statuses;
@@ -105,6 +106,7 @@ namespace YuguLibrary
                 return attributes[(int)attribute];
             }
 
+            #region Getters & Setters
             public float GetHitModifier()
             {
                 return hitModifier;
@@ -114,6 +116,7 @@ namespace YuguLibrary
             {
                 return aggroModifier;
             }
+            #endregion
             #endregion
         }
     }

@@ -42,7 +42,7 @@ namespace YuguLibrary
 
             private int animationPatternIndex;
 
-            private int framesGiven = -1;
+            private float framesGiven = -1;
 
             private bool isLooping;
             #endregion
@@ -84,7 +84,7 @@ namespace YuguLibrary
                 this.animationPatternIndex = animationPatternIndex;
             }
 
-            public void SetFramesGiven(int framesGiven)
+            public void SetFramesGiven(float framesGiven)
             {
                 this.framesGiven = framesGiven;
             }

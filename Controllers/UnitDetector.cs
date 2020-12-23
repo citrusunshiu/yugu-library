@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
+using TileIndicators;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using YuguLibrary.Enumerations;
@@ -12,6 +15,7 @@ namespace YuguLibrary
     {
         public class UnitDetector
         {
+            #region Variables
             /// <summary>
             /// Reference to the controller the unit detector is attached to.
             /// </summary>
@@ -21,6 +25,8 @@ namespace YuguLibrary
             /// Reference to the tilemap used for overworld object movement.
             /// </summary>
             private Tilemap geography;
+
+            private List<Tilemap> hitboxIndicators = new List<Tilemap>();
 
             /// <summary>
             /// Reference to the tilemap used for colored tile indicators.
@@ -83,12 +89,17 @@ namespace YuguLibrary
             /// </summary>
             public static AreaOfEffect aggroRadius;
 
+            private bool automaticAIActivity = true;
+            #endregion
+
+            #region Constructors
             public UnitDetector(Tilemap geography, Tilemap indicators, MonoBehaviour controllerReference)
             {
                 this.geography = geography;
                 this.indicators = indicators;
                 this.controllerReference = controllerReference;
             }
+            #endregion
 
             #region Functions
 
@@ -102,6 +113,10 @@ namespace YuguLibrary
                 overworldObject.position = position;
                 overworldObjects.Add(overworldObject);
                 UtilityFunctions.SetSpriteDefaultPosition(overworldObject.overworldObjectCoordinator);
+                if(overworldObject is Unit)
+                {
+                    CheckHitboxesAtUnit((Unit)overworldObject);
+                }
             }
 
             /// <summary>
@@ -115,15 +130,122 @@ namespace YuguLibrary
                 GameObject.Destroy(overworldObject.overworldObjectCoordinator.gameObject);
             }
 
+            /// <summary>
+            /// Marks instance tiles with a specified tile indicator type.
+            /// </summary>
+            /// <param name="tilesToMark">The tiles to be marked with indicators.</param>
+            /// <param name="indicatorType">The type of indicator to mark the tiles with.</param>
+            public void AddIndicatorTiles(List<Vector3Int> tilesToMark, TileIndicatorTypes indicatorType)
+            {
+                if (indicatorTiles.ContainsKey(indicatorType))
+                {
+                    indicatorTiles[indicatorType] = tilesToMark;
+                }
+                else
+                {
+                    indicatorTiles.Add(indicatorType, tilesToMark);
+                }
+
+                MarkIndicatorTiles();
+            }
+
+            public void RemoveIndicatorTiles(TileIndicatorTypes indicatorType)
+            {
+                if (indicatorTiles.ContainsKey(indicatorType))
+                {
+                    indicatorTiles.Remove(indicatorType);
+                }
+
+                MarkIndicatorTiles();
+            }
+
+            public void WipeIndicatorTiles()
+            {
+                indicators.ClearAllTiles();
+                indicatorTiles = new Dictionary<TileIndicatorTypes, List<Vector3Int>>();
+            }
+
+            public void SetAutomaticAIActivity(bool automaticAIActivity)
+            {
+                this.automaticAIActivity = automaticAIActivity;
+            }
+
+            public void AssignAndExecuteUnitAIs()
+            {
+                if (automaticAIActivity)
+                {
+                    AssignUnitAIs();
+                    ExecuteUnitAIs();
+                }
+            }
+
             #region Instance Functions
             /// <summary>
             /// Changes the current unit detector instance.
             /// </summary>
             /// <param name="instance">The instance that the unit detector will change to.</param>
             /// <param name="spawnPosition">The position where the player will be placed at.</param>
-            public void LoadNewInstance(Instance instance, Vector3Int spawnPosition)
+            public void LoadNewInstance(Instance instance, Vector3Int spawnPosition, OverworldObject playerUnit)
             {
+                OverworldObject player = playerUnit;
+
+                string playerUnitJSONFileName;
+                int playerLevel;
+                int playerProgressionPoint;
+
+
+                ResetUnitDetector();
+
+                //Unit newPlayerUnit = new Unit(playerUnitJSONFileName, playerLevel, TargetTypes.Ally);
+
                 SwapGeography(instance.GetGeographyName());
+
+                // stuff regarding: resetting unit detector, placing player unit, setting instance special tiles (+ spawning units) ?
+
+                if (instance.GetUnitSpawners() != null)
+                {
+                    unitSpawners = new List<UnitSpawner>();
+                    foreach (UnitSpawner unitSpawner in instance.GetUnitSpawners())
+                    {
+                        AddUnitSpawner(unitSpawner);
+                    }
+                }
+
+                if (instance.GetLoadingZones() != null)
+                {
+                    loadingZones = new List<LoadingZone>();
+                    foreach (LoadingZone loadingZone in instance.GetLoadingZones())
+                    {
+                        loadingZones.Add(loadingZone);
+                    }
+                }
+
+                MarkLoadingZones();
+
+                currentInstance = instance;
+
+                //UtilityFunctions.GetActiveGeology().SetLocation(instance);
+
+                UtilityFunctions.GetActiveUnitDetector().SpawnOverworldObject(playerUnit, spawnPosition);
+                UtilityFunctions.GetActivePlayer().SetCurrentOverworldObject(playerUnit);
+                //UtilityFunctions.SetSpriteDefaultPosition(playerUnit.overworldObjectCoordinator);
+
+                //InitializeInstance(spawnPosition, leadUnit);
+            }
+
+            private void ResetUnitDetector()
+            {
+
+            }
+
+            /// <summary>
+            /// Adds a unit spawneer to the current instance, and spawns the maximum allowed number of units.
+            /// </summary>
+            /// <param name="unitSpawner">UnitSpawner object to add.</param>
+            public void AddUnitSpawner(UnitSpawner unitSpawner)
+            {
+                unitSpawners.Add(unitSpawner);
+                unitSpawner.SpawnAllUnits();
             }
             #endregion
 
@@ -144,22 +266,7 @@ namespace YuguLibrary
 
                 Vector3Int currentPosition = overworldObject.position;
                 Vector3Int newPosition = new Vector3Int(currentPosition.x + x, currentPosition.y + y, currentPosition.z + z);
-
                 Vector3Int highestFloorTile = GetHighestFloorTileAtPosition(newPosition);
-
-                /* If not ascending or descending but the floor isn't directly below the overworld object, drop it down */
-                /*
-                if(z == 0 && !overworldObject.isJumping && newPosition.x != highestFloorTile.x + 1)
-                {
-                    x++;
-                    y++;
-                    z--;
-
-                    newPosition.x++;
-                    newPosition.y++;
-                    newPosition.z--;
-                }
-                */
 
                 Directions moveDirection;
 
@@ -190,35 +297,213 @@ namespace YuguLibrary
                     moveDirection = overworldObject.direction;
                 }
 
-                if (!overworldObject.isStationary && !geography.HasTile(newPosition) && highestFloorTile.z != -255)
-                //if(true)
+                if (overworldObject.canTurn)
+                {
+                    overworldObject.direction = moveDirection;
+                }
+
+                if (IsTileOpen(newPosition, false) && !overworldObject.isStationary && !geography.HasTile(newPosition) && highestFloorTile.z != -255)
                 {
                     Vector3Int oldPosition = overworldObject.position;
                     Vector3Int tileToPlace = newPosition;
 
                     overworldObject.position = tileToPlace;
-                    overworldObject.direction = moveDirection;
 
-                    //UtilityFunctions.SetSpriteDefaultPosition(overworldObject.overworldObjectCoordinator);
 
                     DelayMovements(overworldObject, z);
+                    if(overworldObject is Unit)
+                    {
+                        CheckHitboxesAtUnit((Unit)overworldObject);
+                    }
+
+                    //if unit moved was the player, check for loading zones
+                    if (UtilityFunctions.GetActivePlayer().GetCurrentOverworldObject().Equals(overworldObject))
+                    {
+                        LoadingZone loadingZone = GetLoadingZoneAtPosition(overworldObject.position);
+
+                        if (loadingZone != null /*&& !UtilityFunctions.GetActiveEncounter().IsEncounterActive()*/)
+                        {
+                            loadingZone.LoadZone(overworldObject);
+                        }
+                    }
 
                     return true;
                 }
 
                 return false;
             }
-            
+
             /// <summary>
             /// Finds the shortest traversable path from one location to another.
             /// </summary>
-            /// <param name="overworldObject">Overworld object attempting to travel.</param>
+            /// <param name="unit">Unit attempting to travel.</param>
             /// <param name="to">Location to pathfind to.</param>
             /// <returns>Returns the direction for the unit to move to next to reach the desired location, or returns 
             /// <see cref="Directions.Down"/> if there is none.</returns>
-            public Directions PathfindTo(OverworldObject overworldObject, Vector3Int to)
+            public Directions PathfindTo(Unit unit, Vector3Int to)
             {
-                return Directions.Down;
+                Vector3Int from = unit.position;
+
+                List<AStarNode> openList = new List<AStarNode>();
+                List<AStarNode> closedList = new List<AStarNode>();
+
+                AStarNode start = new AStarNode(null, from, 0, 0);
+
+                openList.Add(start);
+
+                AStarNode endNode = null;
+
+                int passCount = 0;
+                //keep searching for route
+                while (openList.Count > 0)
+                {
+                    passCount++;
+
+                    AStarNode shortestNode = null;
+
+                    for (int i = 0; i < openList.Count; i++)
+                    {
+                        AStarNode node = openList[i];
+                        if (shortestNode == null || shortestNode.GetTotalDistance() > node.GetTotalDistance())
+                        {
+                            shortestNode = node;
+                        }
+                    }
+
+
+                    openList.Remove(shortestNode);
+
+                    List<AStarNode> neighbours = new List<AStarNode>();
+
+                    List<Vector3Int> positions = GetSurroundingTiles(unit, shortestNode.position);
+
+                    //find valid tiles of movement for the unit
+                    foreach (Vector3Int position in positions)
+                    {
+                        AStarNode n = new AStarNode(shortestNode, position, shortestNode.GetDistanceFromStart() + 1,
+                            CalculateTileDistance(position, to));
+
+                        neighbours.Add(n);
+                    }
+
+                    //checking for endpoint, adding valid tiles to openList for next pass
+                    foreach (AStarNode neighbour in neighbours)
+                    {
+                        if (UtilityFunctions.CompareVector3Ints(neighbour.position, to))
+                        {
+                            endNode = neighbour;
+                            break;
+                        }
+
+                        bool shouldSkip = false;
+
+                        for (int i = 0; i < openList.Count; i++)
+                        {
+                            if (UtilityFunctions.CompareVector3Ints(neighbour.position, openList[i].position)
+                                && neighbour.GetTotalDistance() >= openList[i].GetTotalDistance())
+                            {
+                                shouldSkip = true;
+                            }
+                        }
+
+                        for (int i = 0; i < closedList.Count; i++)
+                        {
+                            if (UtilityFunctions.CompareVector3Ints(neighbour.position, closedList[i].position)
+                                && neighbour.GetTotalDistance() >= closedList[i].GetTotalDistance())
+                            {
+                                shouldSkip = true;
+                            }
+                        }
+
+                        if (shouldSkip)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            openList.Add(neighbour);
+                        }
+                    }
+
+                    if (endNode != null)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        closedList.Add(shortestNode);
+                    }
+                }
+
+                //if there is a path, figure out how to move the unit 1 step closer
+                if (endNode != null)
+                {
+                    AStarNode firstMovement = endNode;
+
+                    while (firstMovement.parent != null)
+                    {
+                        AStarNode temp = firstMovement.parent;
+
+                        if (temp.parent != null)
+                        {
+                            firstMovement = firstMovement.parent;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    Vector3Int moveTo = firstMovement.position;
+
+                    //TODO: need to adjust for z-y offset;
+                    int dx = unit.position.x - moveTo.x;
+                    int dy = unit.position.y - moveTo.y;
+                    int dz = unit.position.z - moveTo.z;
+
+                    if (dx > 0)
+                    {
+                        return Directions.SW;
+                    }
+                    else if (dx < 0)
+                    {
+                        return Directions.NE;
+                    }
+
+                    if (dy > 0)
+                    {
+                        return Directions.SE;
+                    }
+                    else if (dy < 0)
+                    {
+                        return Directions.NW;
+                    }
+
+                    return Directions.Up;
+                }
+                else
+                {
+                    Debug.Log("no path found");
+                    return Directions.None;
+                }
+            }
+
+            private List<Vector3Int> GetSurroundingTiles(Unit unit, Vector3Int position)
+            {
+                //when looking for surrounding tiles, should search 10 tiles down and unit.jumpheight tiles up
+                List<Vector3Int> surroundingTiles = new List<Vector3Int>();
+
+                Vector3Int nwTile = new Vector3Int(position.x, position.y + 1, position.z);
+                Vector3Int neTile = new Vector3Int(position.x + 1, position.y, position.z);
+                Vector3Int swTile = new Vector3Int(position.x - 1, position.y, position.z);
+                Vector3Int seTile = new Vector3Int(position.x, position.y - 1, position.z);
+
+                surroundingTiles.AddRange(GetAllTilesAtPosition(nwTile, 0, 0));
+                surroundingTiles.AddRange(GetAllTilesAtPosition(neTile, 0, 0));
+                surroundingTiles.AddRange(GetAllTilesAtPosition(swTile, 0, 0));
+                surroundingTiles.AddRange(GetAllTilesAtPosition(seTile, 0, 0));
+
+                return surroundingTiles;
             }
 
             /// <summary>
@@ -227,9 +512,155 @@ namespace YuguLibrary
             /// <param name="overworldObject">OverworldObject attempting to travel.</param>
             /// <param name="to">Location to travel to.</param>
             /// <returns>Returns true if the overworld object moved successfully, and false otherwise.</returns>
-            public bool BlinkTo(OverworldObject overworldObject, Vector3Int to)
+            public bool BlinkTo(OverworldObject overworldObject, Vector3Int to, bool ignoreUnits)
             {
+                bool valid = false;
+                if (ignoreUnits)
+                {
+                    valid = IsTileOpen(to, true);
+                }
+                else
+                {
+                    valid = IsTileOpen(to, false);
+                }
+
+                if (valid)
+                {
+                    Vector3Int oldPosition = overworldObject.position;
+                    overworldObject.position = to;
+                    SetSurroundingTileOpacity(oldPosition, overworldObject.position);
+                    UtilityFunctions.SetSpriteDefaultPosition(overworldObject.overworldObjectCoordinator);
+                    if (overworldObject == UtilityFunctions.GetActivePlayer().GetCurrentOverworldObject())
+                    {
+                        overworldObject.overworldObjectCoordinator.SetCameraPosition();
+                    }
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            /// <summary>
+            /// Lowers the opacity of the tiles surrounding a unit's current position after they move.
+            /// </summary>
+            /// <param name="oldPosition">The unit's position before moving.</param>
+            /// <param name="newPosition">The unit's position after moving.</param>
+            /// <remarks>Sets the tile opacity around the unit's old tile back to normal if there are no other units nearby.</remarks>
+            private void SetSurroundingTileOpacity(Vector3Int oldPosition, Vector3Int newPosition)
+            {
+                //remove opacity from old position; add it to new position
+                //Debug.Log("TODO: set surrounding tile opacity");
+            }
+
+            /// <summary>
+            /// Calculates the distance between 2 tiles, ignoring terrain and including diagonals.
+            /// </summary>
+            /// <param name="tile1">The first tile to check distance between.</param>
+            /// <param name="tile2">The second tile to check distance between.</param>
+            /// <returns>Returns an integer equal to the number of tiles required for tile1 to connect to tile2.</returns>
+            private static int CalculateTileDistance(Vector3Int tile1, Vector3Int tile2)
+            {
+                int dx = (tile1.x > tile2.x) ? tile1.x - tile2.x : tile2.x - tile1.x;
+                int dy = (tile1.y > tile2.y) ? tile1.y - tile2.y : tile2.y - tile1.y;
+
+                return dx + dy;
+            }
+
+            /// <summary>
+            /// Returns a list of all floor tiles at a given position.
+            /// </summary>
+            /// <param name="position">The position to search for tiles at.</param>
+            /// <param name="minZ">The minimum Z-axis value to search through.</param>
+            /// <param name="maxZ">The maximum Z-axis value to search through.</param>
+            /// <returns>Returns a List of all positions where a tile was located.</returns>
+            public List<Vector3Int> GetAllTilesAtPosition(Vector3Int position, int minZ, int maxZ)
+            {
+                List<Vector3Int> tiles = new List<Vector3Int>();
+
+                for (int i = minZ; i <= maxZ; i++)
+                {
+                    Vector3Int tile = new Vector3Int(position.x - i, position.y - i, position.z + i);
+                    if (IsTileOpen(tile, true))
+                    {
+                        tiles.Add(tile);
+                    }
+                }
+
+                return tiles;
+            }
+
+            /// <summary>
+            /// Checks if a unit or terrain is at a specified location.
+            /// </summary>
+            /// <param name="position">Location to check</param>
+            /// <param name="ignoreUnits">Whether or not units should be ignored while performing tile check.</param>
+            /// <returns>Returns true if no terrain or units present, and false otherwise.</returns>
+            public bool IsTileOpen(Vector3Int position, bool ignoreUnits)
+            {
+                // TODO: tilebelow check might break dropping off of the floor; check later n see
+                //Vector3Int tileBelow = new Vector3Int(position.x + 1, position.y + 1, position.z - 1);
+
+                Vector3Int tileBelow = GetHighestFloorTileAtPosition(position);
+
+                if (ignoreUnits)
+                {
+                    if (geography.HasTile(tileBelow) && !geography.HasTile(position))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    if (geography.HasTile(tileBelow) && !geography.HasTile(position) && GetOverworldObjectsAtPosition(position).Count == 0)
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Checks if a unit is currently in the air.
+            /// </summary>
+            /// <param name="unit">Unit to check.</param>
+            /// <returns>Returns true if the unit is airborne, and false otherwise.</returns>
+            public bool IsAirborne(OverworldObject overworldObject)
+            {
+                Vector3Int currentPosition = overworldObject.position;
+
+                currentPosition.x++;
+                currentPosition.y++;
+                currentPosition.z--;
+                if (geography.HasTile(currentPosition))
+                {
+                    return false;
+                }
                 return true;
+            }
+
+            /// <summary>
+            /// Gets the <see cref="LoadingZone"/> at a given position, if it exists.
+            /// </summary>
+            /// <param name="position">The position of the LoadingZone.</param>
+            /// <returns>Returns the LoadingZone at the location, or null if there is none.</returns>
+            private LoadingZone GetLoadingZoneAtPosition(Vector3Int position)
+            {
+                foreach (LoadingZone loadingZone in loadingZones)
+                {
+                    if (UtilityFunctions.CompareVector3Ints(loadingZone.position, position))
+                    {
+                        return loadingZone;
+                    }
+                }
+                return null;
             }
 
             /// <summary>
@@ -239,7 +670,94 @@ namespace YuguLibrary
             public void PlaceHitbox(Hitbox hitbox)
             {
                 hitboxes.Add(hitbox);
-                // not done yet: hitbox arming/activation/lingering/removal; hitbox checkpoints.
+                controllerReference.StartCoroutine(ProgressHitboxInterval(hitbox));
+            }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="hitbox"></param>
+            /// <param name="frameProgress"></param>
+            /// <returns></returns>
+            private IEnumerator ProgressHitboxInterval(Hitbox hitbox, int frameProgress = 0)
+            {
+                yield return new WaitForSeconds(UtilityFunctions.FRAME_LENGTH);
+
+                frameProgress++;
+                ProgressHitboxVisual(hitbox, frameProgress);
+
+                if(frameProgress == hitbox.GetLingerFrames())
+                {
+                    hitbox.SetIsActive(true);
+                    CheckUnitsAtHitbox(hitbox);
+                }
+
+                if(frameProgress < hitbox.GetDelayFrames() + hitbox.GetLingerFrames())
+                {
+                    RepeatHitboxInterval(hitbox, frameProgress);
+                }
+                else
+                {
+                    hitbox.SetIsActive(false);
+                    hitboxes.Remove(hitbox);
+                }
+            }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="hitbox"></param>
+            /// <param name="frameProgress"></param>
+            private void RepeatHitboxInterval(Hitbox hitbox, int frameProgress)
+            {
+                controllerReference.StartCoroutine(ProgressHitboxInterval(hitbox, frameProgress));
+            }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="hitbox"></param>
+            /// <param name="frameProgress"></param>
+            private void ProgressHitboxVisual(Hitbox hitbox, int frameProgress)
+            {
+                Vector3Int adjustedPosition = hitbox.GetPosition();
+                adjustedPosition.z--;
+                adjustedPosition.x++;
+                adjustedPosition.y++;
+
+                TileBase hitboxTile = ScriptableObject.CreateInstance<HitboxTile>();
+                if (!indicators.HasTile(adjustedPosition))
+                {
+                    indicators.SetTile(adjustedPosition, hitboxTile);
+                    indicators.SetTileFlags(adjustedPosition, TileFlags.None);
+                }
+
+                Color white = new Color(255F/255F, 255F/255F, 255F/255F, 0.5F);
+                Color yellow = new Color(255F/255F, 234F/255F, 0F/255F, 0.5F);
+                Color orange = new Color(255F/255F, 128F/255F, 0F/255F, 0.5F);
+                Color red = new Color(255F/255F, 0F/255F, 0F/255F, 0.5F);
+                Color magenta = new Color(255F/255F, 0F/255F, 191F/255F, 0.5F);
+
+                if (frameProgress < hitbox.GetDelayFrames()/2) // white > yellow
+                {
+                    //indicators.SetColor(hitbox.GetPosition(), new Color());
+                }
+                else if(frameProgress < hitbox.GetDelayFrames()) // yellow > orange
+                {
+                    //indicators.SetColor(hitbox.GetPosition(), new Color());
+                }
+                else if(frameProgress < hitbox.GetDelayFrames() + (hitbox.GetLingerFrames() / 2)) // red > magenta
+                {
+                    indicators.SetColor(adjustedPosition, red);
+                }
+                else if(frameProgress < hitbox.GetDelayFrames() + hitbox.GetLingerFrames()) // magenta > white
+                {
+                    //indicators.SetColor(hitbox.GetPosition(), new Color());
+                }
+                else // remove
+                {
+                    indicators.SetTile(adjustedPosition, null);
+                }
             }
 
             /// <summary>
@@ -248,11 +766,13 @@ namespace YuguLibrary
             /// <param name="hitbox">The hitbox to be executed.</param>
             private void CheckUnitsAtHitbox(Hitbox hitbox)
             {
+                //Debug.Log("searching for units at " + hitbox.GetPosition());
                 List<OverworldObject> overworldObjects = GetOverworldObjectsAtPosition(hitbox.GetPosition());
                 foreach (OverworldObject overworldObject in overworldObjects)
                 {
                     if (overworldObject is Unit)
                     {
+                        //Debug.Log("found: " + overworldObject);
                         hitbox.ExecuteHitbox((Unit)overworldObject);
                     }
                 }
@@ -273,14 +793,70 @@ namespace YuguLibrary
                 }
             }
 
-            private List<OverworldObject> GetOverworldObjectsAtPosition(Vector3Int posititon)
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="position"></param>
+            /// <returns></returns>
+            public List<OverworldObject> GetOverworldObjectsAtPosition(Vector3Int position)
             {
-                List<OverworldObject> overworldObjects = new List<OverworldObject>();
+                List<OverworldObject> owObjects = new List<OverworldObject>();
 
-                return overworldObjects;
+                for(int i = 0; i < overworldObjects.Count; i++)
+                {
+                    if(UtilityFunctions.CompareVector3Ints(overworldObjects[i].GetPosition(), position))
+                    {
+                        owObjects.Add(overworldObjects[i]);
+                    }
+                }
+
+                return owObjects;
             }
             #endregion
 
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="unitSetup"></param>
+            /// <param name="centerTile"></param>
+            /// <param name="direction"></param>
+            public void LoadUnitSetup(UnitSetup unitSetup, Vector3Int centerTile, Directions direction)
+            {
+                Dictionary<string, Vector3Int> units = unitSetup.GetUnitSetup(direction, centerTile);
+
+                foreach (string unitJSONFileName in units.Keys)
+                {
+                    //50 is placeholder
+                    
+                    Unit allyUnit = new Unit(unitJSONFileName, 50, TargetTypes.Ally);
+
+                    if (IsTileOpen(units[unitJSONFileName], false))
+                    {
+                        SpawnOverworldObject(allyUnit, units[unitJSONFileName]);
+                    }
+                    else
+                    {
+                        Debug.Log("tile already occupied; come back later to expand breadth search");
+                        SpawnOverworldObject(allyUnit, units[unitJSONFileName]);
+                    }
+
+                }
+            }
+
+            /// <summary>
+            /// Removes allied units spawned via unit setup from the field after an encounter is closed.
+            /// </summary>
+            public void RemoveUnitSetup()
+            {
+
+            }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="flag"></param>
+            /// <param name="hookBundle"></param>
+            /// <param name="unitsAlerted"></param>
             public void FlagDelegate(DelegateFlags flag, HookBundle hookBundle, List<Unit> unitsAlerted)
             {
                 foreach(Unit unit in unitsAlerted)
@@ -289,6 +865,10 @@ namespace YuguLibrary
                 }
             }
 
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <returns></returns>
             public List<Unit> GetAllUnits()
             {
                 List<Unit> units = new List<Unit>();
@@ -303,7 +883,7 @@ namespace YuguLibrary
 
                 return units;
             }
-            
+
             /// <summary>
             /// Gets the highest floor tile at a given position.
             /// </summary>
@@ -315,19 +895,19 @@ namespace YuguLibrary
                  * be incremented to match
                  * */
 
-                Vector3Int p = position;
+                Vector3Int pos = position;
                 Vector3Int highestFloorTile = new Vector3Int(-255, -255, -255);
 
 
                 int i;
                 for (i = 0; i < 10; i++)
                 {
-                    p.x++;
-                    p.y++;
-                    p.z--;
-                    if (geography.HasTile(p))
+                    pos.x++;
+                    pos.y++;
+                    pos.z--;
+                    if (geography.HasTile(pos))
                     {
-                        highestFloorTile = p;
+                        highestFloorTile = pos;
                         break;
                     }
                 }
@@ -360,11 +940,14 @@ namespace YuguLibrary
                 }
             }
 
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="name"></param>
             private void SwapGeography(string name)
             {
                 if (geography != null)
                 {
-                    Debug.Log(geography.gameObject.transform.parent.gameObject.name);
                     geography.ClearAllTiles();
                     geography.transform.SetParent(null);
                     geography.name += "(OLD)";
@@ -376,7 +959,89 @@ namespace YuguLibrary
                 geography.gameObject.transform.parent.gameObject.name = "trashed";
                 geography.transform.SetParent(GameObject.Find("Controller Hub").transform);
             }
+
+            private void MarkIndicatorTiles()
+            {
+                indicators.ClearAllTiles();
+
+                for (int i = 0; i < Enum.GetNames(typeof(TileIndicatorTypes)).Length; i++)
+                {
+                    TileIndicatorTypes indicatorType = (TileIndicatorTypes)i;
+
+                    if (indicatorTiles.ContainsKey(indicatorType))
+                    {
+                        List<Vector3Int> tilesToMark = indicatorTiles[indicatorType];
+
+                        TileBase tileBase = GetTileFromIndicator(indicatorType);
+
+                        foreach (Vector3Int tile in tilesToMark)
+                        {
+
+                            Vector3Int placement = new Vector3Int(tile.x + 1, tile.y + 1, tile.z - 1);
+
+                            if (geography.HasTile(placement))
+                            {
+                                indicators.SetTile(placement, tileBase);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+            }
+
+            private TileBase GetTileFromIndicator(TileIndicatorTypes indicatorType)
+            {
+                switch (indicatorType)
+                {
+                    case TileIndicatorTypes.Movement:
+                        return ScriptableObject.CreateInstance<MovementIndicator>();
+                    case TileIndicatorTypes.LoadingZone:
+                        return ScriptableObject.CreateInstance<LoadingZoneIndicator>();
+                    case TileIndicatorTypes.Aggro:
+                        return ScriptableObject.CreateInstance<AggroIndicator>();
+                    case TileIndicatorTypes.Encounter:
+                        return ScriptableObject.CreateInstance<EncounterIndicator>();
+                    case TileIndicatorTypes.AllyTargetingSkill:
+                        return ScriptableObject.CreateInstance<AllyTargetingSkillIndicator>();
+                    case TileIndicatorTypes.EnemyTargetingSkill:
+                        return ScriptableObject.CreateInstance<EnemyTargetingSkillIndicator>();
+                    default:
+                        return ScriptableObject.CreateInstance<MovementIndicator>();
+                }
+            }
+
+            private void MarkLoadingZones()
+            {
+                List<Vector3Int> loadingZoneTiles = new List<Vector3Int>();
+                foreach (LoadingZone loadingZone in loadingZones)
+                {
+                    loadingZoneTiles.Add(loadingZone.position);
+                }
+
+                AddIndicatorTiles(loadingZoneTiles, TileIndicatorTypes.LoadingZone);
+            }
+
+            private void AssignUnitAIs()
+            {
+
+            }
+
+            private void ExecuteUnitAIs()
+            {
+
+            }
             #endregion
+        }
+
+        public class HitboxTile : TileBase
+        {
+            public override void GetTileData(Vector3Int position, ITilemap tilemap, ref TileData tileData)
+            {
+                tileData.sprite = Resources.Load<Sprite>("Sprites/Tiles/Prototype/hitbox");
+            }
         }
     }
 }

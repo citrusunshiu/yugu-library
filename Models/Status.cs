@@ -40,7 +40,7 @@ namespace YuguLibrary
         /// <summary>
         /// List of <see cref="HookFunction"/> objects to attach to a unit when the status is applied.
         /// </summary>
-        private List<HookFunction> hookFunctions;
+        private List<HookFunction> hookFunctions = new List<HookFunction>();
 
         /// <summary>
         /// List of all instances of the status stacked onto the owner unit.
@@ -61,6 +61,7 @@ namespace YuguLibrary
         #endregion
 
         #region Functions
+        #region Getters & Setters
         public StatusEffects GetStatusID()
         {
             return statusId;
@@ -75,6 +76,12 @@ namespace YuguLibrary
         {
             this.attachedUnit = attachedUnit;
         }
+        #endregion
+
+
+        #region Protected Status Functionality Parts
+
+        #endregion
         #endregion
 
     }

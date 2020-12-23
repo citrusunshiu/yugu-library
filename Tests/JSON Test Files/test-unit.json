@@ -4,6 +4,9 @@
     "role": "Melee",
     "classification": "Regular",
     "speedTier": "VeryFast",
+    "baseMovementFrames": 5,
+    "baseDescentFrames": 5,
+    "baseAscentFrames": 5,
     "skillResources": [
         {
             "resource": "_gsIce",
@@ -23,6 +26,13 @@
     "magicalDefenseScaling": 180,
     "speedScaling": 200,
     "staggerThresholdScaling": 50,
+    "expYield": 5213,
+    "dropTable": [
+        {
+            "itemJSONFileName": "item.json",
+            "dropChance": 0.1
+        }
+    ],
     "skills": [
         {
             "skillJSONFileName": "Sample/Sample Unit/Skills/skill.json",
@@ -35,14 +45,8 @@
             "className": "YuguLibrary.OverworldObjectActions.TestOWOAction"
         }
     ],
-    "overworldAIs": [
-        {
-            "className": "YuguLibrary.OverworldAIs.RandomMove"
-        }
+    "unitAIs": [
+
     ],
-    "encounterAIs": [
-        {
-            "className": "YuguLibrary.EncounterAIs.RandomSkill"
-        }
-    ]
+    "unitAIFunctionName": "TestUnitAI"
 }

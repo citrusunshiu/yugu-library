@@ -141,6 +141,11 @@ namespace YuguLibrary
                 return isHostile;
             }
 
+            public List<LoadingZone> GetLoadingZones()
+            {
+                return loadingZones;
+            }
+
             public List<UnitSpawner> GetUnitSpawners()
             {
                 return unitSpawners;

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using YuguLibrary.Models;
 
 namespace YuguLibrary
 {
@@ -13,6 +14,8 @@ namespace YuguLibrary
         /// </summary>
         public enum ControllerInputs
         {
+            None,
+
             /// <summary>
             /// PS4: Cross, XBONE: A, SWITCH: B
             /// </summary>
@@ -69,15 +72,23 @@ namespace YuguLibrary
             /// <summary>
             /// PS4: R2, XBONE: LT, SWITCH: ZR
             /// </summary>
-            RightTrigger,
+            RightTrigger
+        }
 
-            None
+        public enum UIScreens
+        {
+            Landing,
+            Landing_FileSelect,
+            Overworld,
+            Menu,
+            Encounter,
+            Cutscene
         }
 
         /// <summary>
         /// List of all possible UI states.
         /// </summary>
-        public enum UIScreens
+        public enum OldUIScreens
         {
             StartScreen,
             StartScreen_FileSelect,
@@ -142,39 +153,34 @@ namespace YuguLibrary
         /// </remarks>
         public enum DelegateFlags
         {
+            /// <summary>
+            /// Checked after a <see cref="HookFunction"/> is attached to a unit.
+            /// </summary>
+            OnApply,
+
+            /// <summary>
+            /// Checked before a <see cref="HookFunction"/> is removed from a unit.
+            /// </summary>
+            OnRemove,
+
+            /// <summary>
+            /// Checked when a unit's <see cref="Unit.currentHP"/> reaches 0.
+            /// </summary>
+            OnHP0,
+
+            /// <summary>
+            /// Checked after a unit recceives <see cref="StatusEffects.Incapacitation"/> status.
+            /// </summary>
+            OnIncapacitation,
+
             OnEncounterRoundStart,
 
             OnEncounterTurnStart,
 
-            OnEncounterBeforeAttack,
-
-            OnEncounterBeforeDefend,
-
-            OnEncounterCollectAttackerModifiers,
-
-            OnEncounterCollectDefenderModifiers,
-
-            OnEncounterAfterAttack,
-
-            OnEncounterAfterDefend,
-
-            OnStatusApplied,
-
-            OnStatusRemoved,
-
             OnEncounterTurnEnd,
 
-            OnEncounterRoundEnd,
+            OnEncounterRoundEnd
 
-            OnEncounterCollectCastingHealModifiers,
-
-            OnEncounterCollectReceivingHealModifiers,
-
-            OnEncounterIncapacitation,
-
-            OnApply,
-
-            OnRemove
         };
 
         /// <summary>
@@ -202,6 +208,7 @@ namespace YuguLibrary
         /// </remarks>
         public enum Directions
         {
+            None,
             NW,
             NE,
             SE,
@@ -286,11 +293,11 @@ namespace YuguLibrary
         /// </summary>
         public enum SpeedTiers
         {
-            VeryFast = 5,
-            Fast = 10,
-            Normal = 15,
-            Slow = 20,
-            VerySlow = 25
+            VeryFast = 4,
+            Fast = 5,
+            Normal = 6,
+            Slow = 10,
+            VerySlow = 13
         }
 
         /// <summary>
@@ -351,6 +358,7 @@ namespace YuguLibrary
         {
             HP,
             MP,
+            EssentiaPoints,
             MirageEssence,
             _gsFirearms,
             _gsIce,
@@ -647,7 +655,8 @@ namespace YuguLibrary
             Windy,
             Snow,
             Hail,
-            Fog
+            Fog,
+            TestWeather
         }
     }
 }

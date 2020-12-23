@@ -5,6 +5,10 @@ using YuguLibrary.Controllers;
 using Mono.Data.Sqlite;
 using System;
 using YuguLibrary.Models;
+using System.Runtime.CompilerServices;
+using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
+using UIConfirgurations;
 
 namespace YuguLibrary
 {
@@ -12,10 +16,14 @@ namespace YuguLibrary
     {
         public static class UtilityFunctions
         {
+            public static float FRAME_LENGTH = 0.016667F;
+
             /// <summary>
             /// Random number generator for functions.
             /// </summary>
             private static System.Random random = new System.Random();
+
+            private static PlayerFile currentFile;
 
             #region Valid KeyCode Values
             /// <summary>
@@ -58,7 +66,7 @@ namespace YuguLibrary
             /// <summary>
             /// Path to the project's root folder that stores all JSON assets.
             /// </summary>
-            public static readonly string JSON_ASSETS_FILE_PATH = Application.dataPath + "/Resources/JSON Assets/";
+            public static readonly string JSON_ASSETS_FILE_PATH = Application.dataPath + "/JSONsHubs/JSON Assets/";
 
             /// <summary>
             /// Path to the project's root folder that stores JSON assets for the <see cref="Unit"/> class.
@@ -69,11 +77,16 @@ namespace YuguLibrary
             /// Path to the project's root folder that stores JSON assets for the <see cref="Instance"/> class.
             /// </summary>
             public static readonly string JSON_ASSETS_INSTANCE_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Instances/";
-            
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public static readonly string JSON_ASSETS_COMMON_SKILL_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Common Skills/";
+
             /// <summary>
             /// Path to the project's root folder that stores JSON assets for the <see cref="Status"/> class.
             /// </summary>
-            public static readonly string JSON_ASSETS_STATUS_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Statuses/";
+            public static readonly string JSON_ASSETS_COMMON_STATUS_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Common Statuses/";
 
             /// <summary>
             /// Path to the project's root folder that stores JSON assets for the <see cref="Cutscene"/> class.
@@ -81,14 +94,19 @@ namespace YuguLibrary
             public static readonly string JSON_ASSETS_CUTSCENE_FOLDER_PATH = JSON_ASSETS_FILE_PATH + "/Cutscenes/";
 
             /// <summary>
+            /// Path to the project's root folder that stores UI screens.
+            /// </summary>
+            public static readonly string UI_FILE_PATH = "Prefabs/UI/";
+
+            /// <summary>
             /// Path to the project's root folder that stores sprites for the UI.
             /// </summary>
-            public static readonly string UI_FILE_PATH = "Sprites/UI/";
+            public static readonly string UI_SPRITES_FILE_PATH = "Sprites/UI/";
             
             /// <summary>
             /// Path to the project's root folder that stores UI icons.
             /// </summary>
-            public static readonly string ICONS_FILE_PATH = UI_FILE_PATH + "Icons/";
+            public static readonly string ICONS_FILE_PATH = UI_SPRITES_FILE_PATH + "Icons/";
 
             /// <summary>
             /// Path to the project's root folder that stores UI borders.
@@ -140,6 +158,65 @@ namespace YuguLibrary
             }
 
             /// <summary>
+            /// Gets the encounter currently active in the scene.
+            /// </summary>
+            /// <returns>Returns the Encounter object from the current scene.</returns>
+            public static Encounter GetActiveEncounter()
+            {
+                GameObject controllerHub = GameObject.Find("Controller Hub");
+                Encounter encounter = controllerHub.GetComponent<EncounterController>().encounter;
+                return encounter;
+            }
+
+            /// <summary>
+            /// Gets the UI manager currently active in the scene.
+            /// </summary>
+            /// <returns>Returns the UIManager object from the current scene.</returns>
+            public static UIManager GetActiveUIManager()
+            {
+                GameObject controllerHub = GameObject.Find("Controller Hub");
+                UIManager uiManager = controllerHub.GetComponent<UIController>().uiManager;
+                return uiManager;
+            }
+
+            public static EventSystem GetActiveEventSystem()
+            {
+                GameObject controllerHub = GameObject.Find("Controller Hub");
+                EventSystem eventSystem = controllerHub.GetComponent<UIController>().uiEventHandler;
+
+                return eventSystem;
+            }
+
+            public static QuestManager GetActiveQuestManager()
+            {
+                GameObject controllerHub = GameObject.Find("Controller Hub");
+                QuestManager questManager = controllerHub.GetComponent<QuestController>().questManager;
+                return questManager;
+            }
+
+            public static Geology GetActiveGeology()
+            {
+                GameObject controllerHub = GameObject.Find("Controller Hub");
+                Geology geology = controllerHub.GetComponent<GeologyController>().geology;
+                return geology;
+            }
+
+            public static void SetCurrentFile(PlayerFile file)
+            {
+                currentFile = file;
+            }
+
+            public static PlayerFile GetCurrentFile()
+            {
+                return currentFile;
+            }
+
+            public static void LoadCurrentPlayerFile()
+            {
+                SceneManager.LoadScene("Instance");
+            }
+
+            /// <summary>
             /// Sets a sprite to a position in the game world relative to its location.
             /// </summary>
             /// <param name="overworldObjectCoordinator">OverworldObjectCoordinator containing the sprite to be set.</param>
@@ -149,6 +226,7 @@ namespace YuguLibrary
                 float xpos = 0;
                 float ypos = (currentPosition.z * 2.28f);
 
+
                 //for every x: x += 1.225, y += 0.6125; 
                 xpos += (currentPosition.x * 1.225f);
                 ypos += (currentPosition.x * 0.6125f);
@@ -156,7 +234,7 @@ namespace YuguLibrary
                 //for every y: x -= 1.225, y += 0.6125;
                 xpos -= (currentPosition.y * 1.225f);
                 ypos += (currentPosition.y * 0.6125f);
-                float zpos = (currentPosition.z * 3.5f);
+                float zpos = (currentPosition.z * 4f);
 
                 Vector3 position = new Vector3(xpos, ypos, zpos);
 
@@ -224,7 +302,7 @@ namespace YuguLibrary
             public static bool GetRandomPercentage(int passChance)
             {
 
-                int randint = random.Next(0, 101);
+                int randint = random.Next(1, 101);
 
                 if (passChance >= randint)
                 {
@@ -244,6 +322,11 @@ namespace YuguLibrary
             {
                 var timeSpan = (DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0));
                 return (long)timeSpan.TotalSeconds;
+            }
+
+            public static string GetUnitName(UnitTurn unitTurn)
+            {
+                return unitTurn.unit.GetType() + " (" + unitTurn.GetHashCode() + ")";
             }
         }
     }

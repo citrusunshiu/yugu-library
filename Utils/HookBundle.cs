@@ -62,4 +62,48 @@ namespace YuguLibrary
             this.target = target;
         }
     }
+
+    #region Encounter Hook Bundles
+    public class RoundStartHookBundle : HookBundle
+    {
+        public RoundStartHookBundle()
+        {
+
+        }
+    }
+
+    public class RoundEndHookBundle : HookBundle
+    {
+        public RoundEndHookBundle()
+        {
+
+        }
+    }
+
+    public class TurnStartHookBundle : HookBundle
+    {
+        /// <summary>
+        /// The <see cref="UnitTurn"/> object of the unit whose turn is about to start.
+        /// </summary>
+        public UnitTurn unitTurn;
+
+        public TurnStartHookBundle(UnitTurn unitTurn)
+        {
+            this.unitTurn = unitTurn;
+        }
+    }
+
+    public class TurnEndHookBundle : HookBundle
+    {
+        /// <summary>
+        /// The <see cref="UnitTurn"/> object of the unit whose turn is about to end.
+        /// </summary>
+        public UnitTurn unitTurn;
+
+        public TurnEndHookBundle(UnitTurn unitTurn)
+        {
+            this.unitTurn = unitTurn;
+        }
+    }
+    #endregion
 }

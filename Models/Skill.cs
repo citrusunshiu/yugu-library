@@ -77,7 +77,7 @@ namespace YuguLibrary
             /// <summary>
             /// The list of animations and hitbox timings that the skill has access to during usage.
             /// </summary>
-            private List<SkillChoreography> skillChoreographies;
+            protected List<SkillChoreography> skillChoreographies;
 
             /// <summary>
             /// The name of the function contained in <see cref="SkillHub"/> associated with the skill object's logic.
@@ -131,6 +131,7 @@ namespace YuguLibrary
             #endregion
 
             #region Functions
+            #region Public Functions
             /// <summary>
             /// Sets the owner of the skill object to a given unit.
             /// </summary>
@@ -146,6 +147,7 @@ namespace YuguLibrary
             /// </summary>
             public void ExecuteSkill()
             {
+                Debug.Log("execskill");
                 Debug.Log(skillFunctionName);
                 if (skillFunctionName.Equals(""))
                 {
@@ -159,11 +161,38 @@ namespace YuguLibrary
             }
 
             /// <summary>
+            /// Sets the cooldown of the skill to 0.
+            /// </summary>
+            public void ResetCooldown()
+            {
+                currentCooldown = 0;
+            }
+
+            /// <summary>
+            /// Allows the skill to be executed.
+            /// </summary>
+            public void EnableSkill()
+            {
+                isEnabled = true;
+            }
+
+            /// <summary>
+            /// Prevents the skill from being executed.
+            /// </summary>
+            public void DisableSkill()
+            {
+                isEnabled = false;
+            }
+            #endregion
+
+            #region Private Functions
+            /// <summary>
             /// Runs all of the skill's skill choreographies in order.
             /// </summary>
-            private void RunSkillDefault()
+            protected void RunSkillDefault()
             {
-                foreach(SkillChoreography skillChoreography in skillChoreographies)
+                Debug.Log("skilldefault: count = " + skillChoreographies.Count);
+                foreach (SkillChoreography skillChoreography in skillChoreographies)
                 {
                     RunSkillChoreography(skillChoreography);
                 }
@@ -176,10 +205,13 @@ namespace YuguLibrary
             /// <param name="skillChoreography">The skill choreography to run.</param>
             private void RunSkillChoreography(SkillChoreography skillChoreography)
             {
+                Debug.Log("skillcho");
                 int framesGiven = skillChoreography.GetTotalFrames();
 
                 if (skillChoreography.GetIsAttackSpeedDependent())
                 {
+                    Debug.Log(framesGiven);
+                    Debug.Log(unit.attackSpeed);
                     framesGiven = (int)Math.Round(framesGiven/unit.attackSpeed);
                 }
 
@@ -201,6 +233,7 @@ namespace YuguLibrary
                         hitbox.SetHitboxGroupID(hitboxGroupID);
                         hitbox.SetUnit(unit);
                         hitbox.SetSkill(this);
+                        hitbox.AdjustPositionToUnit();
 
                         if (skillChoreography.GetIsAttackSpeedDependent())
                         {
@@ -231,11 +264,52 @@ namespace YuguLibrary
                 skillChoreographies = skillJSONParser.GetSkillChoreographies();
                 skillFunctionName = skillJSONParser.GetSkillFunctionName();
             }
+            #endregion
 
+            #region Getters & Setters
             public List<Hit> GetHits()
             {
                 return hits;
             }
+
+            public bool IsEnabled()
+            {
+                return isEnabled;
+            }
+            #endregion
+
+            #region Protected Skill Functionality Parts
+            /// <summary>
+            /// Moves a specified projectile hitbox a specified number of tiles at a specified speed.
+            /// </summary>
+            /// <param name="projectileChoreography">The <see cref="SkillChoreography"/> to be ran during the projectile's travel time.</param>
+            /// <param name="onConnect">The <see cref="SkillChoreography"/> to be ran when the projectile connects with a target.</param>
+            /// <param name="range">The amount of tiles the projectile should travel.</param>
+            /// <param name="movementFrames">The amount of frames taken for the projectile to advance one tile.</param>
+            protected void LaunchProjectile(SkillChoreography projectileChoreography, SkillChoreography onConnect, int range, 
+                float movementFrames)
+            {
+                //may need more params/extra info from json
+
+                //TODO: projectile fire/movement
+                RunSkillChoreography(onConnect);
+            }
+
+            protected void Type2Target()
+            {
+
+            }
+
+            protected void Type3Target()
+            {
+
+            }
+
+            protected void MultiPromptInput()
+            {
+
+            }
+            #endregion
             #endregion
         }
 

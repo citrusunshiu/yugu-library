@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.WindowsRuntime;
 using UnityEngine;
 using YuguLibrary.Enumerations;
 using YuguLibrary.Utilities;
@@ -440,8 +441,12 @@ namespace YuguLibrary
             /// <remarks>
             /// Higher values decrease the animation time of certain skills. (100 attack speed = 2x speed)
             /// </remarks>
-            public float attackSpeed;
+            public float attackSpeed = 1;
             #endregion
+
+            private int expYield;
+
+            private Dictionary<string, float> dropTable = new Dictionary<string, float>();
 
             /// <summary>
             /// The list of attributes that the unit currently has.
@@ -487,12 +492,17 @@ namespace YuguLibrary
             private Dictionary<string, HookFunction> hookFunctions = new Dictionary<string, HookFunction>();
 
             /// <summary>
-            /// List of <see cref="OverworldAI"/> objects currently attached to the unit.
+            /// List of <see cref="UnitAI"/> objects currently attached to the unit.
             /// </summary>
             /// <remarks>
             /// Determines how the unit will interact with other units and tiles in the overworld.
             /// </remarks>
-            private List<OverworldAI> overworldAIs = new List<OverworldAI>();
+            private List<UnitAI> unitAIs = new List<UnitAI>();
+
+            /// <summary>
+            /// The name of the UnitAIHub function that is executed when searching for a new unitAIAction.
+            /// </summary>
+            private string unitAIFunctionName;
 
             /// <summary>
             /// The unit's current <see cref="OverworldAIAction"/>.
@@ -500,14 +510,19 @@ namespace YuguLibrary
             /// <remarks>
             /// When determined, the unit will execute the action when they are free.
             /// </remarks>
-            private OverworldAIAction currentOverworldAIAction;
+            private UnitAIAction currentUnitAIAction;
 
             /// <summary>
             /// Whether or not the unit is currently executing an <see cref="OverworldAIAction"/>.
             /// </summary>
             private bool isExecutingOverworldAIAction;
 
-            private List<string> hitboxImmunities;
+            private List<string> hitboxImmunities = new List<string>();
+
+            /// <summary>
+            /// The UnitSpawner object that created the unit.
+            /// </summary>
+            private UnitSpawner unitSpawner;
 
             #region Encounter-specific Variables
             /// <summary>
@@ -558,7 +573,7 @@ namespace YuguLibrary
                 InitializeUnitBaseValues(unitJSONParser);
                 InitializeStats();
                 InitializeUnitFunctionality(unitJSONParser);
-
+                CalculateFrameSpeeds(15, 5, 5);
 
             }
             #endregion
@@ -578,6 +593,7 @@ namespace YuguLibrary
                 int alterAmount = calculation.GetDamageResult();
                 
                 currentHP -= alterAmount;
+
                 
                 if(alterAmount >= 0) //for damage
                 {
@@ -597,6 +613,7 @@ namespace YuguLibrary
                         currentHP = hp;
                     }
                 }
+                Debug.Log("HP altered by " + alterAmount + " (HP: " + currentHP + "/" + hp + ")");
             }
 
             /// <summary>
@@ -606,6 +623,7 @@ namespace YuguLibrary
             public void AlterAggro(HitCalculation calculation)
             {
                 aggroSpread.InsertAggro(calculation.GetAttackingUnit(), calculation.GetAggroResult());
+                Debug.Log("aggro altered by " + calculation.GetAggroResult());
             }
 
             /// <summary>
@@ -647,6 +665,28 @@ namespace YuguLibrary
                 return true;
             }
 
+            public void RemoveAllBeneficialStatuses()
+            {
+
+            }
+
+            public void RemoveHarmfulStatuses()
+            {
+
+            }
+
+            /// <summary>
+            /// Searches <see cref="statuses"/> for a specified status.
+            /// </summary>
+            /// <param name="statusType">Enum value of the status to search for.</param>
+            /// <returns>Returns true if the status is found in statuses, and returns false otherwise.</returns>
+            /// <seealso cref="Ailments"/> <seealso cref="Impairments"/> 
+            /// <seealso cref="BeneficialEffects"/> <seealso cref="SkillEffects"/>
+            public bool SearchStatuses(StatusEffects statusType)
+            {
+                return statuses.ContainsKey(statusType);
+            }
+
             /// <summary>
             /// Searches for all hook functions of a given delegate flag, and executes their logic.
             /// </summary>
@@ -682,13 +722,33 @@ namespace YuguLibrary
                 skill.AttachSkillToUnit(this);
             }
 
+            public void ResetAllCooldowns()
+            {
+                foreach (Skill skill in skills)
+                {
+                    skill.ResetCooldown();
+                }
+            }
+
             /// <summary>
             /// Adds an overworld AI pattern to the unit.
             /// </summary>
-            /// <param name="overworldAI">The overworld AI pattern to be added.</param>
-            public void AddOverworldAI(OverworldAI overworldAI)
+            /// <param name="unitAI">The overworld AI pattern to be added.</param>
+            public void AddUnitAI(UnitAI unitAI)
             {
-                overworldAIs.Add(overworldAI);
+                unitAIs.Add(unitAI);
+            }
+
+            public bool CheckForUnitAI(Type unitAIType)
+            {
+                foreach(UnitAI unitAI in unitAIs)
+                {
+                    if(unitAI.GetType().Equals(unitAIType))
+                    {
+                        return true;
+                    }
+                }
+                return false;
             }
 
             /// <summary>
@@ -772,6 +832,16 @@ namespace YuguLibrary
                 return targetType;
             }
 
+            public UnitSpawner GetUnitSpawner()
+            {
+                return unitSpawner;
+            }
+
+            public void SetUnitSpawner(UnitSpawner unitSpawner)
+            {
+                this.unitSpawner = unitSpawner;
+            }
+
             public void AddHitboxImmunity(string hitboxGroupID)
             {
                 hitboxImmunities.Add(hitboxGroupID);
@@ -779,7 +849,15 @@ namespace YuguLibrary
 
             public bool SearchHitboxImmunity(string hitboxGroupID)
             {
+                //Debug.Log(hitboxImmunities.Contains(hitboxGroupID));
                 return hitboxImmunities.Contains(hitboxGroupID);
+            }
+
+            public Skill FindSkillByNameID(string nameID)
+            {
+                Skill skill = null;
+
+                return skill;
             }
 
             /// <summary>
@@ -794,6 +872,9 @@ namespace YuguLibrary
                 role = unitJSONParser.GetRole();
                 classification = unitJSONParser.GetClassification();
                 speedTier = unitJSONParser.GetSpeedTier();
+                runFrames = unitJSONParser.GetBaseMovementFrames();
+                descentFrames = unitJSONParser.GetBaseDescentFrames();
+                ascentFrames = unitJSONParser.GetBaseAscentFrames();
 
                 hpScaling = unitJSONParser.GetHPScaling();
                 mpScaling = unitJSONParser.GetMPScaling();
@@ -857,10 +938,10 @@ namespace YuguLibrary
                     AddOverworldObjectAction(action);
                 }
 
-                List<OverworldAI> overworldAIs = unitJSONParser.GetOverworldAIs();
-                foreach (OverworldAI overworldAI in overworldAIs)
+                List<UnitAI> overworldAIs = unitJSONParser.GetUnitAIs();
+                foreach (UnitAI overworldAI in overworldAIs)
                 {
-                    AddOverworldAI(overworldAI);
+                    AddUnitAI(overworldAI);
                 }
 
                 List<EncounterAI> encounterAIs = unitJSONParser.GetEncounterAIs();

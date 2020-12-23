@@ -6,7 +6,7 @@ namespace YuguLibrary
 {
     namespace Models
     {
-        public class Quest
+        public class Item
         {
 
         }

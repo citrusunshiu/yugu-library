@@ -15,8 +15,8 @@ namespace YuguLibrary
         #region Transform Movement Constants
         readonly float xmove = 1.225f;
         readonly float ymove = 0.6125f;
-        readonly float zmove = 2.28f / 2;
-        readonly float zforward = 3.5f;
+        readonly float zmove = (2.28f / 2) + (0.6125f / 5);
+        readonly float zforward = 4f;
         #endregion
         /// <summary>
         /// The <see cref="GameObject"/>'s sprite renderer.
@@ -37,6 +37,8 @@ namespace YuguLibrary
         /// Whether or not an animation coroutine is currently running.
         /// </summary>
         public bool currentlyAnimating;
+
+        IEnumerator currentAnimation;
 
         /// <summary>
         /// The <see cref="Models.OverworldObject"/> object associated with the unit coordinator.
@@ -65,7 +67,7 @@ namespace YuguLibrary
 
         public void FrameMove(Directions direction)
         {
-            int totalMoveFrames;
+            float totalMoveFrames;
             int animationIndex = 1;
 
             switch (direction)
@@ -95,15 +97,24 @@ namespace YuguLibrary
         /// <param name="animationIndex">The index number of the animation to change to.</param>
         /// <param name="framesGiven">The amount of frames given for the animation to play fully. (set to -1 for default play speed)</param>
         /// <param name="isLooping">Whether or not the animation should loop after completion.</param>
-        public void SetAnimation(int animationIndex, int framesGiven, bool isLooping)
+        public void SetAnimation(int animationIndex, float framesGiven, bool isLooping)
         {
-            StopAllCoroutines();
+
+            StopCoroutine(currentAnimation);
             currentlyAnimating = false;
             animationScript.SetAnimationPatternIndex(animationIndex);
             animationScript.SetFramesGiven(framesGiven);
             animationScript.SetIsLooping(isLooping);
             animationQueue.Clear();
             animationScript.PlayAnimation();
+        }
+
+        public void SetAnimation(AnimationTypes animationType, float framesGiven, bool isLooping)
+        {
+            switch (animationType)
+            {
+
+            }
         }
 
         /// <summary>
@@ -115,7 +126,8 @@ namespace YuguLibrary
             {
                 if (!currentlyAnimating)
                 {
-                    StartCoroutine(animationQueue.Dequeue());
+                    currentAnimation = animationQueue.Dequeue();
+                    StartCoroutine(currentAnimation);
                 }
             }
             else if (animationScript.IsLooping())
@@ -124,9 +136,9 @@ namespace YuguLibrary
             }
         }
 
-        private IEnumerator MoveSegment(Directions direction, int totalMoveFrames, int moveProgress = 0)
+        private IEnumerator MoveSegment(Directions direction, float totalMoveFrames, int moveProgress = 0)
         {
-            yield return new WaitForSeconds(0.016667F);
+            yield return new WaitForSeconds(UtilityFunctions.FRAME_LENGTH);
 
             float dx = xmove / totalMoveFrames;
             float dy = ymove / totalMoveFrames;
@@ -148,17 +160,18 @@ namespace YuguLibrary
                     break;
                 case Directions.Up:
                     dx = 0;
-                    dy = zmove / totalMoveFrames;
+                    dy = (zmove / totalMoveFrames);
                     dz = zforward / totalMoveFrames;
                     break;
                 case Directions.Down:
                     dx = 0;
-                    dy = (zmove / totalMoveFrames) * -1;
+                    dy = ((zmove / totalMoveFrames)) * -1;
                     dz = (zforward / totalMoveFrames) * -1;
                     break;
             }
 
             transform.position = new Vector3(transform.position.x + dx, transform.position.y + dy, transform.position.z + dz);
+
             Player player = UtilityFunctions.GetActivePlayer();
             if (overworldObject.Equals(player.GetCurrentOverworldObject()))
             {
@@ -174,10 +187,14 @@ namespace YuguLibrary
             {
                 SetAnimation(0, -1, true);
                 UtilityFunctions.SetSpriteDefaultPosition(this);
+                if (overworldObject.Equals(player.GetCurrentOverworldObject()))
+                {
+                    SetCameraPosition();
+                }
             }
         }
 
-        private void SetCameraPosition()
+        public void SetCameraPosition()
         {
             Player player = UtilityFunctions.GetActivePlayer();
 
@@ -185,7 +202,7 @@ namespace YuguLibrary
             player.mainCamera.transform.position = camerapos;
         }
 
-        private void RepeatMove(Directions direction, int totalMoveFrames, int moveProgress)
+        private void RepeatMove(Directions direction, float totalMoveFrames, int moveProgress)
         {
             StartCoroutine(MoveSegment(direction, totalMoveFrames, moveProgress));
         }

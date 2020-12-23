@@ -506,28 +506,24 @@ namespace YuguLibrary
                             if (CheckForProperty("xPos", reader))
                             {
                                 xPos = (long)GetValueFromJSON(reader);
-                                Debug.Log(xPos);
                                 reader.Read();
                             }
 
                             if (CheckForProperty("yPos", reader))
                             {
                                 yPos = (long)GetValueFromJSON(reader);
-                                Debug.Log(yPos);
                                 reader.Read();
                             }
 
                             if (CheckForProperty("zPos", reader))
                             {
                                 zPos = (long)GetValueFromJSON(reader);
-                                Debug.Log(zPos);
                                 reader.Read();
                             }
 
                             if (IsEndOfObject(reader))
                             {
                                 instanceCoordinates = new Vector3Int((int)xPos, (int)yPos, (int)zPos);
-                                Debug.Log(instanceCoordinates);
                             }
                         }
 
@@ -588,7 +584,6 @@ namespace YuguLibrary
                                     if (IsEndOfObject(reader))
                                     {
                                         loadingZonePosition = new Vector3Int((int)xPos, (int)yPos, (int)zPos);
-                                        Debug.Log(loadingZonePosition);
                                     }
                                 }
 
@@ -620,9 +615,7 @@ namespace YuguLibrary
 
                                     if (IsEndOfObject(reader))
                                     {
-                                        Debug.Log("testtt");
                                         playerUnitSpawnPosition = new Vector3Int((int)xPos, (int)yPos, (int)zPos);
-                                        Debug.Log(playerUnitSpawnPosition);
                                     }
                                 }
 
@@ -630,12 +623,8 @@ namespace YuguLibrary
                                 {
                                     if (!instanceJSONFileName.Equals("") && loadingZonePosition.x != -255 && playerUnitSpawnPosition.x != -255)
                                     {
-                                        Debug.Log("test");
                                         LoadingZone loadingZone = new LoadingZone(loadingZonePosition, instanceJSONFileName, playerUnitSpawnPosition);
                                         loadingZones.Add(loadingZone);
-                                        Debug.Log(loadingZone);
-
-                                        Debug.Log(playerUnitSpawnPosition);
 
                                         instanceJSONFileName = "";
                                         loadingZonePosition = new Vector3Int(-255, -255, -255);
@@ -839,7 +828,6 @@ namespace YuguLibrary
 
                         if (CheckForProperty("hits", reader))
                         {
-                            Debug.Log("in hits");
                             string hitNameID = "";
                             float damageModifier = -1;
                             float aggroModifier = -1;
@@ -983,7 +971,6 @@ namespace YuguLibrary
 
                                         if (CheckForProperty("hitIndex", reader))
                                         {
-                                            Debug.Log("IN HIT INDEX");
                                             hitIndex = (int)(long)GetValueFromJSON(reader);
                                         }
 
@@ -1018,7 +1005,6 @@ namespace YuguLibrary
 
                                                 if (IsEndOfObject(reader))
                                                 {
-                                                    Debug.Log(hitIndex);
                                                     hitboxes.Add(new Hitbox(startFrame, delayFrames, lingerFrames, 
                                                         new Vector3Int(xPos, yPos, zPos), hitFunctionName, hitIndex));
 

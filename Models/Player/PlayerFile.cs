@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
+using YuguLibrary.Controllers;
 using YuguLibrary.Enumerations;
 using YuguLibrary.Models;
+using YuguLibrary.Utilities;
 
 public class PlayerFile
 {
@@ -46,11 +48,11 @@ public class PlayerFile
         this.leadUnitJSONFileName = leadUnitJSONFileName;
     }
 
-    public void SaveToFile()
+    public void SaveToFile(string fileName)
     {
-        Debug.Log("saving file to " + Application.persistentDataPath + "/testSave.ygs");
+        Debug.Log("saving file to " + Application.persistentDataPath + "/" + fileName);
         BinaryFormatter binaryFormatter = new BinaryFormatter();
-        FileStream fileStream = new FileStream(Application.persistentDataPath + "/testSave.ygs", FileMode.Create);
+        FileStream fileStream = new FileStream(Application.persistentDataPath + "/" + fileName, FileMode.Create);
         SerializablePlayerFile serializablePlayerFile = ConvertToSerializablePlayerFile();
         binaryFormatter.Serialize(fileStream, serializablePlayerFile);
         fileStream.Close();
@@ -81,10 +83,63 @@ public class PlayerFile
 
     public static PlayerFile CreateNewFile()
     {
-        PlayerFile playerFile = new PlayerFile();
+        int year = 1;
+        Seasons season = Seasons.Spring;
+        int day = 30;
+        Times time = Times.Night;
+        int timeSegment = 0;
+        Dictionary<string, WeatherConditions> weather = new Dictionary<string, WeatherConditions>();
+        string currentInstanceJSONFileName = "02_Magicadia/Aristocrat Tree District/Silverlight Forest/silverlight-forest_1.json";
+        Vector3Int playerPosition = new Vector3Int(0, 0, 1);
+        List<Quest> questProgression = new List<Quest>();
+        List<PlayerUnit> playerUnits = new List<PlayerUnit>();
+        List<UnitSetup> unitSetups = new List<UnitSetup>();
+        string leadUnitJSONFileName = "Sample/Sample Unit/unit.json";
+
+        PlayerFile playerFile = new PlayerFile(year, season, day, time, timeSegment, weather, currentInstanceJSONFileName, playerPosition,
+            playerUnits, questProgression, unitSetups, leadUnitJSONFileName);
+
         return playerFile;
     }
 
+    public static PlayerFile CreateTestFile()
+    {
+        int year = 5;
+        Seasons season = Seasons.Summer;
+        int day = 89;
+        Times time = Times.EarlyMorning;
+        int timeSegment = 0;
+        Dictionary<string, WeatherConditions> weather = new Dictionary<string, WeatherConditions>();
+        string currentInstanceJSONFileName = "00_TEST/Dummy Room/dummy-room_1.json";
+        Vector3Int playerPosition = new Vector3Int(0, 0, 1);
+        List<Quest> questProgression = new List<Quest>();
+        List<PlayerUnit> playerUnits = new List<PlayerUnit>();
+        List<UnitSetup> unitSetups = new List<UnitSetup>();
+        string leadUnitJSONFileName = "Sample/Sample Unit/unit.json";
+
+        PlayerFile playerFile = new PlayerFile(year, season, day, time, timeSegment, weather, currentInstanceJSONFileName, playerPosition,
+            playerUnits, questProgression, unitSetups, leadUnitJSONFileName);
+
+        return playerFile;
+    }
+
+    public void LoadGameState()
+    {
+        Debug.Log("gamestate loading");
+        Instance instance = new Instance(currentInstanceJSONFileName);
+        Unit unit = new Unit(leadUnitJSONFileName, 1, TargetTypes.Ally);
+        Geology geology = UtilityFunctions.GetActiveGeology();
+        geology.SetYear(year);
+        geology.SetSeason(season);
+        geology.SetDay(day);
+        geology.SetTimeOfDay(time);
+        geology.SetTimeSegment(timeSegment);
+        geology.SetCurrentInstance(instance);
+
+        UnitDetector unitDetector = UtilityFunctions.GetActiveUnitDetector();
+
+        unitDetector.LoadNewInstance(instance, playerPosition, unit);
+    }
 }
 
 [Serializable]

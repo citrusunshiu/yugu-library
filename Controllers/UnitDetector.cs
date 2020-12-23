@@ -204,6 +204,7 @@ namespace YuguLibrary
 
                 if (instance.GetUnitSpawners() != null)
                 {
+                    unitSpawners = new List<UnitSpawner>();
                     foreach (UnitSpawner unitSpawner in instance.GetUnitSpawners())
                     {
                         AddUnitSpawner(unitSpawner);
@@ -212,26 +213,18 @@ namespace YuguLibrary
 
                 if (instance.GetLoadingZones() != null)
                 {
+                    loadingZones = new List<LoadingZone>();
                     foreach (LoadingZone loadingZone in instance.GetLoadingZones())
                     {
-                        Debug.Log("adding loading zone at position " + loadingZone.position);
                         loadingZones.Add(loadingZone);
                     }
                 }
-
-
-                Debug.Log(geography);
 
                 MarkLoadingZones();
 
                 currentInstance = instance;
 
-                Debug.Log("counts; unitspawners: " + unitSpawners.Count + "; loadingzones: " + loadingZones.Count);
-                Debug.Log("onload overworldobject count: " + overworldObjects.Count);
-
                 //UtilityFunctions.GetActiveGeology().SetLocation(instance);
-
-                Debug.Log("spawn pos: " + spawnPosition);
 
                 UtilityFunctions.GetActiveUnitDetector().SpawnOverworldObject(playerUnit, spawnPosition);
                 UtilityFunctions.GetActivePlayer().SetCurrentOverworldObject(playerUnit);
@@ -315,7 +308,6 @@ namespace YuguLibrary
                     Vector3Int tileToPlace = newPosition;
 
                     overworldObject.position = tileToPlace;
-                    Debug.Log(overworldObject.position);
 
 
                     DelayMovements(overworldObject, z);
@@ -327,12 +319,10 @@ namespace YuguLibrary
                     //if unit moved was the player, check for loading zones
                     if (UtilityFunctions.GetActivePlayer().GetCurrentOverworldObject().Equals(overworldObject))
                     {
-                        Debug.Log("getting loadingzone at " + overworldObject.position);
                         LoadingZone loadingZone = GetLoadingZoneAtPosition(overworldObject.position);
 
                         if (loadingZone != null /*&& !UtilityFunctions.GetActiveEncounter().IsEncounterActive()*/)
                         {
-                            Debug.Log("loading new area");
                             loadingZone.LoadZone(overworldObject);
                         }
                     }
@@ -663,7 +653,6 @@ namespace YuguLibrary
             /// <returns>Returns the LoadingZone at the location, or null if there is none.</returns>
             private LoadingZone GetLoadingZoneAtPosition(Vector3Int position)
             {
-                Debug.Log(loadingZones.Count);
                 foreach (LoadingZone loadingZone in loadingZones)
                 {
                     if (UtilityFunctions.CompareVector3Ints(loadingZone.position, position))
@@ -959,15 +948,12 @@ namespace YuguLibrary
             {
                 if (geography != null)
                 {
-                    Debug.Log(geography.gameObject.transform.parent.gameObject.name);
                     geography.ClearAllTiles();
                     geography.transform.SetParent(null);
                     geography.name += "(OLD)";
                 }
 
                 GameObject.Instantiate(Resources.Load(UtilityFunctions.GEOGRAPHY_FILE_PATH + name));
-
-                Debug.Log(UtilityFunctions.GEOGRAPHY_FILE_PATH + name);
 
                 geography = GameObject.Find(name + "(Clone)").GetComponentInChildren<Tilemap>();
                 geography.gameObject.transform.parent.gameObject.name = "trashed";

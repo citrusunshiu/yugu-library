@@ -50,10 +50,23 @@ namespace YuguLibrary
             public Player(Camera mainCamera)
             {
                 this.mainCamera = mainCamera;
+                playerFile = UtilityFunctions.GetCurrentFile();
             }
             #endregion
 
             #region Functions
+            public void LoadPlayerFile()
+            {
+                if(playerFile != null)
+                {
+                    playerFile.LoadGameState();
+                }
+                else
+                {
+                    Debug.Log("playerfile is null");
+                }
+            }
+
             public void SetCurrentOverworldObject(OverworldObject overworldObject)
             {
                 currentOverworldObject = overworldObject;

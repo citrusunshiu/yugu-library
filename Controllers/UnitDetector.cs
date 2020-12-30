@@ -19,29 +19,17 @@ namespace YuguLibrary
             /// <summary>
             /// Reference to the controller the unit detector is attached to.
             /// </summary>
-            MonoBehaviour controllerReference;
+            private MonoBehaviour controllerReference;
 
             /// <summary>
-            /// Reference to the tilemap used for overworld object movement.
+            /// Reference to the tilemap used for overworld object movement and collision.
             /// </summary>
             private Tilemap geography;
-
-            private List<Tilemap> hitboxIndicators = new List<Tilemap>();
 
             /// <summary>
             /// Reference to the tilemap used for colored tile indicators.
             /// </summary>
             private Tilemap indicators;
-
-            /// <summary>
-            /// Reference to the current instance loaded.
-            /// </summary>
-            private Instance currentInstance;
-            
-            /// <summary>
-            /// References to all effect areas in the current instance.
-            /// </summary>
-            private List<AreaOfEffect> aoes = new List<AreaOfEffect>();
 
             /// <summary>
             /// References to all <see cref="UnitSpawner"/> objects in the current instance.
@@ -53,8 +41,14 @@ namespace YuguLibrary
             /// </summary>
             private List<LoadingZone> loadingZones = new List<LoadingZone>();
 
+            /// <summary>
+            /// References to all <see cref="OverworldObject"/> objects in the current instance.
+            /// </summary>
             private List<OverworldObject> overworldObjects = new List<OverworldObject>();
 
+            /// <summary>
+            /// References to all <see cref="Hitbox"/> objects in the current instance.
+            /// </summary>
             private List<Hitbox> hitboxes = new List<Hitbox>();
 
             /// <summary>
@@ -62,7 +56,7 @@ namespace YuguLibrary
             /// </summary>
             private Dictionary<Vector3Int, List<SpecialTile>> specialTiles
                 = new Dictionary<Vector3Int, List<SpecialTile>>();
-            
+
             /// <summary>
             /// References to the active indicator tiles in the current instance.
             /// </summary>
@@ -70,29 +64,18 @@ namespace YuguLibrary
                 new Dictionary<TileIndicatorTypes, List<Vector3Int>>();
 
             /// <summary>
-            /// Whether or not overworld AI patterns are currently running.
+            /// Whether or not <see cref="Unit"/> objects will automatically receive new <see cref="UnitAIAction"/> commands to execute.
             /// </summary>
-            public static bool overworldAIActivity = true;
-
-            /// <summary>
-            /// Whether or not the <see cref="aggroRadius"/> object will move with a unit.
-            /// </summary>
-            public static bool lockAggroRadius = false;
-
-            /// <summary>
-            /// The default size of the <see cref="aggroRadius"/> object.
-            /// </summary>
-            public static int baseAggroRadiusSize = 5;
-            
-            /// <summary>
-            /// The <see cref="AreaOfEffect"/> object that will attract enemy units to its center.
-            /// </summary>
-            public static AreaOfEffect aggroRadius;
-
             private bool automaticAIActivity = true;
             #endregion
 
             #region Constructors
+            /// <summary>
+            /// Constructs a unit detector that uses a specified tilemap for collision checking.
+            /// </summary>
+            /// <param name="geography">Tthe tilemap used to determine overworld object movement and collision.</param>
+            /// <param name="indicators">The tilemap used for colored tile indicators.</param>
+            /// <param name="controllerReference">The controller the unit detector is attached to</param>
             public UnitDetector(Tilemap geography, Tilemap indicators, MonoBehaviour controllerReference)
             {
                 this.geography = geography;
@@ -113,6 +96,7 @@ namespace YuguLibrary
                 overworldObject.position = position;
                 overworldObjects.Add(overworldObject);
                 UtilityFunctions.SetSpriteDefaultPosition(overworldObject.overworldObjectCoordinator);
+
                 if(overworldObject is Unit)
                 {
                     CheckHitboxesAtUnit((Unit)overworldObject);
@@ -149,6 +133,10 @@ namespace YuguLibrary
                 MarkIndicatorTiles();
             }
 
+            /// <summary>
+            /// Removes all indicator tiles of a given type.
+            /// </summary>
+            /// <param name="indicatorType">The type of indicator tile to remove.</param>
             public void RemoveIndicatorTiles(TileIndicatorTypes indicatorType)
             {
                 if (indicatorTiles.ContainsKey(indicatorType))
@@ -159,17 +147,27 @@ namespace YuguLibrary
                 MarkIndicatorTiles();
             }
 
+            /// <summary>
+            /// Removes indicator tiles of all types from the current instance.
+            /// </summary>
             public void WipeIndicatorTiles()
             {
                 indicators.ClearAllTiles();
                 indicatorTiles = new Dictionary<TileIndicatorTypes, List<Vector3Int>>();
             }
 
+            /// <summary>
+            /// Sets the value for whether or not non-playable units should automatically receive AI commands.
+            /// </summary>
+            /// <param name="automaticAIActivity"></param>
             public void SetAutomaticAIActivity(bool automaticAIActivity)
             {
                 this.automaticAIActivity = automaticAIActivity;
             }
 
+            /// <summary>
+            /// Assigns unit AI commands to units that currently have none, and Runs unit AI commands for any idle units.
+            /// </summary>
             public void AssignAndExecuteUnitAIs()
             {
                 if (automaticAIActivity)
@@ -187,20 +185,8 @@ namespace YuguLibrary
             /// <param name="spawnPosition">The position where the player will be placed at.</param>
             public void LoadNewInstance(Instance instance, Vector3Int spawnPosition, OverworldObject playerUnit)
             {
-                OverworldObject player = playerUnit;
-
-                string playerUnitJSONFileName;
-                int playerLevel;
-                int playerProgressionPoint;
-
-
                 ResetUnitDetector();
-
-                //Unit newPlayerUnit = new Unit(playerUnitJSONFileName, playerLevel, TargetTypes.Ally);
-
                 SwapGeography(instance.GetGeographyName());
-
-                // stuff regarding: resetting unit detector, placing player unit, setting instance special tiles (+ spawning units) ?
 
                 if (instance.GetUnitSpawners() != null)
                 {
@@ -222,15 +208,11 @@ namespace YuguLibrary
 
                 MarkLoadingZones();
 
-                currentInstance = instance;
-
-                //UtilityFunctions.GetActiveGeology().SetLocation(instance);
+                UtilityFunctions.GetActiveGeology().SetCurrentInstance(instance);
 
                 UtilityFunctions.GetActiveUnitDetector().SpawnOverworldObject(playerUnit, spawnPosition);
                 UtilityFunctions.GetActivePlayer().SetCurrentOverworldObject(playerUnit);
                 //UtilityFunctions.SetSpriteDefaultPosition(playerUnit.overworldObjectCoordinator);
-
-                //InitializeInstance(spawnPosition, leadUnit);
             }
 
             private void ResetUnitDetector()

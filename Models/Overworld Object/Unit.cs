@@ -498,7 +498,7 @@ namespace YuguLibrary
             /// Determines how the unit will interact with other units and tiles in the overworld.
             /// </remarks>
             private List<UnitAI> unitAIs = new List<UnitAI>();
-
+            
             /// <summary>
             /// The name of the UnitAIHub function that is executed when searching for a new unitAIAction.
             /// </summary>
@@ -523,6 +523,18 @@ namespace YuguLibrary
             /// The UnitSpawner object that created the unit.
             /// </summary>
             private UnitSpawner unitSpawner;
+
+            /// <summary>
+            /// The default size of the <see cref="aggroRadius"/> object.
+            /// </summary>
+            public int baseAggroRadiusSize = 5;
+
+            /// <summary>
+            /// The <see cref="AreaOfEffect"/> object that will attract enemy units to its center.
+            /// </summary>
+            public AreaOfEffect aggroRadius;
+
+
 
             #region Encounter-specific Variables
             /// <summary>
@@ -559,7 +571,6 @@ namespace YuguLibrary
             public Unit(string unitJSONFileName, int level, TargetTypes targetType) : base()
             {
                 UnitJSONParser unitJSONParser = new UnitJSONParser(unitJSONFileName);
-
 
                 GameObject g = (GameObject)Resources.Load("Prefabs/Overworld Object");
                 GameObject overworldObject = GameObject.Instantiate(g);

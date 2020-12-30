@@ -61,7 +61,7 @@ namespace YuguLibrary
             /// <summary>
             /// Path to the project's string database to retrieve text from.
             /// </summary>
-            public static readonly string SQLITE_LOCALIZATION_DB_FILE_PATH = Application.dataPath + "/Databases/yugutext.db";
+            public static readonly string SQLITE_LOCALIZATION_DB_FILE_PATH = Application.dataPath + "/Databases/text.db";
 
             /// <summary>
             /// Path to the project's root folder that stores all JSON assets.

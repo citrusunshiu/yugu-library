@@ -10,9 +10,9 @@ namespace YuguLibrary
         public class UIManager
         {
 
-            Stack<UIConfiguration> uiStack;
+            private Stack<UIConfiguration> uiStack;
 
-            UIConfiguration currentUI;
+            private UIConfiguration currentUI;
 
             public UIManager()
             {

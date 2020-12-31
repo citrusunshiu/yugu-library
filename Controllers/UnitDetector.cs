@@ -185,21 +185,20 @@ namespace YuguLibrary
             /// <param name="spawnPosition">The position where the player will be placed at.</param>
             public void LoadNewInstance(Instance instance, Vector3Int spawnPosition, OverworldObject playerUnit)
             {
-                ResetUnitDetector();
                 SwapGeography(instance.GetGeographyName());
 
+                unitSpawners = new List<UnitSpawner>();
                 if (instance.GetUnitSpawners() != null)
                 {
-                    unitSpawners = new List<UnitSpawner>();
                     foreach (UnitSpawner unitSpawner in instance.GetUnitSpawners())
                     {
                         AddUnitSpawner(unitSpawner);
                     }
                 }
 
+                loadingZones = new List<LoadingZone>();
                 if (instance.GetLoadingZones() != null)
                 {
-                    loadingZones = new List<LoadingZone>();
                     foreach (LoadingZone loadingZone in instance.GetLoadingZones())
                     {
                         loadingZones.Add(loadingZone);
@@ -213,11 +212,6 @@ namespace YuguLibrary
                 UtilityFunctions.GetActiveUnitDetector().SpawnOverworldObject(playerUnit, spawnPosition);
                 UtilityFunctions.GetActivePlayer().SetCurrentOverworldObject(playerUnit);
                 //UtilityFunctions.SetSpriteDefaultPosition(playerUnit.overworldObjectCoordinator);
-            }
-
-            private void ResetUnitDetector()
-            {
-
             }
 
             /// <summary>
@@ -321,7 +315,7 @@ namespace YuguLibrary
             /// <param name="unit">Unit attempting to travel.</param>
             /// <param name="to">Location to pathfind to.</param>
             /// <returns>Returns the direction for the unit to move to next to reach the desired location, or returns 
-            /// <see cref="Directions.Down"/> if there is none.</returns>
+            /// <see cref="Directions.None"/> if there is none.</returns>
             public Directions PathfindTo(Unit unit, Vector3Int to)
             {
                 Vector3Int from = unit.position;
@@ -470,24 +464,6 @@ namespace YuguLibrary
                 }
             }
 
-            private List<Vector3Int> GetSurroundingTiles(Unit unit, Vector3Int position)
-            {
-                //when looking for surrounding tiles, should search 10 tiles down and unit.jumpheight tiles up
-                List<Vector3Int> surroundingTiles = new List<Vector3Int>();
-
-                Vector3Int nwTile = new Vector3Int(position.x, position.y + 1, position.z);
-                Vector3Int neTile = new Vector3Int(position.x + 1, position.y, position.z);
-                Vector3Int swTile = new Vector3Int(position.x - 1, position.y, position.z);
-                Vector3Int seTile = new Vector3Int(position.x, position.y - 1, position.z);
-
-                surroundingTiles.AddRange(GetAllTilesAtPosition(nwTile, 0, 0));
-                surroundingTiles.AddRange(GetAllTilesAtPosition(neTile, 0, 0));
-                surroundingTiles.AddRange(GetAllTilesAtPosition(swTile, 0, 0));
-                surroundingTiles.AddRange(GetAllTilesAtPosition(seTile, 0, 0));
-
-                return surroundingTiles;
-            }
-
             /// <summary>
             /// Teleports a given <see cref="OverworldObject"/> to specified location.
             /// </summary>
@@ -524,6 +500,55 @@ namespace YuguLibrary
             }
 
             /// <summary>
+            /// Returns a list of all floor tiles at a given position.
+            /// </summary>
+            /// <param name="position">The position to search for tiles at.</param>
+            /// <param name="minZ">The minimum Z-axis value to search through.</param>
+            /// <param name="maxZ">The maximum Z-axis value to search through.</param>
+            /// <returns>Returns a List of all positions where a tile was located.</returns>
+            public List<Vector3Int> GetAllTilesAtPosition(Vector3Int position, int minZ, int maxZ)
+            {
+                List<Vector3Int> tiles = new List<Vector3Int>();
+
+                for (int i = minZ; i <= maxZ; i++)
+                {
+                    Vector3Int tile = new Vector3Int(position.x - i, position.y - i, position.z + i);
+                    if (IsTileOpen(tile, true))
+                    {
+                        tiles.Add(tile);
+                    }
+                }
+
+                return tiles;
+            }
+
+            /// <summary>
+            /// Returns all tiles surrounding a given position within the range of 10 tiles below and n tiles above, 
+            /// where n = <see cref="OverworldObject.jumpHeight"/>.
+            /// </summary>
+            /// <param name="unit">The unit whose jump height should be checked.</param>
+            /// <param name="position">The position to check for surrounding tiles at.</param>
+            /// <returns>Returns a list of <see cref="Vector3Int"/> objects corresponding to all found surrounding tile locations.</returns>
+            private List<Vector3Int> GetSurroundingTiles(Unit unit, Vector3Int position)
+            {
+                //when looking for surrounding tiles, should search 10 tiles down and unit.jumpheight tiles up
+                List<Vector3Int> surroundingTiles = new List<Vector3Int>();
+
+                Vector3Int nwTile = new Vector3Int(position.x, position.y + 1, position.z);
+                Vector3Int neTile = new Vector3Int(position.x + 1, position.y, position.z);
+                Vector3Int swTile = new Vector3Int(position.x - 1, position.y, position.z);
+                Vector3Int seTile = new Vector3Int(position.x, position.y - 1, position.z);
+
+                surroundingTiles.AddRange(GetAllTilesAtPosition(nwTile, 0, 0));
+                surroundingTiles.AddRange(GetAllTilesAtPosition(neTile, 0, 0));
+                surroundingTiles.AddRange(GetAllTilesAtPosition(swTile, 0, 0));
+                surroundingTiles.AddRange(GetAllTilesAtPosition(seTile, 0, 0));
+
+                return surroundingTiles;
+            }
+
+
+            /// <summary>
             /// Lowers the opacity of the tiles surrounding a unit's current position after they move.
             /// </summary>
             /// <param name="oldPosition">The unit's position before moving.</param>
@@ -547,29 +572,6 @@ namespace YuguLibrary
                 int dy = (tile1.y > tile2.y) ? tile1.y - tile2.y : tile2.y - tile1.y;
 
                 return dx + dy;
-            }
-
-            /// <summary>
-            /// Returns a list of all floor tiles at a given position.
-            /// </summary>
-            /// <param name="position">The position to search for tiles at.</param>
-            /// <param name="minZ">The minimum Z-axis value to search through.</param>
-            /// <param name="maxZ">The maximum Z-axis value to search through.</param>
-            /// <returns>Returns a List of all positions where a tile was located.</returns>
-            public List<Vector3Int> GetAllTilesAtPosition(Vector3Int position, int minZ, int maxZ)
-            {
-                List<Vector3Int> tiles = new List<Vector3Int>();
-
-                for (int i = minZ; i <= maxZ; i++)
-                {
-                    Vector3Int tile = new Vector3Int(position.x - i, position.y - i, position.z + i);
-                    if (IsTileOpen(tile, true))
-                    {
-                        tiles.Add(tile);
-                    }
-                }
-
-                return tiles;
             }
 
             /// <summary>
@@ -656,10 +658,11 @@ namespace YuguLibrary
             }
 
             /// <summary>
-            /// 
+            /// Increments a given <see cref="Hitbox"/> object's frame progress, and enables or disables the hitbox depending on the 
+            /// Hitbox object's specifications.
             /// </summary>
-            /// <param name="hitbox"></param>
-            /// <param name="frameProgress"></param>
+            /// <param name="hitbox">The Hitbox object to progress the frame of.</param>
+            /// <param name="frameProgress">The Hitbox object's current frame progress.</param>
             /// <returns></returns>
             private IEnumerator ProgressHitboxInterval(Hitbox hitbox, int frameProgress = 0)
             {
@@ -686,20 +689,21 @@ namespace YuguLibrary
             }
 
             /// <summary>
-            /// 
+            /// Starts a new coroutine to rerun <see cref="ProgressHitboxInterval(Hitbox, int)"/>.
             /// </summary>
-            /// <param name="hitbox"></param>
-            /// <param name="frameProgress"></param>
+            /// <param name="hitbox">The Hitbox object to progress the frame of.</param>
+            /// <param name="frameProgress">The Hitbox object's current frame progress.</param>
             private void RepeatHitboxInterval(Hitbox hitbox, int frameProgress)
             {
                 controllerReference.StartCoroutine(ProgressHitboxInterval(hitbox, frameProgress));
             }
 
             /// <summary>
-            /// 
+            /// Adjusts the color of a <see cref="Hitbox"/> object's tile indicator dependent on the frame progression of the hitbox, and 
+            /// the hitbox's specified activation and ending timings.
             /// </summary>
-            /// <param name="hitbox"></param>
-            /// <param name="frameProgress"></param>
+            /// <param name="hitbox">The Hitbox object to progress the visual of.</param>
+            /// <param name="frameProgress">The Hitbox object's current frame progress.</param>
             private void ProgressHitboxVisual(Hitbox hitbox, int frameProgress)
             {
                 Vector3Int adjustedPosition = hitbox.GetPosition();
@@ -776,10 +780,10 @@ namespace YuguLibrary
             }
 
             /// <summary>
-            /// 
+            /// Gets all <see cref="OverworldObject"/> objects at a given position.
             /// </summary>
-            /// <param name="position"></param>
-            /// <returns></returns>
+            /// <param name="position">The posititon to get all OverworldObjects at.</param>
+            /// <returns>Returns a list of all OverworldObjects at the given position.</returns>
             public List<OverworldObject> GetOverworldObjectsAtPosition(Vector3Int position)
             {
                 List<OverworldObject> owObjects = new List<OverworldObject>();
@@ -797,11 +801,16 @@ namespace YuguLibrary
             #endregion
 
             /// <summary>
-            /// 
+            /// Spawns all units from a given <see cref="UnitSetup"/> relative to a given reference tile and rotation (specified by 
+            /// direction).
             /// </summary>
-            /// <param name="unitSetup"></param>
-            /// <param name="centerTile"></param>
-            /// <param name="direction"></param>
+            /// <remarks>
+            /// The position that the units are placed relative to the reference tile will be rotated or flipped dependent 
+            /// on the specified direction. UnitSetup positions are assumed to be facing <see cref="Directions.NE"/> by default.
+            /// </remarks>
+            /// <param name="unitSetup">The UnitSetup object containing the list of units to spawn and their relative positions.</param>
+            /// <param name="centerTile">The position to place the units relative to.</param>
+            /// <param name="direction">The rotation of the UnitSetup.</param>
             public void LoadUnitSetup(UnitSetup unitSetup, Vector3Int centerTile, Directions direction)
             {
                 Dictionary<string, Vector3Int> units = unitSetup.GetUnitSetup(direction, centerTile);
@@ -826,7 +835,7 @@ namespace YuguLibrary
             }
 
             /// <summary>
-            /// Removes allied units spawned via unit setup from the field after an encounter is closed.
+            /// Removes allied units spawned via unit setup from the field.
             /// </summary>
             public void RemoveUnitSetup()
             {
@@ -848,9 +857,9 @@ namespace YuguLibrary
             }
 
             /// <summary>
-            /// 
+            /// Gets all <see cref="Unit"/> objects in the unit detector.
             /// </summary>
-            /// <returns></returns>
+            /// <returns>Returns a list of all Unit objects in the unit detector.</returns>
             public List<Unit> GetAllUnits()
             {
                 List<Unit> units = new List<Unit>();
@@ -942,6 +951,9 @@ namespace YuguLibrary
                 geography.transform.SetParent(GameObject.Find("Controller Hub").transform);
             }
 
+            /// <summary>
+            /// 
+            /// </summary>
             private void MarkIndicatorTiles()
             {
                 indicators.ClearAllTiles();
@@ -974,6 +986,11 @@ namespace YuguLibrary
                 }
             }
 
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="indicatorType"></param>
+            /// <returns></returns>
             private TileBase GetTileFromIndicator(TileIndicatorTypes indicatorType)
             {
                 switch (indicatorType)
@@ -995,6 +1012,9 @@ namespace YuguLibrary
                 }
             }
 
+            /// <summary>
+            /// 
+            /// </summary>
             private void MarkLoadingZones()
             {
                 List<Vector3Int> loadingZoneTiles = new List<Vector3Int>();
@@ -1006,11 +1026,17 @@ namespace YuguLibrary
                 AddIndicatorTiles(loadingZoneTiles, TileIndicatorTypes.LoadingZone);
             }
 
+            /// <summary>
+            /// 
+            /// </summary>
             private void AssignUnitAIs()
             {
 
             }
 
+            /// <summary>
+            /// 
+            /// </summary>
             private void ExecuteUnitAIs()
             {
 

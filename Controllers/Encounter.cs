@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using YuguLibrary.Enumerations;
+using YuguLibrary.HookBundles;
 using YuguLibrary.Models;
 using YuguLibrary.Utilities;
 

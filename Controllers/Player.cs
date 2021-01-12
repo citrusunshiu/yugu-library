@@ -10,13 +10,16 @@ namespace YuguLibrary
 {
     namespace Controllers
     {
+        /// <summary>
+        /// Manages the <see cref="OverworldObject"/> controlled by the player, player inputs, and the scene's camera.
+        /// </summary>
         public class Player
         {
             #region Variables
             /// <summary>
             /// Reference to the controller the unit detector is attached to.
             /// </summary>
-            MonoBehaviour controllerReference;
+            private MonoBehaviour controllerReference;
 
             /// <summary>
             /// The player's saved data.
@@ -38,15 +41,37 @@ namespace YuguLibrary
             /// </summary>
             public float cameraSpeed = 5;
 
+            /// <summary>
+            /// Whether or not the system will process keyboard/controller inputs from the user.
+            /// </summary>
             public bool inputsDisabled = false;
 
+            /// <summary>
+            /// The <see cref="KeyCode"/> associated with the up movement direction.
+            /// </summary>
             private KeyCode arrowUp = KeyCode.UpArrow;
+
+            /// <summary>
+            /// The <see cref="KeyCode"/> associated with the down movement direction.
+            /// </summary>
             private KeyCode arrowDown = KeyCode.DownArrow;
+
+            /// <summary>
+            /// The <see cref="KeyCode"/> associated with the left movement direction.
+            /// </summary>
             private KeyCode arrowLeft = KeyCode.LeftArrow;
+
+            /// <summary>
+            /// The <see cref="KeyCode"/> associated with the right movement direction.
+            /// </summary>
             private KeyCode arrowRight = KeyCode.RightArrow;
             #endregion
 
             #region Constructors
+            /// <summary>
+            /// Constructs a player object with a reference to the scene's camera.
+            /// </summary>
+            /// <param name="mainCamera">The scene's camera.</param>
             public Player(Camera mainCamera)
             {
                 this.mainCamera = mainCamera;
@@ -55,6 +80,9 @@ namespace YuguLibrary
             #endregion
 
             #region Functions
+            /// <summary>
+            /// 
+            /// </summary>
             public void LoadPlayerFile()
             {
                 if(playerFile != null)
@@ -67,6 +95,10 @@ namespace YuguLibrary
                 }
             }
 
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="overworldObject"></param>
             public void SetCurrentOverworldObject(OverworldObject overworldObject)
             {
                 currentOverworldObject = overworldObject;
@@ -74,6 +106,10 @@ namespace YuguLibrary
                 overworldObject.overworldObjectCoordinator.SetCameraPosition();
             }
 
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <returns></returns>
             public OverworldObject GetCurrentOverworldObject()
             {
                 return currentOverworldObject;

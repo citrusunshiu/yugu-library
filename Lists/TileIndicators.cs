@@ -52,4 +52,14 @@ namespace TileIndicators
             tileData.sprite = Resources.Load<Sprite>("Sprites/Tiles/Indicators/enemyTargetingSkillTileIndicator");
         }
     }
+
+    public class HitboxTile : TileBase
+    {
+        public override void GetTileData(Vector3Int position, ITilemap tilemap, ref TileData tileData)
+        {
+            tileData.sprite = Resources.Load<Sprite>("Sprites/Tiles/Prototype/hitbox");
+        }
+    }
+
+
 }

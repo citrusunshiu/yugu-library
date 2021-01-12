@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using YuguLibrary.Enumerations;
@@ -8,6 +9,9 @@ namespace YuguLibrary
 {
     namespace Models
     {
+        /// <summary>
+        /// Base class for defining unit AI.
+        /// </summary>
         public abstract class UnitAI
         {
             public UnitAI()
@@ -15,13 +19,19 @@ namespace YuguLibrary
 
             }
 
-            public abstract UnitAIAction GetUnitAIAction();
 
             #region Functions
-
+            /// <summary>
+            /// Gets a <see cref="UnitAIAction"/> object that may dynamically change dependent on the current game state.
+            /// </summary>
+            /// <returns>Returns a UnitAIAction object as determined by the function's logic.</returns>
+            public abstract UnitAIAction GetUnitAIAction();
             #endregion
         }
 
+        /// <summary>
+        /// Contains functions that generate <see cref="UnitAIAction"/> objects for unit AI functionality.
+        /// </summary>
         public static class UnitAILogic
         {
             public static UnitAIAction RandomMove(Unit unit)

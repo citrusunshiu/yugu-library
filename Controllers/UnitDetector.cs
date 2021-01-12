@@ -13,6 +13,10 @@ namespace YuguLibrary
 {
     namespace Controllers
     {
+        /// <summary>
+        /// Tracks and manages the positions and collision of <see cref="OverworldObject"/> and <see cref="Hitbox"/> objects in an 
+        /// <see cref="Instance"/>.
+        /// </summary>
         public class UnitDetector
         {
             #region Variables
@@ -907,7 +911,9 @@ namespace YuguLibrary
             }
 
             /// <summary>
-            /// Prevents movement from an <see cref="OverworldObject"/> for a specified amount of time.
+            /// Prevents movement from an <see cref="OverworldObject"/> for an amount of time specified by 
+            /// <see cref="OverworldObject.GetMovementDelay"/>, <see cref="OverworldObject.ascentDelay"/>, or 
+            /// <see cref="OverworldObject.descentDelay"/>, dependent on how the overworld object moved.
             /// </summary>
             /// <param name="overworldObject">The overworldObject to have its movement delayed.</param>
             /// <param name="z">The amount of tiles travelled in the Z-axis.</param>
@@ -932,9 +938,9 @@ namespace YuguLibrary
             }
 
             /// <summary>
-            /// 
+            /// Changes the tilemap referenced by <see cref="geography"/> to a new specified tilemap.
             /// </summary>
-            /// <param name="name"></param>
+            /// <param name="name">The prefab name of the tilemap to swap to.</param>
             private void SwapGeography(string name)
             {
                 if (geography != null)
@@ -952,7 +958,7 @@ namespace YuguLibrary
             }
 
             /// <summary>
-            /// 
+            /// Replaces the currently displayed indicator tiles with the values currently stored in <see cref="indicatorTiles"/>.
             /// </summary>
             private void MarkIndicatorTiles()
             {
@@ -987,10 +993,10 @@ namespace YuguLibrary
             }
 
             /// <summary>
-            /// 
+            /// Gets the tile associated with a given <see cref="TileIndicatorTypes"/> value.
             /// </summary>
-            /// <param name="indicatorType"></param>
-            /// <returns></returns>
+            /// <param name="indicatorType">The tile indicator type to get the tile of.</param>
+            /// <returns>Returns the tile associated with the given TileIndicatorTypes value.</returns>
             private TileBase GetTileFromIndicator(TileIndicatorTypes indicatorType)
             {
                 switch (indicatorType)
@@ -1013,7 +1019,7 @@ namespace YuguLibrary
             }
 
             /// <summary>
-            /// 
+            /// Adds the position of the current instance's loading zones to <see cref="indicatorTiles"/>.
             /// </summary>
             private void MarkLoadingZones()
             {
@@ -1027,7 +1033,8 @@ namespace YuguLibrary
             }
 
             /// <summary>
-            /// 
+            /// Iterates through all <see cref="Unit"/> objects in the current instance, and runs their unit AI function to generate a 
+            /// <see cref="UnitAIAction"/> to execute, if one is not already present on the unit.
             /// </summary>
             private void AssignUnitAIs()
             {
@@ -1035,21 +1042,14 @@ namespace YuguLibrary
             }
 
             /// <summary>
-            /// 
+            /// Iterates through all <see cref="Unit"/> objects in the current instance, and executes their current 
+            /// <see cref="UnitAIAction"/>, if one is not already being executed for the unit.
             /// </summary>
             private void ExecuteUnitAIs()
             {
 
             }
             #endregion
-        }
-
-        public class HitboxTile : TileBase
-        {
-            public override void GetTileData(Vector3Int position, ITilemap tilemap, ref TileData tileData)
-            {
-                tileData.sprite = Resources.Load<Sprite>("Sprites/Tiles/Prototype/hitbox");
-            }
         }
     }
 }
